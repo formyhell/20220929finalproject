@@ -1,0 +1,10 @@
+/* 에러페이지 CSS */
+.errorImg{
+	text-align: center;
+	margin-top: 9%;
+	object-fit: cover;
+}
+img {
+	width: 50%;
+	object-fit: cover;
+}

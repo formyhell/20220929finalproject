@@ -1,0 +1,77 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 24.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<style>
+.outer {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 50px;
+}
+
+li a:hover {
+    color: #fff !important;
+    background: #1fcab8;
+}
+</style>
+</head>
+<body>
+<div class="applyBody">
+	<c:if test="${not empty applyList }">
+		<c:forEach items="${applyList }" var="apply">
+			<div class="row mt-80 outer">
+        <div class="col-sm-6">
+          <div class="about-block gray-bg   padding-40 clearfix">
+            <div class="client-avtar" style="height: 84px;"> 
+            <img src="${cPath }/resources/images/${apply.genImg}" class="img-responsive" style="object-fit:cover; width:70px; height:80px;"> </div>
+            <div class="text-box">
+              <div class="box-title row">
+                <h4 class="col-md-4">${apply.applyApplicant }<span class="badge badge-primary" style="margin-left:10px">${apply.applyObj }</span></h4>
+                <ul class="widget-tag pt-15" style="float:right; margin-top: -10px; list-style:none">
+	              <li> <a href='${cPath }/outsourcing/apply/portfolio/${apply.applyApplicant}'>포트폴리오</a> </li>
+	              <li> <a href='${cPath }/outsourcing/apply/info/${apply.applyApplicant}'>이력</a> </li>
+            	</ul>
+              </div>
+              <div class="text-content row">
+                <p style="margin-left: 10px;">${apply.applyContent }</p>
+                <a style="float:right; min-width: 30px; height: 55px;" href="${cPath }/outsourcing/apply/form/${apply.applyId}" class="btn-text">계약</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+		</c:forEach>
+	</c:if>
+	<c:if test="${empty applyList }">
+		<div class="page-404 ptb-80 ptb-xs-60" style="padding-top:200px; padding-bottom:229px">
+			<div class="container">
+				<div class="row text-center">
+					<div class="col-sm-8 col-sm-offset-2">
+						<div style="color:#1fcab8; font-size:100px; margin-bottom:50px">
+							<i class="fa-solid fa-circle-exclamation"></i>
+						</div>
+						<h2 style="margin-left:30px">현재 프로젝트에 지원한 지원자가 없습니다.</h2>
+					</div>
+				</div>
+			</div>
+		</div>
+	</c:if>
+</div>
+
+
+<script src="https://kit.fontawesome.com/15952e61fa.js" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<style>
+#mymodal {
+    position: fixed;
+    width:100%;
+    height:100%;
+    left:0;top:0;
+    z-index:1000;
+    background-color:rgba(107, 107, 107, 0.8); /* 반투명 */
+	display:none;  /* 첨엔 안 보이깅*/
+}
+.modal-content {
+	position: relative;
+    left:750px;
+    top:100px;
+}
+.pmstable {
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+	height: 300px;
+}
+th, td { 
+	text-align: center; 
+}
+
+.card-header{
+	padding: 10px;
+	padding-left: 15px;
+}
+.selector {
+	word-break:break-all;
+}
+
+</style>
+<div class="container">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="card padding-20">
+				<div class="card-header">
+					<h2 style="text-align : center;">${PMSProject.projName }</h2>
+				</div>
+					<br><br><br>
+				<div class="table-responsive" style="height: 450px;">
+					<table class="pmstable" border="1">
+						<tr>
+							<th>프로젝트 이름</th>
+							<td style = "word-break: break-all; width: 250px;">${PMSProject.projName }</td>
+							<th>프로젝트 설계자</th>
+							<td>${PMSProject.projArchi }</td>
+						</tr>
+						<tr>
+							<th>시작일</th>
+							<td>${PMSProject.projSdate }</td>
+							<th>종료일</th>
+							<td>${PMSProject.projFdate }</td>
+						</tr>
+						<tr>
+							<th colspan="2">프로젝트 키</th>
+							<td colspan="2">${PMSProject.projKey }</td>
+						</tr>
+						<tr>
+							<th colspan="2">아웃소싱 프로젝트</th>
+							<td colspan="2">${PMSProject.projOutproj }</td>
+						</tr>
+						<tr>
+							<th colspan="2">상태</th>
+							<td colspan="2">${PMSProject.projState }</td>
+						</tr>
+						<tr style="border: none;">
+							<td colspan="4">
+								<input type="button" class="btn-grayDay float-right" value="삭제"  onclick="f_modalOpen()" style="border: none;">
+								<button onclick="location='${cPath}/pmsProject/${PMSProject.projId }/form'"  class="btn-blueOcen float-right" style=" border: none;">수정</button>
+					<button onclick="location='${cPath }/pms/${PMSProject.projId }'" class="btn-blueOcen float-right" style="width:150px; border: none;">pms프로젝트 바로가기</button>
+							</td>
+						</tr>
+					</table>
+					 <!-- Modal -->
+					<div id="mymodal">
+						<div class="modal-content padding-20" style="width: 450px; height: 180px;">
+						<h3>PMS프로젝트 비밀번호 입력</h3>
+						<form action="${cPath }/pmsProject/${PMSProject.projId }" method="post">
+							<input type="hidden" name="_method" value="delete">
+							<input type="password" class="form-control" name="projPass" placeholder="비밀번호">
+							<input type="button" class="btn-grayDay" value="취소"  onclick="f_check()()" style="float: right; border: none;">
+							<input type="submit" class="btn-blueOcen" data-href="${cPath }/pmsProject/${PMSProject.projId }" value="삭제" style="float: right; border: none;"/>
+							<input type="hidden" name="projId" value="${PMSProject.projId }"/>
+						</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+function f_modalOpen(){
+    mymodal.style.display="block";
+}
+function f_check(){
+    mymodal.style.display="none";
+}
+</script>

@@ -1,0 +1,73 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* 2022. 8. 27.     고혜인      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/security/tags"
+	prefix="security"%>
+
+<script src="http://cdn.ckeditor.com/4.19.1/standard/ckeditor.js"></script>
+
+<div id="services-section" class="pt-xs-60" style="padding-top: 5vh">
+	<div class="container">
+		<div class="row padding-20">
+			<div class="col-sm-12">
+				<div class="block-title v-line mb-45">
+					<h2>Community</h2>
+					<p class="italic">자유게시판</p>
+				</div>
+				<div>
+					<form:form modelAttribute="cmnt" method="post" action="${cPath }/community/${cmnt.cmntNo }">
+						<security:csrfInput />
+						<form:input type="hidden" path="cmntNo" value="${cmnt.cmntNo }" />
+						<form:input type="hidden" path="cmntWriter" value="${cmnt.cmntWriter }" />
+						<input type="hidden" name="_method" value="put" />
+						<div class="col-md-12">
+							<div class="form-group">
+								<label for="title">제목</label>
+								<div class="ui-input-group">
+									<form:input path="cmntTitle" required="required"
+										style="width: 100%;" value="${cmnt.cmntTitle }" />
+									<form:errors path="cmntTitle" element="span" cssClass="error" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="content">내용</label>
+								<div class="ui-input-group">
+									<form:textarea path="cmntContent" required="required"
+										value="${cmnt.cmntContent }"
+										placeholder="상업성 광고, 저속한 표현, 특정인에 대한 비방 등의 게시글은 관리자에 의해 통보없이 삭제될 수 있습니다." />
+									<form:errors path="cmntContent" element="span" cssClass="error" />
+								</div>
+							</div>
+						</div>
+						<div class="float-right mb-25">
+							<input type="submit" value="저장" class="btn btn-primary" /> 
+							<input type="reset" value="취소" class="btn btn-warning" />
+						</div>
+
+					</form:form>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	CKEDITOR.replace('cmntContent',{
+		filebrowserImageUploadUrl : "${cPath}/file/image?command=imageUpload&${_csrf.parameterName}=${_csrf.token}",
+		height : 300
+	});
+</script>
+<script src="${cPath }/resources/js/ckeditor/editorConfig.js"></script>

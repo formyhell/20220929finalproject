@@ -1,0 +1,89 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>  
+
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="${cPath }/resources/css/paging/listPaging.css">
+
+<div id="services-section" class="pt-xs-60" style="padding-top: 5vh">
+<div class="container">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="block-title v-line mb-45"> 
+				<h2>Notice</h2> 
+				<p class="italic"> 
+					공지사항
+				</p> 
+			</div> 
+			<div>
+<!-- 				<div class="card-header"><h5>notice</h5></div> -->
+				<!-- 리스트 -->
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col">#</th>
+								<th scope="col" style="width: 950px;">제목</th>
+<!-- 								<th scope="col">작성자</th> -->
+								<th scope="col" style="width: 80px;">작성일</th>
+								<th scope="col" style="width: 70px;" >조회수</th>
+							</tr>
+						</thead>
+						<tbody>
+							<c:set value="${pagingVO.dataList }" var="notList" />
+							<c:choose>
+								<c:when test="${not empty notList}">
+									<c:forEach items="${notList }" var="notice">
+										<tr>
+											<th>${notice.notNo }</th>
+											<c:url value="/notice/${notice.notNo }" var="noticeURL" />
+											<td><a href="${noticeURL }"><c:out value="${notice.notTitle }" /></a></td>
+<%-- 											<td><c:out value="${notice.notAdmin }" /></td> --%>
+											<td><c:out value="${notice.notSdate }" /></td>
+											<td><c:out value="${notice.notHit }" /></td>
+										</tr>
+									</c:forEach>
+								</c:when>
+								<c:otherwise>
+									<tr>
+										<td colspan="4">공지 없음</td>
+									</tr>
+								</c:otherwise>
+							</c:choose>
+						</tbody>
+						<!-- 페이징 -->
+						<tfoot>
+							<tr>
+								<td colspan="5">
+									<div class="pagingArea pagination-nav text-left mt-60 mtb-xs-30">
+										${pagingVO.pagingHTMLBS }</div>
+								</td>
+							</tr>
+						</tfoot>
+						
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/notice" method="get">
+	<input type="hidden" name="page" />
+
+</form:form>
+
+<script src="${cPath }/resources/js/board/boardList.js"></script>

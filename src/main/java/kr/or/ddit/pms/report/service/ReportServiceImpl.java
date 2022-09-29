@@ -1,0 +1,204 @@
+package kr.or.ddit.pms.report.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.pms.report.dao.ReportDAO;
+import kr.or.ddit.pms.report.vo.ReportVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@Transactional
+public class ReportServiceImpl implements reportService {
+	
+	@Inject
+	ReportDAO reportDAO;
+	
+	@Value("#{appInfo['attatchPath']}")
+	private File saveFolder;
+	
+	@PostConstruct
+	public void init() throws IOException{
+		log.info("주입된 저장 경로 : {}", saveFolder.getCanonicalPath());
+	}
+	
+	
+	// 파일 저장 메서드
+	private int processAttatches(ReportVO report) throws IOException {
+		List<AttatchVO> attatchList = report.getAttatchList();
+		if (attatchList == null || attatchList.isEmpty())
+			return 0;
+
+		int rowcnt = 0; // ATTATCH
+
+		for (AttatchVO attatch : attatchList) {
+			rowcnt += reportDAO.insertAttatches(attatch);
+		}
+
+		reportDAO.insertReportAttatch(report);
+
+		// 2진 데이터(파일 자체) 저장 : d:/saveFiles
+		for (AttatchVO attatch : attatchList) {
+			attatch.saveTo(saveFolder);
+		}
+		return rowcnt;
+	}
+
+	private void removeAttatches(ReportVO report) {
+		String[] delAttNos = report.getDelAttNos();
+		log.info("!!!!!!!!!!!asdasd!!!!!!!!!!!!!" + report.getDelAttNos());
+		if (delAttNos == null || delAttNos.length == 0)
+			return;
+
+		List<String> saveNames = Arrays.stream(delAttNos).map((attId) -> {
+			AttatchVO attatch = reportDAO.selectAttatch(attId);
+			return attatch.getAttSavename();
+		}).collect(Collectors.toList());
+		reportDAO.deleteReportAttatches(report);
+		reportDAO.deleteAttatches(report);
+
+		for (String saveName : saveNames) {
+			File saveFile = new File(saveFolder, saveName);
+			FileUtils.deleteQuietly(saveFile);
+		}
+	}
+	
+	@Transactional
+	@Override
+	public ServiceResult createReport(ReportVO report) {
+		List<AttatchVO> attatchList = report.getAttatchList();
+		log.info("첨부파일 리스트 !!!!!!!!!!!!!!!!!!!!" + attatchList);
+		
+		int rowcnt = reportDAO.insertReport(report);
+		
+		log.info("보고서 정보 저장할 vo{}", report.getAttatchList());
+		
+		try {
+			if (report.getAttatchList().size() != 0) {
+				processAttatches(report);
+//				reportDAO.insertReportAttatch(report);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public List<ReportVO> reteiveReportList(PagingVO<ReportVO> pagingVO) {
+		
+		pagingVO.setTotalRecord(reportDAO.selectTotalReport(pagingVO));
+		List<ReportVO> reportList = reportDAO.selectReportList(pagingVO);
+		pagingVO.setDataList(reportList);
+		
+		return reportList;
+	}
+
+	@Override
+	public ReportVO retrieveReport(String reportId) {
+
+		ReportVO report = reportDAO.selectReport(reportId);
+		
+		if (report.getReportId() == null) {
+			throw new RuntimeException(String.format("%d 보고서 없음", report.getReportId()));
+		}
+		reportDAO.selectReport(reportId);
+		List<AttatchVO> reportFileList = reportDAO.selectReportFileList(report);
+		report.setAttatchList(reportFileList);
+		
+		
+		return report;
+	}
+
+	@Override
+	public ServiceResult modifyReport(ReportVO report) {
+		
+		if (reportDAO.selectReport(report.getReportId()) == null) {
+			throw new RuntimeException(String.format("%d 보고서 없음", report.getReportId()));
+		}
+		
+		int rowcnt = reportDAO.updateReport(report);
+		try {
+			removeAttatches(report);
+			processAttatches(report);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		return rowcnt >0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public ServiceResult deleteReport(ReportVO report) {
+		
+		ReportVO oneReport = reportDAO.selectReport(report.getReportId());
+		
+		int rowcnt = 0;
+		
+		if (oneReport != null) {
+			reportDAO.deleteReportAttatchAll(report);
+			rowcnt = reportDAO.deleteReport(report);
+		} else {
+			throw new RuntimeException(String.format("%d 보고서 없음", report.getReportId()));
+		}
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	
+	
+	@Override
+	public List<ReportVO> involveReprotList(PagingVO<ReportVO> pagingVO) {
+		pagingVO.setTotalRecord(reportDAO.involveReportTotal(pagingVO));
+		List<ReportVO> involveReportList = reportDAO.involveReportList(pagingVO);
+		pagingVO.setDataList(involveReportList);
+		return involveReportList;
+	}
+	
+	
+	
+	@Override
+	public AttatchVO reportFileDownload(String attId) {
+		AttatchVO attatch = reportDAO.selectAttatch(attId);
+		if (attatch == null) {
+			throw new RuntimeException(String.format("$s 첨부파일 없음", attId));
+		}
+		
+		return attatch;
+	}
+	
+	
+	
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

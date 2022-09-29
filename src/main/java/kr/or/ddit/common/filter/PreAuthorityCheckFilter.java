@@ -1,0 +1,81 @@
+package kr.or.ddit.common.filter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import kr.or.ddit.common.member.vo.ComMemberVO;
+import kr.or.ddit.common.member.vo.GenMemberVO;
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class PreAuthorityCheckFilter extends OncePerRequestFilter{
+	
+	private AccessDeniedHandler accessDeniedHandler = new AccessDeniedHandlerImpl();
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain )
+			throws ServletException, IOException {
+		
+		AntPathRequestMatcher matcher = new AntPathRequestMatcher("/pms/{projId}/**");
+		String projId = matcher.extractUriTemplateVariables(request).get("projId");
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		List<String> memProj = null;
+		if(StringUtils.isNotBlank(projId)) {
+			log.info("{} 접근 제어 대상인 자원", request.getRequestURI());
+			
+			MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+			MemberVO member = userPrincipal.getRealMember();
+			String simpleName = member.getClass().getSimpleName();
+			
+			
+			if("GenMemberVO".equals(simpleName)) {
+				memProj = ((GenMemberVO)member).getMemProj();
+				log.info("일반 회원 일 때 여기서 memProj 확인함 {}", memProj);
+			}else if("ComMemberVO".equals(simpleName)) {
+				memProj = ((ComMemberVO)member).getComProj();
+				log.info("기업 회원 일 때 여기서 memProj 확인함 {}", memProj);
+			}else if("AdminVO".equals(simpleName)){
+				ArrayList<String> admin = new ArrayList<>(); 
+				admin.add("ALL");
+				memProj = admin;
+			}else {
+				log.info("누구야???????");
+				return;
+			}
+			
+			log.info("simpleName: {}", simpleName);
+			log.info("memProj: {}", memProj);
+			log.info("구분할 프로젝트 : {}", projId);
+			if(!memProj.stream().anyMatch(auth -> auth.equals(projId)) && !"ALL".equals(memProj.get(0))) {
+//				accessDeniedHandler.handle((HttpServletRequest)request, response, new AccessDeniedException("해당 프로젝트에 접근 할 수 없는 사용자임."));
+				response.sendRedirect("/PHOS/accessError");
+				log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 접근 불가");
+				return;
+			}else{
+				log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 접근 허용");
+			}
+		}else {
+//			log.info("{} 접근 제어 대상이 아닌 자원", request.getRequestURI());
+		}
+		filterChain.doFilter(request, response);
+		
+	}
+	
+
+}

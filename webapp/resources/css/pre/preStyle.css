@@ -1,0 +1,6 @@
+@charset "UTF-8";
+    pre{
+    	border: none;
+    	background-color: white;
+    	white-space: pre-wrap;
+    }

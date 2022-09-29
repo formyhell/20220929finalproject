@@ -1,0 +1,15 @@
+/**
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      윤지영       최초작성 에러 반응형 CSS
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+.errorImg {
+	text-align: center;
+	margin-top: 9%;
+	object-fit: cover;
+}

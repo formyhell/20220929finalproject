@@ -1,0 +1,31 @@
+package kr.or.ddit.common.mypage.memInfo.vo;
+
+import java.io.Serializable;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * @author 신창규
+ * @since 2022. 8. 26.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 26.      306-06       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@EqualsAndHashCode(of = { "skillCode", "genId" })
+public class GenSkillVO implements Serializable{
+	
+	public GenSkillVO(String skill) {
+		this.skillCode = skill;
+	}
+	public String skillName;
+	public String skillCode;
+	public String genId;
+}

@@ -1,0 +1,15 @@
+@charset "UTF-8";
+
+    #mymodal {
+        position: fixed;
+        width:100%;
+        height:100%;
+        left:0;top:0;
+        background-color:rgba(0,0,0,0.8); /* 반투명 */
+        display:none;  /* 첨엔 안 보이깅*/
+    }
+    .my-content {
+        position: relative;
+        left:100px;
+        top:100px;
+    }

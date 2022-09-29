@@ -1,0 +1,180 @@
+package kr.or.ddit.common.mypage.project.manageProject.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.common.member.vo.MemReviewVO;
+import kr.or.ddit.outsourcing.vo.ApplicantVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.outsourcing.vo.ProjReviewVO;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 17.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                    수정자              		 수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 17.    조채원       			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Mapper
+public interface ProjectManageDAO {
+	/**
+	 * 일반 회원의 레코드 수 조회
+	 * @return
+	 */
+	public int genSelectTotalProj(Map<String, Object> pagingMap);
+	
+	/**
+	 * 기업 회원의 레코드 수 조회
+	 * @return
+	 */
+	public int comSelectTotalProj(Map<String, Object> pagingMap);
+	
+	/**
+	 * 일반 회원의 프로젝트 목록 조회
+	 * @param genId
+	 * @return
+	 */
+	public List<OutProjVO> genSelectAll(Map<String, Object> pagingMap);	
+	
+	/**
+	 * 기업 회원의 프로젝트 목록 조회
+	 * @param comId
+	 * @return
+	 */
+	public List<OutProjVO> comSelectAll(Map<String, Object> pagingMap);
+	
+	/**
+	 * 프로젝트 아이디를 받아 프로젝트 정보 조회
+	 * @param projId
+	 * @return
+	 */
+	public OutProjVO selectOne(String projId);
+	
+	/**
+	 * 프로젝트 아이디를 받아 프로젝트 등록한 기업회원 조회
+	 * @param projId
+	 * @return
+	 */
+	public String selectCommem(String projId);
+	
+	/**
+	 * 프로젝트 리뷰 입력
+	 * @param projRev
+	 * @return
+	 */
+	public int insertProjRev(ProjReviewVO projRev);
+	
+	/**
+	 * 프로젝트 리뷰 조회
+	 * @param projRev
+	 * @return
+	 */
+	public ProjReviewVO selectProjRev(ProjReviewVO projRev);
+	
+	/**
+	 * 프로젝트 리뷰 수정
+	 * @param projRev
+	 * @return
+	 */
+	public int modifyProjRev(ProjReviewVO projRev);
+	
+	/**
+	 * 프로젝트 리뷰 삭제
+	 * @param revId
+	 * @return
+	 */
+	public int deleteProjRev(String revId);
+	
+	/**
+	 * 일반회원 리뷰를 입력하기 위한 지원자 리스트 조회
+	 * @param projId
+	 * @return
+	 */
+	public List<ApplicantVO> selectApplyList(String projId); 
+	
+	/**
+	 * 일반회원 리뷰 삽입
+	 * @param memRev
+	 * @return
+	 */
+	public int insertGenRev(MemReviewVO memRev);
+	
+	/**
+	 * 일반회원 리뷰 수정
+	 * @param memRev
+	 * @return
+	 */
+	public int modifyGenRev(MemReviewVO memRev);
+	
+	/**
+	 * 일반회원 리뷰 삭제
+	 * @param revId
+	 * @return
+	 */
+	public int deleteGenRev(String revId);
+	
+	/**
+	 * 일반회원 리뷰 조회
+	 * @param memRev
+	 * @return
+	 */
+	public MemReviewVO selectGenRev(MemReviewVO memRev);
+	
+	/**
+	 * 리뷰 아이디로 일반회원 리뷰 조회
+	 * @param memRevId
+	 * @return
+	 */
+	public MemReviewVO selectGenRevWithId(String genrevId);
+	
+	/**
+	 * 리뷰 아이디로 프로젝트 리뷰 조회
+	 * @param revId
+	 * @return
+	 */
+	public ProjReviewVO selectProjRevWithId(String revId);
+	
+	/**
+	 * 일반회원 평점 업데이트
+	 * @param memId
+	 * @return
+	 */
+	public int updateGenRating(String memId);
+	
+	/**
+	 * 기업회원 평점 업데이트
+	 * @param memId
+	 * @return
+	 */
+	public int updateComRating(String memId);
+	
+	/**
+	 * 프로젝트 평점 업데이트
+	 * @param projId
+	 * @return
+	 */
+	public int updateProjRating(String projId);
+	
+	/**
+	 * 일반회원 등급 업데이트
+	 * @param genMap
+	 * @return
+	 */
+	public int updateGenGrade(String memId);
+	
+	
+	/**
+	 * 기업회원 등급 업데이트
+	 * @param comMap
+	 * @return
+	 */
+	public int updateComGrade(String memId);
+}

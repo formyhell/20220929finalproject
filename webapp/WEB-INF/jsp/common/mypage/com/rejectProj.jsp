@@ -1,0 +1,155 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 9. 7.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<style>
+ .txt_line {
+      width:200px;
+      padding:0px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+  }
+</style>
+
+
+	<div class="container invoice">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="card" style="min-height: 800px;">
+                    <div class="card-body">  
+                      <div>
+                    <div id="searchUI" class="form-field">
+						<div class="row" style="margin-left:5px;margin-top:10px;">
+							<div class="col-sm-3" style="padding: 0px;">
+								<div class="mb-3">
+									<form:input class="form-control" style="border: 1px solid #DEDEDE;" placeholder="Search Here" path="simpleCondition.searchWord" />
+					            </div>
+                  			</div>
+							<div class="col-sm-3">
+								<div class="mb-3">
+					                <input type="button" id="searchBtn" class="btn btn-outline-primary" value="검색" >
+					            </div>
+                  			</div>
+						</div>
+					</div>                          
+                        <div>
+                          <div class="table-responsive invoice-table" id="table">
+                            <table class="table table-bordered table-striped">
+                              <tbody>
+                                
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+               <div class="pagingArea pagination justify-content-center pagination-primary" style="padding-bottom: 20px"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/myinfo/rejectProj" method="get">
+	<input type="hidden" name="page" />
+	<form:input type="hidden" path="searchWord" />
+</form:form>     
+            
+<script>
+let pagingArea = $(".pagingArea").on("click", "a", function(event) {
+	let page = $(this).data("page");
+	$("#searchForm").find("[name=page]").val(page);
+	searchForm.submit();
+});
+
+let searchForm = $("#searchForm").on("submit", function(event) {
+	event.preventDefault();
+	let url = this.action;
+    let method = this.method;
+    let data = $(this).serialize();
+    $.ajax({
+        url : url,
+        method : method,
+        data : data,
+        dataType : "json",
+        success : function(resp) {
+        	let pagingVO = resp;
+        	let projList = pagingVO.dataList;
+        	let trTags = [];
+        	$("tbody").empty();
+        	if (projList && projList.length > 0) {
+				$(projList).each(function(index, proj) {
+					trTags.push(trTag(proj));	
+				});
+				$("tbody").append(thead());
+				$("tbody").append(trTags);
+				$(".pagination").html(pagingVO.pagingHTMLBS);
+			} 	
+        }
+     })
+     return false;
+  }).submit();
+
+let searchUI = $("#searchUI").on("click", "#searchBtn", function(event) {
+	searchForm.get(0).reset();
+	let inputs = searchUI.find(":input[name]");
+	$(inputs).each(function(idx, input) {
+		let name = $(this).attr("name");
+		let value = $(this).val();
+		searchForm.find("[name=" + name + "]").val(value);
+	});
+	searchForm.submit();
+});
+
+let thead = function() {
+	return $("<tr>").append(
+				$("<td>").addClass("item").css("text-align", "center").append(
+					$("<h6>").addClass("p-2 mb-0").text("프로젝트")		
+				),
+				$("<td>").addClass("item").css("text-align", "center").append(
+						$("<h6>").addClass("p-2 mb-0").text("기획상태")		
+				),
+				$("<td>").addClass("item").css("text-align", "center").append(
+						$("<h6>").addClass("p-2 mb-0").text("등록일")		
+				),
+				$("<td>").addClass("item").css("text-align", "center").append(
+						$("<h6>").addClass("p-2 mb-0").text("반려사유")		
+				),
+				$("<td>").addClass("item").css("text-align", "center").append(
+						$("<h6>").addClass("p-2 mb-0").text("공고수정")		
+				)
+			);
+}
+
+
+let trTag = function(proj) {
+	console.log(proj);
+	return $("<tr>").attr("onclick","location.href='${cPath}/myinfo/rejectProj/" + proj.projId + "'").append(
+				$("<td>").append(
+					$("<label>").text(proj.projTitle),
+					$("<p>").addClass("m-0 txt_line").text(proj.projContent)
+				), 
+				$("<td>").css("vertical-align","middle").append(
+					$("<p>").addClass("itemtext digits txt_line").text(proj.projPlanstate)		
+				),
+				$("<td>").css("vertical-align","middle").append(
+						$("<p>").addClass("itemtext digits").css("text-align", "center").text(proj.projRecruitsdate)		
+				),
+				$("<td>").css("vertical-align","middle").append(
+						$("<p>").addClass("itemtext digits").text(proj.projReject)		
+				),
+				$("<td>").css({"vertical-align":"middle","text-align":"center"}).append(
+						$("<a>").attr({
+							"class":"btn btn-primary btn-sm",
+							"href":'${cPath }/outsourcing/' + proj.projId + '/form'
+						}).text("수정")		
+				)
+			);
+};
+
+</script>

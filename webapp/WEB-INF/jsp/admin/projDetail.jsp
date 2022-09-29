@@ -1,0 +1,227 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 9. 2.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<!-- Modal -->
+<div class="modal fade" id="denyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">반려 사유 입력</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+      <form class="needs-validation"  method="post" novalidate id="denyForm">
+      		<textarea class="form-control" id="projReject" cols="60" rows="3" maxlength="30" required></textarea>
+      		<div class="invalid-feedback">반려 사유를 입력하세요.</div>
+        <sec:csrfInput/>
+       <button type="button" class="btn btn-light" style="float:right; margin-top:20px" data-bs-dismiss="modal">취소</button>
+        <input type="submit" class="btn btn-primary" style="float:right; margin-right:10px; margin-top:20px"  id="btn_submit" value="저장" />
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+            <div class="row">
+              <div>
+                <div class="card">
+                  <div class="job-search">
+                    <div class="card-body">
+                      <div class="media">
+                        <div class="media-body">
+                          <div class="row">
+                          	<h4 class="f-w-600 col-md-8 txt-primary" style="margin-right: -60px">${proj.projTitle }</h4>
+                          	<p id="projId" style="display: none">${proj.projId }</p>
+                          </div>
+                          <p id="projList">${listType}</p>
+                          <p>${proj.projRegist }</p>
+                          <c:if test="${proj.projState eq '모집중'}">
+	                          <c:if test="${proj.projApprove eq 0}">
+	                          	<a class="btn btn-danger btn-sm btn-deny" style="float:right" data-bs-toggle="modal" data-bs-target="#denyModal">반려</a>
+	                          	<a class="btn btn-primary btn-sm btn-approve" style="float:right; margin-right:10px">승인</a>
+	                          </c:if>
+	                          <c:if test="${proj.projApprove eq 2}">
+	                          	<a class="btn btn-primary btn-sm btn-approve" style="float:right">승인</a>
+	                          </c:if>
+	                          <c:if test="${proj.projApprove eq 1}">
+	                          	<a class="btn btn-danger btn-sm btn-deny" style="float:right" data-bs-toggle="modal" data-bs-target="#denyModal">반려</a>
+	                          </c:if>
+                          </c:if>
+                        </div>
+                      </div>
+                      <div class="job-description">
+                        <h6>세부사항</h6>
+                        <p>모집기간 ${proj.projRecruitsdate }-${proj.projRecruitfdate }</p>
+                      	<P>프로젝트 기간 ${proj.projSdate }-${proj.projRealfdate }</P>
+                      	<p>비용 ${proj.projEstimate }</p>
+                      	<p>모집인원 ${proj.projMemnum }</p>
+                      	<p>고용형태 ${proj.projEmptype }</p>
+                      	<p>분류 ${proj.projType }</p>
+                      	<p>지역 ${proj.projLoc }</p>
+                      	<p class="f-w-600">프로젝트 필요기술</p>
+                      	<c:if test="${not empty proj.objSingleList }">
+                      		<c:forEach items="${proj.objSingleList }" var="obj">
+                      			<span class="badge rounded-pill badge-primary col-sm-1">${obj }</span>
+                      		</c:forEach>
+                      	</c:if>
+                      	<p class="f-w-600">프로젝트 모집분야</p>
+                      	<c:if test="${not empty proj.skillSingleList }">
+                      		<c:forEach items="${proj.skillSingleList }" var="skill">
+                      			<span class="badge rounded-pill badge-light text-dark col-sm-1">${skill }</span>
+                      		</c:forEach>
+                      	</c:if>
+                      </div>
+                      <div class="job-description">
+                        <h6>업무내용</h6>
+                        	<pre>${proj.projContent }</pre>
+                      </div>
+                      <div class="job-description">
+                        <h6>모집요건</h6>
+                        	<pre>${proj.projQualifi }</pre>
+                      </div>
+                      <c:if test="${not empty proj.projReject }">
+                      	<div class="job-description deny-div">
+                        <h6>반려사유</h6>
+                        	<pre style="color: red">${proj.projReject }</pre>
+                      </div>
+                      </c:if>
+                      <div class="deny-wrapper">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> 
+<script src="${cPath}/resources/assetsPms/js/form-validation-custom.js"></script> 
+<script>
+var header = '${_csrf.headerName}';
+var token =  '${_csrf.token}'; 
+let projId = $("#projId").text();
+let url = "";
+
+$(document).ready(function() {
+	let listType = $("#projList").text();
+	
+	if(listType == "requireCheckList") {
+		url = "${cPath}/admin/checkList/require";
+	} else if(listType == "checkList") {
+		url = "${cPath}/admin/checkList";
+	} else if(listType == "outProjList") {
+		url = "${cPath}/admin/outProjList";
+	}
+});
+
+$("#denyModal").on("hidden.bs.modal", function(){
+	$(this).find("#denyForm").get(0).reset();
+}).on("shown.bs.modal", function(){
+	$(this).find("#projReject").focus();
+});
+
+function approveAlert() {
+	Swal.fire({
+	      icon: 'success',
+	      title: '프로젝트 공고가 승인되었습니다.',
+	    });
+}
+
+function denyAlert() {
+	Swal.fire({
+	      icon: 'success',
+	      title: '프로젝트 공고가 반려되었습니다.',
+	    });
+}
+
+function errerAlert() {
+	Swal.fire({
+		icon: 'error',
+	      title: '처리에 실패했습니다. 다시 시도하세요.',
+	    });
+}
+
+$(document).on("click", ".btn-approve", function() {
+	$.ajax({
+		url : url,
+		method : "put",
+		contentType: 'application/json; charset=utf-8',
+		data : JSON.stringify({
+			projId : projId
+		}),
+		dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+		,
+		beforeSend : function(xhr)
+		{
+		   xhr.setRequestHeader(header,token);
+		},
+		success : function(resp, status, jqXHR) {
+			if(resp) {
+				approveAlert();
+				$(".btn-approve").hide();
+				$(".btn-deny").hide();
+				$(".media-body").append('<a class="btn btn-danger btn-sm btn-deny" style="float:right" data-bs-toggle="modal" data-bs-target="#denyModal">반려</a>');
+				$(".deny-div").remove();
+			} else {
+				errerAlert();
+			}
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	});
+});
+
+$(document).on("submit", "#denyForm", function(event) {
+	event.preventDefault();
+	let projReject = $("#projReject").val();
+	$.ajax({
+		url : url,
+		method : "delete",
+		contentType: 'application/json; charset=utf-8',
+		data : JSON.stringify({
+			projId : projId,
+			projReject : projReject
+		}),
+		dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+		,
+		beforeSend : function(xhr)
+		{
+		   xhr.setRequestHeader(header,token);
+		},
+		success : function(resp, status, jqXHR) {
+			let proj = resp;
+			console.log(proj);
+			if(proj) {
+				$('#denyModal').modal('hide');
+				$(".btn-approve").hide();
+				$(".btn-deny").hide();
+				$(".media-body").append('<a class="btn btn-primary btn-sm btn-approve" style="float:right">승인</a>');
+				denyAlert();
+				let denyDiv = '<div class="job-description deny-div">';
+				denyDiv	+= '<h6>반려사유</h6>';
+				denyDiv	+= '<p style="color: red">' + proj.projReject + '</p>';
+				denyDiv	+= '</div>';
+				$(".deny-wrapper").append(denyDiv);
+			} else {
+				errerAlert();
+			}
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	});
+});
+</script>      

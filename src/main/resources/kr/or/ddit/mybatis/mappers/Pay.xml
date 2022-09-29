@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.payment.dao.PayDAO">
+<insert id="insertOutPay" parameterType="kr.or.ddit.common.payment.vo.PayVO">
+INSERT INTO PAY (
+    PAY_ID,
+    PAY_COMMEM,
+    PAY_METHOD,
+    PAY_PRICE,
+    PAY_PROJ,
+    PAY_STATE
+) VALUES (
+    FN_CREATE_PAY_ID,
+    #{payCommem},
+    #{payMethod},
+    #{payPrice},
+    #{payProj},
+    '1'
+)
+</insert>
+</mapper>

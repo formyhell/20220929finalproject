@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+
+<!-- 메인 템플릿 -->
+  <definition name="mainPage" template="/WEB-INF/jsp/main_tiles.jsp">
+    <put-attribute name="header" value="/includee/main/mainHeader.jsp" />
+    <put-attribute name="footer" value="/includee/main/mainFooter.jsp" />
+  </definition>
+
+  <definition name="index" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/index.jsp" />
+  </definition>
+  
+  <!-- member -->
+  <definition name="common/member/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/common/member/{1}.jsp" />
+  </definition>
+  
+  <!-- admin -->
+  <definition name="admin/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/admin/{1}.jsp" />
+  </definition>
+
+  
+  <!-- outsourcing -->
+  <definition name="outsourcing/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/outsourcing/{1}.jsp" />
+  </definition>
+  
+  <!-- pmsProject -->
+  <definition name="pms/pmsProject/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/pms/pmsProject/{1}.jsp"/>
+  </definition>
+  
+  <!-- community -->
+  <definition name="common/community/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/common/community/{1}.jsp"/>
+  </definition>
+  
+  <!-- notice -->
+  <definition name="common/notice/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/common/notice/{1}.jsp"/>
+  </definition>
+  
+  <!-- qna -->
+  <definition name="common/qna/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/common/qna/{1}.jsp"/>
+  </definition>
+  
+  <!-- schedule -->
+  <definition name="common/schedule/*" extends="mainPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/common/schedule/{1}.jsp"/>
+  </definition>
+  
+  
+<!-- pms 템플릿 -->
+  <definition name="pmsPage" template="/WEB-INF/jsp/pms_tiles.jsp">
+    <put-attribute name="header" value="/includee/pms/pmsHeader.jsp" />
+    <put-attribute name="left" value="/includee/pms/pmsLeft.jsp" />
+  </definition>  
+  
+    <definition name="pms/*" extends="pmsPage">
+	  <put-attribute name="body" value="/WEB-INF/jsp/pms/{1}.jsp" />
+	</definition>
+  <!-- pms issue -->
+  <definition name="pms/issue/*" extends="pmsPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/pms/issue/{1}.jsp"/>
+  </definition>
+  <!-- pms report -->
+  <definition name="pms/report/*" extends="pmsPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/pms/report/{1}.jsp"/>
+  </definition>
+  <!-- pms rule -->
+  <definition name="pms/rule/*" extends="pmsPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/pms/rule/{1}.jsp"/>
+  </definition>
+  <!-- pms work -->
+  <definition name="pms/work/*" extends="pmsPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/pms/work/{1}.jsp"/>
+  </definition>
+  
+
+<!-- 마이페이지  -->
+  <definition name="myPage" template="/WEB-INF/jsp/common/mypage/myPage_tiles.jsp">
+  </definition>
+  
+  <!-- 일반회원 마이페이지  -->
+  <definition name="gen/mypage" extends="myPage">
+    <put-attribute name="header" value="/includee/mypage/gen/genMyPageHeader.jsp" />
+    <put-attribute name="left" value="/includee/mypage/gen/genMyPageLeft.jsp" />  	
+  </definition>
+  
+  <definition name="common/mypage/gen/*" extends="gen/mypage">
+	<put-attribute name="body" value="/WEB-INF/jsp/common/mypage/gen/{1}.jsp"/>
+  </definition>
+  <definition name="common/mypage/gen/project/interestproject/*" extends="gen/mypage">
+	<put-attribute name="body" value="/WEB-INF/jsp/common/mypage/gen/project/interestproject/interestProject.jsp"/>
+  </definition>
+  <definition name="common/mypage/gen/project/recommendProject/*" extends="gen/mypage">
+	<put-attribute name="body" value="/WEB-INF/jsp/common/mypage/gen/project/recommendProject/recommendproject.jsp"/>
+  </definition>
+  
+  <!-- portfolio -->
+  <definition name="common/portfolio/*" extends="gen/mypage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/common/portfolio/{1}.jsp" />
+  </definition>
+
+  <!-- 기업회원 마이페이지  -->
+  <definition name="com/mypage" extends="myPage">
+    <put-attribute name="header" value="/includee/mypage/com/comMyPageHeader.jsp" />
+    <put-attribute name="left" value="/includee/mypage/com/comMyPageLeft.jsp" />
+  </definition> 
+  
+  <definition name="common/mypage/com/*" extends="com/mypage">
+	<put-attribute name="body" value="/WEB-INF/jsp/common/mypage/com/{1}.jsp"/>
+  </definition>
+
+  <!-- 관리자 템플릿 -->
+  <definition name="adminPage" template="/WEB-INF/jsp/pms_tiles.jsp">
+  	<put-attribute name="header" value="/includee/admin/adminHeader.jsp"/>
+  	<put-attribute name="left" value="/includee/admin/adminLeft.jsp"/>
+  </definition>
+  
+  <definition name="admin/*" extends="adminPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/admin/{1}.jsp"/>
+  </definition>
+  
+  <definition name="admin/board/*" extends="adminPage">
+  	<put-attribute name="body" value="/WEB-INF/jsp/admin/board/{1}.jsp"/>
+  </definition>
+  
+</tiles-definitions>
+

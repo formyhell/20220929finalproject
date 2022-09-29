@@ -1,0 +1,101 @@
+package kr.or.ddit.admin.outsourcing.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 8.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자               		수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 8.     조채원       			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Mapper
+public interface CheckListDAO {
+	
+	/**
+	 * 관리자 페이지 등록한 프로젝트 수
+	 * @return
+	 */
+	public List<OutProjVO> selectAdminAll();
+	
+	/**
+	 * 검토 리스트 조회
+	 * @return
+	 */
+	public List<OutProjVO> selectAll(PagingVO<OutProjVO> pagingVO);
+	
+	/**
+	 * 검토 리스트 레코드 수 조회
+	 * @return
+	 */
+	public int selectTotalProj(PagingVO<OutProjVO> pagingVO);
+	
+	/**
+	 * 필수 검토 리스트 조회
+	 * @return
+	 */
+	public List<OutProjVO> selectRequireAll();
+	
+	/**
+	 * 아이디에 해당하는 프로젝트 정보 조회
+	 * @param projId
+	 * @return
+	 */
+	public OutProjVO selectProj(String projId);
+	
+	/**
+	 * 필터링에 걸린 프로젝트 정보 조회
+	 * @param projId
+	 * @return
+	 */
+	public OutProjVO selectFilterProj(String projId);
+	
+	/**
+	 * 아이디에 해당하는 프로젝트 반려 처리
+	 * @param outProj
+	 * @return
+	 */
+	public int updateDeny(OutProjVO outProj);
+	
+	/**
+	 * 아이디에 해당하는 프로젝트 승인 처리
+	 * @param outProj
+	 * @return
+	 */
+	public int updateApprove(OutProjVO outProj);
+	
+	/**
+	 * 아이디를 받아 해당하는 필수 검토 리스트 삭제
+	 * @param projId
+	 * @return
+	 */
+	public int deleteRequireCheck(String projId);
+	
+	/**
+	 * 승인된 아웃소싱 리스트 조회
+	 * @return
+	 */
+	public int selectApproveAllCount();
+	public List<OutProjVO> selectApproveAll(Map<String,Object> map);
+	
+	/**
+	 * 반려된 아웃소싱 리스트 조회
+	 * @return
+	 */
+	public int selectNotApproveAllCount();
+	public List<OutProjVO> selectNotApproveAll(Map<String,Object> map);
+	
+}

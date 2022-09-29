@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.admin.member.dao.AdminMemberDAO">
+	<sql id="member">
+		<trim prefix="AND">
+			<if
+				test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">
+				<choose>
+					<when test="pagingVO.simpleCondition.searchType eq 'memId'">
+						INSTR(MEM_ID, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'memName'">
+						( INSTR(GEN_NAME, #{pagingVO.simpleCondition.searchWord}) >0 OR 
+							INSTR(COM_NAME, #{pagingVO.simpleCondition.searchWord}) >0 )
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'memNick'">
+						( INSTR(GEN_NICK, #{pagingVO.simpleCondition.searchWord}) >0 OR 
+							INSTR(COM_NICK, #{pagingVO.simpleCondition.searchWord}) >0 )
+					</when>
+					<otherwise>
+						(
+						INSTR(MEM_ID, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						( INSTR(GEN_NAME, #{pagingVO.simpleCondition.searchWord}) >0 OR 
+							INSTR(COM_NAME, #{pagingVO.simpleCondition.searchWord}) >0 )
+						OR
+						( INSTR(GEN_NICK, #{pagingVO.simpleCondition.searchWord}) >0 OR 
+							INSTR(COM_NICK, #{pagingVO.simpleCondition.searchWord}) >0 )
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</trim>
+	</sql>
+
+
+	<select id="selectTotalMem"  resultType="int">
+	SELECT COUNT(*)
+	FROM (
+		SELECT ROWNUM RNUM, A.*
+		FROM (
+			SELECT MEM_ID, MEM_TYPE, COALESCE(GEN_NICK, COM_NICK) AS MEM_NICK, COALESCE(GEN_NAME, COM_NAME) AS MEM_NAME, COALESCE(GEN_ENABLED, COM_ENABLED) AS MEM_ENABLED,
+               COALESCE(GEN_RATING, COM_RATING) AS MEM_RATING, COALESCE(GEN_GRD, COM_GRD) AS MEM_GRD, COALESCE(GEN_DELETE, COM_DELETE) AS MEM_DELETE
+               FROM V_MEMBERALL 
+			WHERE MEM_TYPE != 'ROLE_ADMIN'
+			<if test="searchMemType != null">
+			    AND MEM_TYPE = #{searchMemType}
+			</if>	
+			<include refid="member"/>
+		)A
+	)
+	</select>
+	<select id="selectMemList" parameterType="Map" resultType="Map">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+				SELECT MEM_ID, MEM_TYPE, COALESCE(GEN_NICK, COM_NICK) AS MEM_NICK, COALESCE(GEN_NAME, COM_NAME) AS MEM_NAME, COALESCE(GEN_ENABLED, COM_ENABLED) AS MEM_ENABLED,
+                COALESCE(GEN_RATING, COM_RATING) AS MEM_RATING, COALESCE(GEN_GRD, COM_GRD) AS MEM_GRD, COALESCE(GEN_DELETE, COM_DELETE) AS MEM_DELETE
+                FROM V_MEMBERALL 
+				WHERE MEM_TYPE != 'ROLE_ADMIN'
+				<if test="searchMemType != null">
+				    AND MEM_TYPE = #{searchMemType}
+				</if>	
+				<include refid="member"/>
+			)A
+		)B
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	
+	<update id="updateDisGenMem" parameterType="String">
+		UPDATE GEN_MEMBER
+	    SET ENABLED = 0
+		WHERE GEN_ID = #{memId}
+	</update>
+	<update id="updateDisComMem" parameterType="String">
+		UPDATE COM_MEMBER
+	    SET ENABLED = 0
+		WHERE COM_ID = #{memId}
+	</update>
+	
+	<update id="updateEnGenMem" parameterType="String">
+		UPDATE GEN_MEMBER
+	    SET ENABLED = 1
+		WHERE GEN_ID = #{memId}
+	</update>
+	<update id="updateEnComMem" parameterType="String">
+		UPDATE COM_MEMBER
+	    SET ENABLED = 1
+		WHERE COM_ID = #{memId}
+	</update>
+	
+	
+</mapper>

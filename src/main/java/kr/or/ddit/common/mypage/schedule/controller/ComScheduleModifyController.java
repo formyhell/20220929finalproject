@@ -1,0 +1,288 @@
+package kr.or.ddit.common.mypage.schedule.controller;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.mypage.schedule.dao.ScheduleDAO;
+import kr.or.ddit.common.mypage.schedule.service.ScheduleService;
+import kr.or.ddit.common.mypage.schedule.vo.ScheduleVO;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.common.validate.UpdateGroup;
+import lombok.extern.slf4j.Slf4j;
+
+
+
+/**
+ * @author 김유진
+ * @since 2022. 8. 13.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                 수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 13.   김유진              최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Controller
+@RequestMapping("/com/schedule")
+public class ComScheduleModifyController {
+	
+	@Inject
+	ScheduleService service;
+	@Inject
+	ScheduleDAO dao;
+	
+	@ModelAttribute("projList")
+	public List<Map<String, Object>> projList(Authentication authentication) {
+		String memId = authentication.getName();
+		return dao.selectProjList(memId);
+	}
+	
+	@ModelAttribute("typeList")
+	public List<Map<String, Object>> typeList() {
+		return dao.selectTypeList();
+	}
+	
+	/**
+	 * 캘린더
+	 * @param mv
+	 * @return
+	 */
+	@GetMapping
+	public ModelAndView scheduleView(ModelAndView mv) {
+		mv.setViewName("common/mypage/com/scheduleView");
+		return mv;
+	}
+	
+	/**
+	 * 일정 리스트 조회
+	 * @param authentication
+	 * @return
+	 * @throws ParseException
+	 */
+	@PostMapping(value="list",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<Map<String, Object>> scheduleList(
+			Authentication authentication
+			, @RequestParam(value="typeList[]") ArrayList<String> typeList
+	) throws ParseException{
+		
+		String memId = authentication.getName();
+		List<ScheduleVO> scheduleList = service.retrieveScheduleList(memId);
+		
+        HashMap<String, Object> hash = new HashMap<>();
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        
+        if(typeList.size()==0 || typeList==null || typeList.get(0).equals("ALL")) {
+			for (int i = 0; i < scheduleList.size(); i++) {
+            	hash.put("id", scheduleList.get(i).getScheNo());
+            	hash.put("type", scheduleList.get(i).getScheType());
+            	hash.put("proj", scheduleList.get(i).getScheProj());
+                hash.put("start", scheduleList.get(i).getScheSdate());
+                hash.put("end", scheduleList.get(i).getScheFdate());
+                
+                String sdate = scheduleList.get(i).getScheSdate();
+                String fdate = scheduleList.get(i).getScheFdate();
+                if(!sdate.substring(0,10).equals(fdate.substring(0,10))) {
+                	Date ffdate = format.parse(fdate);
+                	ffdate = DateUtils.addDays(ffdate, 1);
+                	hash.put("end", format.format(ffdate));
+                }
+                
+                hash.put("title", scheduleList.get(i).getScheTitle());
+                hash.put("content", scheduleList.get(i).getScheContent());
+                hash.put("backgroundColor", scheduleList.get(i).getScheColor());
+                if("yellow".equals( scheduleList.get(i).getScheColor())) {
+                	hash.put("textColor", "black");
+                }else {
+                	hash.put("textColor", "white");
+                }
+                
+                mapList.add(new HashMap<>(hash));
+            }  
+		}else {
+			for(int j=0; j<typeList.size(); j++) {
+				for (int i = 0; i < scheduleList.size(); i++) {
+		        	if(typeList.get(j).equals(scheduleList.get(i).getScheType())) {
+		        		
+		        	hash.put("id", scheduleList.get(i).getScheNo());
+		        	hash.put("type", scheduleList.get(i).getScheType());
+		        	hash.put("proj", scheduleList.get(i).getScheProj());
+		            hash.put("start", scheduleList.get(i).getScheSdate());
+		            hash.put("end", scheduleList.get(i).getScheFdate());
+		            
+		            String sdate = scheduleList.get(i).getScheSdate();
+		            String fdate = scheduleList.get(i).getScheFdate();
+		            if(!sdate.substring(0,10).equals(fdate.substring(0,10))) {
+		            	Date ffdate = format.parse(fdate);
+		            	ffdate = DateUtils.addDays(ffdate, 1);
+		            	hash.put("end", format.format(ffdate));
+		            }
+		            
+		            hash.put("title", scheduleList.get(i).getScheTitle());
+		            hash.put("content", scheduleList.get(i).getScheContent());
+		            hash.put("backgroundColor", scheduleList.get(i).getScheColor());
+		            if("yellow".equals( scheduleList.get(i).getScheColor())) {
+	                	hash.put("textColor", "black");
+	                }else {
+	                	hash.put("textColor", "white");
+	                }
+		            
+		            mapList.add(new HashMap<>(hash));
+		        	}
+		        }  
+			}
+		}
+        log.info("mapList: {}", mapList);
+        return mapList;
+	}
+	
+	
+	
+	/**
+	 * 일정 추가
+	 * @param mv
+	 * @param schedule
+	 * @param errors
+	 * @param attributes
+	 * @return
+	 */
+	@Transactional
+	@PostMapping(produces = "application/text; charset=utf8")
+	@ResponseBody
+	public String scheduleinsert(
+		@Validated(InsertGroup.class) ScheduleVO schedule
+		, Errors errors
+	) {
+		boolean vaild =  !errors.hasErrors();
+		String message = null;
+		if(vaild){
+			ServiceResult result = service.createSchedule(schedule);
+//			ServiceResult result = ServiceResult.OK;
+			switch (result) {
+			case FAIL: //서버상의 문제
+				log.info("서버문제");
+				message = "다시 시도해주세요.";
+				break;
+			default: //OK
+				message = "일정이 등록되었습니다.";
+				break;
+			}	
+		}else {
+			log.info("누락실패");
+			message = "다시 시도해주세요. 필수 값이 누락되었습니다.";
+		}
+		return message;
+		
+	}
+
+	
+	/**
+	 * 일정 수정 폼
+	 * @param scheduleId
+	 * @param model
+	 * @return
+	 */
+	@GetMapping("{scheduleId}/form")
+	@ResponseBody
+	public ScheduleVO scheduleEdit(
+		@PathVariable String scheduleId
+		, Model model
+	) {
+		int scheNo = Integer.parseInt(scheduleId);
+		ScheduleVO schedule = service.retrieveSchedule(scheNo);
+		return schedule;
+	}
+	
+	
+	/**
+	 * 일정 수정
+	 * @param schedule
+	 * @param errors
+	 * @return
+	 */
+	@Transactional
+	@PostMapping(value="{scheduleId}/form", produces = "application/text; charset=utf8")
+	@ResponseBody
+	public String scheduleUpdate(
+		@Validated(UpdateGroup.class) ScheduleVO schedule
+		, Errors errors
+	) {
+		log.info("수정 schedule {}",schedule);
+		boolean vaild =  !errors.hasErrors();
+		String message = null;
+		if(vaild){
+			ServiceResult result = service.modifySchedule(schedule);
+//			ServiceResult result = ServiceResult.OK;
+			switch (result) {
+			case FAIL: //서버상의 문제
+				log.info("서버문제");
+				message = "다시 시도해주세요.";
+				break;
+			default: //OK
+				message = "수정되었습니다.";
+				break;
+			}	
+		}else {
+			log.info("누락실패");
+			message = "다시 시도해주세요. 필수 값이 누락되었습니다.";
+		}
+		return message;
+	}
+	
+	
+	// 일정 삭제
+	@Transactional
+	@DeleteMapping(value="{scheduleId}", produces = "application/text; charset=utf8")
+	@ResponseBody
+	public String scheduleDelete(
+		@PathVariable String scheduleId
+	) {
+		int scheNo = Integer.parseInt(scheduleId);
+		ServiceResult result = service.deleteSchedule(scheNo);
+//		ServiceResult result = ServiceResult.OK;
+		String message = null;
+		switch (result) {
+		case FAIL: //서버상의 문제
+			log.info("서버문제");
+			message = "다시 시도해주세요.";
+			break;
+		default: //OK
+			message = "삭제되었습니다.";
+			break;		
+		}	
+		return message;
+	}
+
+}

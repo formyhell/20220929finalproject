@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.admin.filtering.dao.FilteringDAO">
+
+	<select id="selectAll" resultType="map">
+		SELECT ROWNUM RNUM, FILTER_NO, FILTER_WORD
+		FROM FILTERING
+	</select>
+	
+	<insert id="insertFilter" parameterType="String">
+		INSERT INTO FILTERING VALUES(FILTER_NO_SEQ.NEXTVAL, #{filterWord})
+	</insert>
+	
+	<delete id="deleteFilter" parameterType="int">
+		DELETE FROM FILTERING WHERE FILTER_NO = #{filterNo}
+	</delete>
+	
+	<select id="selectCountFilter" parameterType="String" resultType="int">
+		SELECT COUNT(*) 
+		FROM FILTERING 
+		WHERE FILTER_WORD = #{filterWord}
+	</select>
+	
+	<select id="selectFilterNo" parameterType="int" resultType="int">
+		SELECT COUNT(*)
+		FROM FILTERING
+		WHERE FILTER_NO = #{filterNo}
+	</select>
+</mapper>

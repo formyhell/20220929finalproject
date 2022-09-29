@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.rejectProject.dao.RejectProjDAO">
+	<sql id="search">
+	  <trim prefix="AND">
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">
+						(
+						INSTR(PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_QUALIFI, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_TYPE, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_PLANSTATE, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_LOC, #{pagingVO.simpleCondition.searchWord}) > 0
+						)
+		</if>
+	  </trim>
+	</sql>
+	
+	<resultMap type="kr.or.ddit.outsourcing.vo.OutProjVO" id="projMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID" />
+		<collection property="objSingleList" javaType="List" ofType="String">
+			<result column="OBJ_NAME" />
+		</collection>
+		<collection property="skillSingleList" javaType="List" ofType="String">
+			<result column="SKILL_NAME"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT PROJ_ID, PROJ_TITLE, PROJ_CONTENT, PROJ_REJECT, PROJ_PLANSTATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE
+			FROM OUTSOURCING_PROJ
+			WHERE PROJ_REGIST = #{member.memId}
+			  AND PROJ_APPROVE = 2
+			  <include refid="search" />
+	</select>
+	
+	<select id="selectTotalAll" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT PROJ_ID, PROJ_TITLE, PROJ_CONTENT, PROJ_REJECT, PROJ_PLANSTATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE
+		FROM OUTSOURCING_PROJ
+		WHERE PROJ_REGIST = 'DDITORKR5'
+		  AND PROJ_APPROVE = 2
+		  <include refid="search" />)
+	</select>
+	
+	<select id="selectOne" parameterType="String" resultMap="projMap">
+		SELECT PROJ_ID, PROJ_REGIST, EMPTYPE_NAME AS PROJ_EMPTYPE, PROJ_TYPE, TO_CHAR(PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE, PROJ_APPROVE, PROJ_REJECT
+				,PROJ_PLANSTATE ,PROJ_MEMNUM, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE, PROJ_CONTENT
+				,PROJ_QUALIFI , PROJ_LOC ,STATE_NAME AS PROJ_STATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, PROJ_TITLE, OBJ_NAME, SKILL_NAME
+		FROM V_OUTPROJ
+		WHERE PROJ_ID = #{projId}
+	</select>
+</mapper>

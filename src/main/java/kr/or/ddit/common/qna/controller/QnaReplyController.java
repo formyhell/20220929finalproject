@@ -1,0 +1,178 @@
+package kr.or.ddit.common.qna.controller;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.qna.service.QnaReplyService;
+import kr.or.ddit.common.qna.vo.QnaReplyVO;
+import kr.or.ddit.common.validate.InsertGroup;
+import lombok.extern.slf4j.Slf4j;
+/**
+ * 
+ * @author 고혜인
+ * @since 2022. 8. 16.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 16.      작성자명       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@RestController //비동기방식, 값만 받아옴
+@RequestMapping("/qna/{qnaNo}/reply")
+public class QnaReplyController {
+
+	@Inject
+	private QnaReplyService service;
+	
+	@GetMapping
+	public Map<String, Object> replyView(
+			@PathVariable int qnaNo
+			, Model model
+	){
+		QnaReplyVO reply = service.reply(qnaNo);
+		
+		Map<String, Object> map = new HashMap<>();
+		
+		if(reply == null) {
+			map.put("result", "no");
+		} else {
+			map.put("result", reply);
+		}
+		model.addAttribute("qnaNo", qnaNo);
+		
+		
+		return map;
+	}
+	
+	@PostMapping
+	public Map<String, Object> replyInsert(
+			@Validated(InsertGroup.class) @RequestBody QnaReplyVO reply
+			, BindingResult errors
+			, @RequestParam Map<String, Object> paramMap
+	){
+		Map<String, Object> resultMap = new HashMap<>();
+		boolean result = false;
+		ServiceResult rst = null;
+		
+		log.info("insert =====>> " + reply);
+
+//		if(!errors.hasErrors()) {
+			rst = service.createReply(reply);
+			
+			switch (rst) {
+			case OK:
+				log.info("insert2222 =====>> " + reply);				
+				result = true;
+				break;
+
+			default:
+				log.info("insert3333 =====>> " + reply);
+				break;
+			}
+//		} else {
+//			resultMap.put("message", "오류");
+//		}
+		resultMap.put("result", result);
+		resultMap.put("reply", reply);
+		resultMap.putAll(paramMap);
+		
+		
+		return resultMap;
+	}
+	
+	@PutMapping
+	public Map<String, Object> replyUpdate(
+		@RequestBody QnaReplyVO reply
+		, @RequestParam Map<String, Object> paramMap
+	)
+	{
+//		log.info("fbi"+hiMap); // 일단 넘어온 값 확인
+//		
+//		//sql에 넘길 값 세팅
+//		reply.setRepTitle(hiMap.get("repTitle"));
+//		reply.setRepContent(hiMap.get("repContent"));
+//		reply.setRepNo( Integer.parseInt(hiMap.get("repNo")));
+		
+		Map<String, Object> resultMap = new HashMap<>();
+		boolean flag = false;
+		
+		ServiceResult result = service.modifyReply(reply);
+		switch (result) {
+		case OK:
+			resultMap.put("message", "성공");
+			break;
+
+		default:
+			resultMap.put("message", "오류");
+			break;
+		}
+		resultMap.put("flag", flag);
+		resultMap.put("reply", reply);
+		resultMap.putAll(paramMap);
+		
+		
+		return resultMap;
+//		
+		
+//		Map<String, Object> resultMap = new HashMap<>();
+//		boolean result = false;
+//		
+//		log.info("update =====>> " + reply);
+//		
+//		service.modifyReply(reply);
+//		result = true;
+//
+//		resultMap.put("result", result);
+//		resultMap.putAll(paramMap);
+//		
+//		return resultMap;
+		
+	}
+	
+	@DeleteMapping
+	public Map<String, Object> replyDelete(
+			@PathVariable int qnaNo
+			, @RequestParam Map<String, Object> paramMap
+	) {
+		Map<String, Object> resultMap = new HashMap<>();
+		boolean result = false;
+		
+		try {
+			service.removeReply(qnaNo);
+			result = true;
+		} catch (Exception e) {
+			resultMap.put("message", "오류");
+			result = false;
+		}
+		
+		resultMap.put("result", result);
+		resultMap.putAll(paramMap);
+		
+		return resultMap;
+	}
+	
+	
+	
+	
+}

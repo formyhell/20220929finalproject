@@ -1,0 +1,100 @@
+package kr.or.ddit.pms.report.service;
+
+import java.util.List;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.pms.report.vo.ReportVO;
+
+/**
+ * @author 작성자명
+ * @since 2022. 8. 23.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 23.      홍승조       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+public interface reportService {
+	
+	
+	/**
+	 * 보고서 등록
+	 * @param report
+	 * @return OK, FAIL
+	 */
+	public ServiceResult createReport(ReportVO report);
+	
+	
+	/**
+	 * 보고서 목록 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<ReportVO> reteiveReportList(PagingVO<ReportVO> pagingVO);
+	
+	
+	/**
+	 * 보고서 상세조회
+	 * @param reportId
+	 * @return 존재하지 않으면, {@link PKNotFoundException} 발생
+	 */
+	public ReportVO retrieveReport(String reportId);
+	
+	
+	
+	/**
+	 * 보고서 수정
+	 * @param report
+	 * @return {@link PKNotFoundException}, OK, FAIL
+	 */
+	public ServiceResult modifyReport(ReportVO report);
+	
+	
+	
+	/**
+	 * 보고서 삭제
+	 * @param report
+	 * @return {@link PKNotFoundException}, OK, FAIL
+	 */
+	public ServiceResult deleteReport(ReportVO report);
+	
+	
+	/**
+	 * 참가한 프로젝트에서 본인이 등록한 보고서들
+	 * @param pagingVO
+	 * @return 참여한 프로젝트에 본인이 등록한 보고서 목록
+	 */
+	public List<ReportVO> involveReprotList(PagingVO<ReportVO> pagingVO);
+	
+	
+	/**
+	 * 파일 다운로드를 위한 메타데이터 조회
+	 * @param attId
+	 * @return
+	 */
+	public AttatchVO reportFileDownload(String attId);
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,75 @@
+package kr.or.ddit.common.mypage.portfolio.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.member.vo.EducationVO;
+import kr.or.ddit.common.mypage.portfolio.dao.EducationDAO;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 22.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자               		수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 22.   조채원       			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Service
+@RequiredArgsConstructor
+public class EducationServiceImpl implements EducationService {
+	private final EducationDAO eduDAO;
+	
+	@Override
+	public List<EducationVO> findAll(String memId) {
+		return eduDAO.selectAll(memId);
+	}
+
+	@Override
+	public EducationVO create(EducationVO edu) {
+		if(edu == null) {
+			throw new RuntimeException("입력한 값이 없습니다.");
+		}
+		int rowcnt = eduDAO.insertEducation(edu);
+		if(rowcnt < 1) {
+			throw new RuntimeException("등록에 실패했습니다.");
+		} 
+		return eduDAO.selectEducation(edu);
+	}
+
+	@Override
+	public void remove(int eduNo) {
+		eduDAO.deleteEducation(eduNo);
+		
+	}
+
+	@Override
+	public List<Map<String, Object>> selectEduTypeList() {
+		return eduDAO.selectEduTypeList();
+	}
+
+	@Override
+	public List<Map<String, Object>> selectEduStateList() {
+		return eduDAO.selectEduStateList();
+	}
+
+	@Override
+	public EducationVO update(EducationVO edu) {
+		if(edu == null) {
+			throw new RuntimeException("입력한 값이 없습니다.");
+		}
+		int rowcnt = eduDAO.updateEducation(edu);
+		if(rowcnt < 1) {
+			throw new RuntimeException("등록에 실패했습니다.");
+		} 
+		return eduDAO.selectEducation(edu);
+	}
+
+}

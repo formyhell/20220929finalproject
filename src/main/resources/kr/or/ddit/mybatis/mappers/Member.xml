@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.member.dao.MemberDAO">
+<!-- 	로그인 처리 까지만 지원함. -->
+<resultMap type="kr.or.ddit.common.member.vo.MemberVO" id="memberMap" autoMapping="true">
+	<id property="memId" column="MEM_ID"/>
+	<result property="memPass" column="MEM_PASS" />
+	<collection property="memType" ofType="string">
+		<result column="MEM_TYPE"/>
+	</collection>
+	
+	<discriminator javaType="string" column="MEM_TYPE">
+         <case value="ROLE_ADMIN" resultType="kr.or.ddit.common.member.vo.AdminVO">
+            
+            <result property="adminId" column="MEM_ID"/>
+            <result property="adminPass" column="MEM_PASS"/>
+            <result property="enabled" column="ADMIN_ENABLED"/>
+         </case>
+         <case value="ROLE_GENMEM" resultType="kr.or.ddit.common.member.vo.GenMemberVO">
+            <result property="genId" column="MEM_ID"/>
+            <result property="genPass" column="MEM_PASS"/>
+            <result property="genNick" column="GEN_NICK"/>
+            <result property="genName" column="GEN_NAME"/>
+            <result property="genBirth" column="GEN_BIRTH"/>
+            <result property="genMail" column="GEN_MAIL"/>
+            <result property="genHp" column="GEN_HP"/>         
+            <result property="genIntro" column="GEN_INTRO"/>         
+            <result property="genDelete" column="GEN_DELETE"/>         
+            <result property="genRating" column="GEN_RATING"/>         
+            <result property="enabled" column="GEN_ENABLED"/>         
+            <result property="genGrd" column="GEN_GRD"/>    
+            <collection property="memProj" ofType="string">
+				<result column="MEM_PROJ"/>
+			</collection>     
+         </case>
+         <case value="ROLE_COMMEM" resultType="kr.or.ddit.common.member.vo.ComMemberVO">
+            <result property="comId" column="MEM_ID"/>
+            <result property="comPass" column="MEM_PASS"/>
+            <result property="comNick" column="COM_NICK"/>
+            <result property="comName" column="COM_NAME"/>
+            <result property="comHp" column="COM_HP"/>
+            <result property="comComname" column="COM_COMNAME"/>
+            <result property="comMail" column="COM_MAIL"/>         
+            <result property="comComtel" column="COM_COMTEL"/>         
+            <result property="comComceo" column="COM_COMCEO"/>         
+            <result property="comCbr" column="COM_CBR"/>         
+            <result property="comOpendate" column="COM_OPENDATE"/>         
+            <result property="comDelete" column="COM_DELETE"/>         
+            <result property="comRating" column="COM_RATING"/>         
+            <result property="enabled" column="COM_ENABLED"/>         
+            <result property="comGrd" column="COM_GRD"/>         
+            <collection property="comProj" ofType="string">
+				<result column="MEM_PROJ"/>
+			</collection>            
+         </case>
+      </discriminator>
+</resultMap>
+<select id="selectMember" parameterType="string" resultMap="memberMap">
+	SELECT *
+	FROM ( SELECT DISTINCT A.*, B.PROJ_ID MEM_PROJ
+			FROM V_MEMBERALL A LEFT OUTER JOIN PROJ_INVOLVE B ON (A.MEM_ID = B.INVOLVE_MEM)
+	      )
+	WHERE MEM_ID = #{memId}
+	AND (GEN_ENABLED = 1 OR GEN_ENABLED IS NULL)
+	AND (COM_ENABLED = 1 OR COM_ENABLED IS NULL)
+</select>
+
+<select id="findPk" parameterType="String" resultType="kr.or.ddit.common.member.vo.MemberVO">
+	SELECT *
+	FROM V_MEMBER
+	WHERE MEM_ID = #{memId}
+</select>
+<select id="findNick" parameterType="String" resultType="kr.or.ddit.common.member.vo.MemberVO">
+	SELECT MEM_ID
+	FROM V_MEMBERALL
+	WHERE GEN_NICK = #{memId} OR COM_NICK = #{memId}
+</select>
+</mapper>
