@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.memInfo.dao.PWDAO">
+
+<update id="updateGenPW" parameterType="Map">
+UPDATE GEN_MEMBER SET 
+	GEN_PASS=#{newPass,jdbcType=VARCHAR}
+WHERE GEN_ID = #{memId}
+</update>
+
+<update id="updateComPW" parameterType="Map">
+UPDATE COM_MEMBER SET
+	COM_PASS=#{newPass,jdbcType=VARCHAR}
+WHERE COM_ID = #{memId}
+</update>
+
+</mapper>

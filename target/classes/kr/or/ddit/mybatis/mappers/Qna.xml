@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.qna.dao.QnaDAO">
+	
+	<sql id="qna">
+		<where>
+			<if test="simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+				<choose>
+					<when test="simpleCondition.searchType eq 'qnaTitle'">
+						INSTR(QNA_TITLE, #{simpleCondition.searchWord}) > 0
+					</when>		
+					<when test="simpleCondition.searchType eq 'qnaWriter'">
+						INSTR(QNA_WRITER, #{simpleCondition.searchWord}) > 0
+					</when>				
+					<when test="simpleCondition.searchType eq 'qnaContent'">
+						INSTR(QNA_CONTENT, #{simpleCondition.searchWord}) > 0
+					</when>		
+					<otherwise>
+						   INSTR(QNA_TITLE, #{simpleCondition.searchWord}) > 0
+						OR INSTR(QNA_WRITER, #{simpleCondition.searchWord}) > 0
+						OR INSTR(QNA_CONTENT, #{simpleCondition.searchWord}) > 0
+					</otherwise>		
+				</choose>
+			</if>
+		</where>	
+	</sql>
+	
+	<!-- 글 수 -->
+	<select id="selectQnaCount" resultType="int">
+		SELECT COUNT(*)
+		FROM QNA
+		<include refid="qna" />
+	</select>
+	
+	<!-- 글 리스트 -->
+	<select id="selectQnaList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.common.qna.vo.QnaVO">
+		SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						SELECT QNA_NO, QNA_TITLE, QNA_CONTENT,  TO_CHAR(QNA_DATE, 'YY-MM-DD') QNA_DATE, QNA_ANSWER, QNA_WRITER
+						FROM QNA
+						<include refid="qna" />
+						ORDER BY QNA_NO DESC
+				) A
+			) B
+		<![CDATA[
+			WHERE RNUM >= #{startRow} AND RNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<select id="selectQna" parameterType="int" resultType="kr.or.ddit.common.qna.vo.QnaVO">
+		SELECT QNA_NO, QNA_TITLE, QNA_CONTENT, TO_CHAR(QNA_DATE, 'YY-MM-DD HH24:MI:SS') QNA_DATE, QNA_ANSWER, QNA_WRITER
+		  FROM QNA
+		 WHERE QNA_NO=#{qnaNo}
+		
+	</select>
+	
+	
+	<insert id="insertQna" parameterType="kr.or.ddit.common.qna.vo.QnaVO">
+		INSERT INTO qna (
+		    QNA_NO,
+		    QNA_TITLE,
+		    QNA_CONTENT,
+		    QNA_DATE,
+		    QNA_ANSWER,
+		    QNA_WRITER
+		) VALUES (
+		    QNA_NO_SEQ.NEXTVAL,
+		    #{qnaTitle},
+		    #{qnaContent},
+		    sysdate,
+		    0,
+		    #{qnaWriter}
+		)
+		
+	</insert>
+	
+	<update id="updateQna" parameterType="kr.or.ddit.common.qna.vo.QnaVO">
+		UPDATE QNA
+		SET QNA_TITLE=#{qnaTitle,jdbcType=VARCHAR},
+			QNA_CONTENT=#{qnaContent,jdbcType=CLOB}
+		WHERE QNA_NO = #{qnaNo}
+	</update>
+	
+	<delete id="deleteQna" parameterType="int">
+		DELETE FROM QNA
+		WHERE QNA_NO = #{qnaNo}
+	</delete>
+	
+	<update id="updateRep" parameterType="kr.or.ddit.common.qna.vo.QnaReplyVO">
+		UPDATE QNA
+		SET QNA_ANSWER = 1
+		WHERE QNA_NO = ${repParent}
+	</update>
+	
+	<update id="deleteRep" parameterType="String">
+		UPDATE QNA
+		SET QNA_ANSWER = 0
+		WHERE QNA_NO = ${repParent}
+	</update>
+
+
+</mapper>

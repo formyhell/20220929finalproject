@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.contractProject.dao.ContractProjectDAO">
+	<sql id="search">
+	  <trim prefix="AND">
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">
+			<choose>
+					<when test="pagingVO.simpleCondition.searchType eq 'projQualifi'">
+						INSTR(PROJ_QUALIFI, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'projTitle'">
+						INSTR(PROJ_TITLE, UPPER(#{pagingVO.simpleCondition.searchWord})) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'projContent'">
+						INSTR(PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'projRegist'">
+						INSTR(PROJ_REGIST, UPPER(#{pagingVO.simpleCondition.searchWord})) > 0
+					</when>
+					<otherwise>
+						(
+						INSTR(PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_QUALIFI, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+						)
+					</otherwise>
+				</choose>
+		</if>
+	  </trim>
+	</sql>
+
+	<select id="selectGenTotalProj" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT ROWNUM RNUM, D.*
+		FROM (SELECT DISTINCT PROJ_ID, PROJ_TITLE, PROJ_REGIST, PROJ_SDATE, PROJ_FDATE, PROJ_LOC, PROJ_ESTIMATE, CODE_NAME 
+		FROM OUTSOURCING_PROJ C, (SELECT CODE_NAME, APPLY_PROJ, APPLY_APPLICANT, CONTRACT_STATE
+		FROM APPLY_PROJ, (SELECT CONTRACT_APPLYID, CODE_NAME, CONTRACT_STATE
+		FROM CONTRACT_PROJ INNER JOIN COMMON_CODE ON (CONTRACT_PROJ.CONTRACT_STATE=COMMON_CODE.CODE_ID)) A
+		WHERE APPLY_PROJ.APPLY_ID=A.CONTRACT_APPLYID) B
+		WHERE B.APPLY_PROJ=C.PROJ_ID
+		  AND CONTRACT_STATE IN ('EXAMINE', 'SIGN')
+		  AND C.PROJ_STATE = 'RECRUIT'
+		  AND B.APPLY_APPLICANT = #{genId}
+		  <include refid="search" />
+		  ) D) E
+	</select>
+	
+	<select id="selectComTotalProj" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT ROWNUM RNUM, D.*
+		FROM (SELECT DISTINCT PROJ_ID, PROJ_TITLE, PROJ_REGIST, PROJ_SDATE, PROJ_FDATE, PROJ_LOC, PROJ_ESTIMATE, CODE_NAME 
+		FROM OUTSOURCING_PROJ C, (SELECT CODE_NAME, APPLY_PROJ, APPLY_APPLICANT, CONTRACT_STATE
+		FROM APPLY_PROJ, (SELECT CONTRACT_APPLYID, CODE_NAME, CONTRACT_STATE
+		FROM CONTRACT_PROJ INNER JOIN COMMON_CODE ON (CONTRACT_PROJ.CONTRACT_STATE=COMMON_CODE.CODE_ID)) A
+		WHERE APPLY_PROJ.APPLY_ID=A.CONTRACT_APPLYID) B
+		WHERE B.APPLY_PROJ=C.PROJ_ID
+		  AND CONTRACT_STATE IN ('EXAMINE', 'SIGN')
+		  AND C.PROJ_STATE = 'RECRUIT'
+		  AND C.PROJ_REGIST = #{comId}
+		  <include refid="search" />
+		  ) D) E
+	</select>
+	
+	<select id="selectGenAll" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT E.*
+		FROM (SELECT ROWNUM RNUM, D.*
+		FROM (SELECT DISTINCT PROJ_ID, PROJ_TITLE, PROJ_REGIST, PROJ_SDATE, PROJ_FDATE, PROJ_LOC, PROJ_ESTIMATE, CODE_NAME 
+		FROM OUTSOURCING_PROJ C, (SELECT CODE_NAME, APPLY_PROJ, APPLY_APPLICANT, CONTRACT_STATE
+		FROM APPLY_PROJ, (SELECT CONTRACT_APPLYID, CODE_NAME, CONTRACT_STATE
+		FROM CONTRACT_PROJ INNER JOIN COMMON_CODE ON (CONTRACT_PROJ.CONTRACT_STATE=COMMON_CODE.CODE_ID)) A
+		WHERE APPLY_PROJ.APPLY_ID=A.CONTRACT_APPLYID) B
+		WHERE B.APPLY_PROJ=C.PROJ_ID
+		  AND CONTRACT_STATE IN ('EXAMINE', 'SIGN')
+		  AND C.PROJ_STATE = 'RECRUIT'
+		  AND B.APPLY_APPLICANT = #{genId}
+		  <include refid="search" />
+		  ) D) E
+	</select>
+	
+	<select id="selectComAll" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT E.*
+		FROM (SELECT ROWNUM RNUM, D.*
+		FROM (SELECT DISTINCT PROJ_ID, PROJ_TITLE, PROJ_REGIST, PROJ_SDATE, PROJ_FDATE, PROJ_LOC, PROJ_ESTIMATE, CODE_NAME 
+		FROM OUTSOURCING_PROJ C, (SELECT CODE_NAME, APPLY_PROJ, APPLY_APPLICANT, CONTRACT_STATE
+		FROM APPLY_PROJ, (SELECT CONTRACT_APPLYID, CODE_NAME, CONTRACT_STATE
+		FROM CONTRACT_PROJ INNER JOIN COMMON_CODE ON (CONTRACT_PROJ.CONTRACT_STATE=COMMON_CODE.CODE_ID)) A
+		WHERE APPLY_PROJ.APPLY_ID=A.CONTRACT_APPLYID) B
+		WHERE B.APPLY_PROJ=C.PROJ_ID
+		  AND CONTRACT_STATE IN ('EXAMINE', 'SIGN')
+		  AND C.PROJ_STATE = 'RECRUIT'
+		  AND C.PROJ_REGIST = #{comId}
+		  <include refid="search" />
+		  ) D) E
+	</select>
+</mapper>

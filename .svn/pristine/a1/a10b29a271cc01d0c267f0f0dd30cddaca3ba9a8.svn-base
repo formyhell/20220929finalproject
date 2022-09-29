@@ -1,0 +1,139 @@
+package kr.or.ddit.admin.board.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.common.community.service.CommunityService;
+import kr.or.ddit.common.community.vo.CommunityTrepVO;
+import kr.or.ddit.common.community.vo.CommunityVO;
+import kr.or.ddit.common.validate.DeleteGroup;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.common.vo.SimpleSearchCondition;
+
+@Controller
+@RequestMapping("/admin/communityRepList")
+public class AdminCommunityRepController {
+	
+	@Inject
+	CommunityService service;
+	
+	@ModelAttribute("cmnt")
+	public CommunityVO cmnt() {
+		return new CommunityVO();
+	}
+	
+	/**
+	 * 신고된 게시글 리스트
+	 * @param simpleCondition
+	 * @param currentPage
+	 * @param model
+	 * @return
+	 */
+	@GetMapping
+	public String repList(
+			@ModelAttribute("simpleCondition") SimpleSearchCondition simpleCondition
+			, @RequestParam(value="searchType", required=false)String searchType
+			, @RequestParam(value="searchWord", required=false)String searchWord
+			, @RequestParam(value="page", required=false, defaultValue="1") int currentPage
+			, Model model) 
+	{
+		PagingVO<CommunityVO> pagingVO = new PagingVO<>();
+		pagingVO.setSimpleCondition(simpleCondition);
+		pagingVO.setCurrentPage(currentPage);
+		service.adminCmntList(pagingVO);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "admin/board/adminCommunityRepList";
+	}
+	
+	/**
+	 * 신고회원 처리(Y -> A)
+	 * @param cmnt
+	 * @param errors
+	 * @param redirectAttributes
+	 * @return
+	 */
+	@DeleteMapping("{cmntNo}")
+	public String communityDelete(
+			@Validated(DeleteGroup.class) @ModelAttribute ("cmnt") CommunityVO cmnt
+			, Errors errors
+	) {
+		String viewName = null;
+		
+		if(!errors.hasErrors()) {
+			service.adminDeleteCmnt(cmnt);
+			viewName = "redirect:/admin/communityRepList";
+		} else {
+			viewName = "redirect:/admin/communityRepList";
+		}
+		
+		return viewName;
+	}
+	/**
+	 * 신고회원 처리(A -> Y)
+	 * @param cmnt
+	 * @param errors
+	 * @param redirectAttributes
+	 * @return
+	 */
+	@PutMapping("{cmntNo}")
+	public String communityUpdate(
+			@Validated(DeleteGroup.class) @ModelAttribute ("cmnt") CommunityVO cmnt
+			, Errors errors
+			) {
+		String viewName = null;
+		
+		if(!errors.hasErrors()) {
+			service.adminUpdateCmnt(cmnt);
+			viewName = "redirect:/admin/communityRepList";
+		} else {
+			viewName = "redirect:/admin/communityRepList";
+		}
+		
+		return viewName;
+	}
+	
+	/**
+	 * 신고한 회원 리스트
+	 * @return
+	 */
+	@ResponseBody
+	@GetMapping("{cmntNo}/member")
+	public Map<String, Object> repMemList(
+			@PathVariable int cmntNo
+			, @RequestParam(name="page", required=false, defaultValue="1") int currentPage
+	) {
+		PagingVO<CommunityTrepVO> pagingVO = new PagingVO<>(3,3); //테스트용
+		pagingVO.setCurrentPage(currentPage);
+		Map<String, Object> trepMap = new HashMap<>();
+		
+		trepMap.put("pagingVO", pagingVO);
+		trepMap.put("cmntNo", cmntNo);
+		
+		List<CommunityTrepVO> trepList = service.selectRepMemList(trepMap);
+		
+		trepMap.put("trepList", trepList);
+		
+		return trepMap;
+	}
+
+
+}

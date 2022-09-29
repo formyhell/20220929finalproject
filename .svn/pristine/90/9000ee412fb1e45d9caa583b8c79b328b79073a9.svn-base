@@ -1,0 +1,89 @@
+package kr.or.ddit.common.community.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * @author 작성자명
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      홍승조       컨트롤로생성
+ * 2022. 8. 2.      홍승조       url 연결
+ * 2022. 8. 6.      홍승조       컨트롤러 통합
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@RequestMapping("/community")
+public class CommunityController {
+	
+	@GetMapping("form")
+	public String communityForm() {
+		return "common/community/communityForm";
+	}
+	
+	@PostMapping
+	public String communityInsert() {
+		String viewName = null;
+		
+		if (true) {
+			
+			viewName = "redirect:/community";
+		} else {
+			viewName = "common/community/communityForm";
+		}
+		return viewName;
+	}
+	
+
+	@GetMapping("23/form")
+	public String communityEdit() {
+		return "common/community/communityEdit";
+	}
+	
+	@PutMapping("23/form")
+	public String communityUpdate() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/community";
+		} else {
+			viewName = "common/community/communityEdit";
+		}
+		return viewName;
+		
+	}
+	
+	
+	@DeleteMapping("23")
+	public String communityDelete() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/community";
+		} else {
+			viewName = "redirect:/community";
+		}
+		return viewName;
+	}
+	
+
+	@GetMapping
+	public String communityList() {
+		return "common/community/communityList";
+	}
+	
+	@GetMapping("23")
+	public String communityView() {
+		return "common/community/communityView";
+	}
+	
+	
+}

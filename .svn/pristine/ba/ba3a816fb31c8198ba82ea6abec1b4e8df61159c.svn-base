@@ -1,0 +1,193 @@
+package kr.or.ddit.outsourcing.service;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.memInfo.vo.GenObjVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.dao.OutProjDAO;
+import kr.or.ddit.outsourcing.vo.ObjectVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.outsourcing.vo.SkillVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 아웃소싱 프로젝트 serviceImpl
+ * @author 고혜인
+ * @since 2022. 8. 16.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 16.      고혜인       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OutProjServiceImpl implements OutProjService{
+
+	@Inject
+	PasswordEncoder passEncoder;
+	
+	private final OutProjDAO outProjDao;
+	
+	@Override
+	public List<OutProjVO> findAll(PagingVO<OutProjVO> pagingVO) {
+		pagingVO.setTotalRecord(outProjDao.selctOutProjCount(pagingVO));
+		List<OutProjVO> outProjList = outProjDao.selectOutProjList(pagingVO);
+		pagingVO.setDataList(outProjList);
+		
+		return outProjList;
+	}
+
+	@Override
+	public OutProjVO findByPK(String projId) {
+		OutProjVO outProj = outProjDao.selectOutProj(projId);
+		
+		List<ObjectVO> objList = outProjDao.projObjList(projId);
+		List<SkillVO> skillList = outProjDao.projSkillList(projId);
+		
+		outProj.setObjList(objList);
+		outProj.setSkillList(skillList);
+		log.info("직무분야리스트@@@@@@@@" + objList);
+		log.info("여기 왜옴?ㅗㅗㅗㅗㅗㅗㅗㅗㅗㅗㅗ" + outProj);
+		
+		return outProj;
+	}
+	
+	
+//	//스킬,직무분야 가져오는곳?
+//	private void projCommonCode(OutProjVO outProj) {
+//		outProj.setOutObjList(outProjDao.selectObjList());
+//		outProj.setOutSkillList(outProjDao.selectSkillList());
+//	}
+	
+
+	@Override
+	@Transactional
+	public void create(OutProjVO outProj) {
+		
+		log.info("아웃소싱 프로젝트 입력할 때 무슨 값이 들어갈까여? {}", outProj);
+//		projCommonCode(outProj);
+		outProjDao.insertOutProj(outProj);
+//		
+		List<ObjectVO> objList = outProj.getObjList();
+		List<SkillVO> skillList = outProj.getSkillList();
+		outProjDao.objList(outProj);
+		outProjDao.skillList(outProj);
+		
+		
+		
+	}
+
+	@Override
+	public void modify(OutProjVO outProj) {
+		log.info("여기!!!!!!!!!!" + outProj);
+		outProjDao.updateOutProj(outProj);
+		
+	}
+
+	@Override
+	public List<OutProjVO> createdProjectList(PagingVO<OutProjVO> pagingVO, String projRegist) {
+		log.info("여기로 와야지");
+		pagingVO.setTotalRecord(outProjDao.selctOutProjCount(pagingVO));
+		List<OutProjVO> outProjList = outProjDao.createdProjectList(projRegist);
+		pagingVO.setDataList(outProjList);
+		return outProjList;
+	}
+
+	@Override
+	public ServiceResult remove(MemberVO member, String password, String outProjId) {
+		ServiceResult result = null;
+		
+		if (passEncoder.matches(password, member.getMemPass())) {
+			// 복호화한값과 입력받은 값이 일치할때
+
+			int rowcnt = outProjDao.deleteOutProj(outProjId);
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+		} else {
+			result = ServiceResult.INVALIDPASSWORD;
+		}
+		return result;
+
+	}
+	
+
+	
+	//프로젝트 종료
+	@Override
+	public ServiceResult finish(MemberVO member, OutProjVO outProj, String password) {
+//		OutProjVO proj = findByPK(outProj.getProjId());
+		
+//		outProjDao.finishProj(proj);
+		log.info("프로젝트 종료 service" + outProj);
+		ServiceResult result = null;
+		
+		if (passEncoder.matches(password, member.getMemPass())) {
+			// 복호화한값과 입력받은 값이 일치할때
+
+			int rowcnt = outProjDao.finishProj(outProj);
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+		} else {
+			result = ServiceResult.INVALIDPASSWORD;
+		}
+		return result;
+	}
+	
+	
+	
+	@Override
+	public void insertSkill(OutProjVO outprojVo) {
+		outprojVo.getProjSkill();
+		outprojVo.getProjObj();
+		
+		log.info("@@@@@@@@@@@@@@ㅜㅜㅜ"+outprojVo);
+		
+		if(outprojVo.getProjSkill()!=null) {
+			outProjDao.insertSkill(outprojVo);
+		}
+		if(outprojVo.getProjObj()!=null) {
+			outProjDao.insertObj(outprojVo);
+		}
+	}
+
+	//스킬,업무분야 삭제
+	@Override
+	public int removeSkill(SkillVO skillVo) {
+		int delSkill = outProjDao.delSkill(skillVo);
+		return delSkill;
+	}
+
+	@Override
+	public int removeObj(ObjectVO projId) {
+		int delObj = outProjDao.delObj(projId);
+		return delObj;
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,423 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+			<!--  Main Banner Start Here-->
+			<div class="main-banner">
+				<div id="rev_slider_34_1_wrapper" class="rev_slider_wrapper" data-alias="news-gallery34">
+					<!-- START REVOLUTION SLIDER 5.0.7 fullwidth mode -->
+					<div id="rev_slider_34_1" class="rev_slider" data-version="5.0.7">
+						<ul>
+							<!-- SLIDE  -->
+							<li data-index="rs-129"  >
+								<!-- MAIN IMAGE -->
+								<img src="resources/assets/images/banner/slider1.jpg"  alt=""  class="rev-slidebg" >
+								<!-- LAYERS -->
+
+								<!-- LAYER NR. 2 -->
+								<div class="tp-caption Newspaper-Title tp-resizeme "
+								id="slide-129-layer-1"
+								data-x="['left','left','left','left']" data-hoffset="['100','50','50','30']"
+								data-y="['top','top','top','center']" data-voffset="['165','135','105','0']"
+								data-fontsize="['50','50','50','30']"
+								data-lineheight="['55','55','55','35']"
+								data-width="['600','600','600','420']"
+								data-height="none"
+								data-whitespace="normal"
+								data-transform_idle="o:1;"
+
+								data-transform_in="y:[-100%];z:0;rX:0deg;rY:0;rZ:0;sX:1;sY:1;skX:0;skY:0;s:1500;e:Power3.easeInOut;"
+								data-transform_out="auto:auto;s:1000;e:Power3.easeInOut;"
+								data-mask_in="x:0px;y:0px;s:inherit;e:inherit;"
+								data-mask_out="x:0;y:0;s:inherit;e:inherit;"
+								data-start="1000"
+								data-splitin="none"
+								data-splitout="none"
+								data-responsive_offset="on" >
+									<div class="banner-text">
+										<span>Project management system</span>
+										<h2>PMS</h2>
+										<p style="font-style: normal; font-family:'Noto Sans KR', sans-serif;">
+											저희 사이트를 이용해 당신의 프로젝트의 성과 및 진행 지표를 체계적으로 관리해보세요.
+										</p>
+										<a class="btn-text" href="${cPath}/pmsProject"> read more</a>
+									</div>
+								</div>
+							</li>
+							<!-- SLIDE  -->
+							<li data-index="rs-130"   data-title="" data-description="">
+								<!-- MAIN IMAGE -->
+								<img src="resources/assets/images/banner/slider2.jpg"  alt=""   class="rev-slidebg">
+								<!-- LAYERS -->
+
+								<!-- LAYER NR. 2 -->
+								<div class="tp-caption Newspaper-Title   tp-resizeme "
+								id="slide-130-layer-1"
+								data-x="['left','left','left','left']" data-hoffset="['100','50','50','30']"
+								data-y="['top','top','top','center']" data-voffset="['165','135','105','0']"
+								data-fontsize="['50','50','50','30']"
+								data-lineheight="['55','55','55','35']"
+								data-width="['600','600','600','420']"
+								data-height="none"
+								data-whitespace="normal"
+								data-transform_idle="o:1;"
+
+								data-transform_in="y:[-100%];z:0;rX:0deg;rY:0;rZ:0;sX:1;sY:1;skX:0;skY:0;s:1500;e:Power3.easeInOut;"
+								data-transform_out="auto:auto;s:1000;e:Power3.easeInOut;"
+								data-mask_in="x:0px;y:0px;s:inherit;e:inherit;"
+								data-mask_out="x:0;y:0;s:inherit;e:inherit;"
+								data-start="1000"
+								data-splitin="none"
+								data-splitout="none"
+								data-responsive_offset="on">
+									<div class="banner-text">
+										<span>participate in the project</span>
+										<h2>Project</h2>
+										<p style="font-style: normal; font-family:'Noto Sans KR', sans-serif;">
+											이곳에서 자신에게 맞는 프로젝트에 찾아보고 참여해보세요.
+										</p>
+										<a class="btn-text" href="${cPath}/outsourcing"> read more</a>
+									</div>
+								</div>
+							</li>
+							<!-- SLIDE  -->
+							<li data-index="rs-131">
+								<!-- MAIN IMAGE -->
+								<img src="resources/assets/images/banner/slider3.jpg"  alt=""   class="rev-slidebg " >
+								<!-- LAYERS -->
+
+								<!-- LAYER NR. 2 -->
+								<div class="tp-caption Newspaper-Title   tp-resizeme "
+								id="slide-131-layer-1"
+								data-x="['left','left','left','left']" data-hoffset="['100','50','50','30']"
+								data-y="['top','top','top','center']" data-voffset="['165','135','105','0']"
+								data-fontsize="['50','50','50','30']"
+								data-lineheight="['55','55','55','35']"
+								data-width="['600','600','600','420']"
+								data-height="none"
+								data-whitespace="normal"
+								data-transform_idle="o:1;"
+
+								data-transform_in="y:[-100%];z:0;rX:0deg;rY:0;rZ:0;sX:1;sY:1;skX:0;skY:0;s:1500;e:Power3.easeInOut;"
+								data-transform_out="auto:auto;s:1000;e:Power3.easeInOut;"
+								data-mask_in="x:0px;y:0px;s:inherit;e:inherit;"
+								data-mask_out="x:0;y:0;s:inherit;e:inherit;"
+								data-start="1000"
+								data-splitin="none"
+								data-splitout="none"
+								data-responsive_offset="on">
+									<div class="banner-text">
+										<span>best websolution</span>
+										<h2>Communtiy</h2>
+										<p style="font-style: normal; font-family:'Noto Sans KR', sans-serif;">
+											프로젝트를 진행하면서 여러 사람들과 이야기를 나누어보세요
+										</p>
+										<a class="btn-text" href="${cPath}/community"> read more</a>
+									</div>
+								</div>
+							</li>
+							<!-- SLIDE  -->
+						</ul>
+						<div class="tp-bannertimer tp-bottom"></div>
+					</div>
+				</div>
+
+			</div>
+			<!--  Main Banner End Here-->
+
+			<!-- CONTENT -->
+
+			<!-- About Section -->
+			<div id="about-section" class="ptb ptb-xs-60">
+				<div class="container">
+					<div class="row">
+						<div class="col-sm-5 col-md-6">
+							<div class=" about-wrap">
+								<div class="block-title v-line">
+									<h2><span>Our</span> Services</h2>
+									<p class="italic" >
+										Aenean suscipit eget mi act
+									</p>
+								</div>
+								<div class="block-content">
+
+									<p>
+										Aenean suscipit eget mi act fermentum phasellus vulputate turpis tincidunt. Aenean suscipit eget mi act fermentum phasellus vulputate turpis tincidunt.
+									</p>
+									<p>
+										Aenean suscipit eget mi act fermentum phasellus vulputate turpis tincidunt. Aenean suscipit eget mi act fermentum phasellus vulputate turpis tincidunt.
+									</p>
+									<a href="#" class="btn-text mt-40 mt-xs-15">Read More</a>
+								</div>
+							</div>
+
+						</div>
+						<div class="col-sm-7 col-md-6">
+							<div class="row pl-70 pl-xs-0 pl-sm-0 mt-xs-30">
+								<div class="col-sm-6">
+									<div class="img-block grid">
+
+										<figure class="effect-sadie">
+											<img class="img-responsive" src="resources/assets/images/1.jpg" alt="Photo">
+											<figcaption>
+												<h2> Strategy <span> Solution</span></h2>
+												<p>
+													Sadie never took her eyes off me.
+													<br>
+													She had a dark soul.
+												</p>
+												<a href="#">View more</a>
+											</figcaption>
+										</figure>
+										<br>
+										<figure class="effect-sadie">
+											<img class="img-responsive" src="resources/assets/images/2.jpg" alt="Photo">
+											<figcaption>
+												<h2> Hight <span> Quality</span></h2>
+												<p>
+													Sadie never took her eyes off me.
+													<br>
+													She had a dark soul.
+												</p>
+												<a href="#">View more</a>
+											</figcaption>
+										</figure>
+									</div>
+								</div>
+								<!-- /.col -->
+								<div class="col-sm-6">
+									<div class="img-block grid mt-45">
+										<figure class="effect-sadie">
+											<img class="img-responsive" src="resources/assets/images/3.jpg" alt="Photo">
+											<figcaption>
+												<h2> SEO <span> marketing</span></h2>
+												<p>
+													Sadie never took her eyes off me.
+													<br>
+													She had a dark soul.
+												</p>
+												<a href="#">View more</a>
+											</figcaption>
+										</figure>
+										<br>
+										<figure class="effect-sadie">
+											<img class="img-responsive" src="resources/assets/images/4.jpg" alt="Photo">
+											<figcaption>
+												<h2> Fast <span> Growth</span></h2>
+												<p>
+													Sadie never took her eyes off me.
+													<br>
+													She had a dark soul.
+												</p>
+												<a href="#">View more</a>
+											</figcaption>
+										</figure>
+									</div>
+								</div>
+								<!-- /.col -->
+							</div>
+							<!-- /.row -->
+						</div>
+					</div>
+				</div>
+
+			</div>
+			<!-- About Section End-->
+			<!-- Project Section -->
+			<div id="project-section" class="dark-bg clearfix">
+
+				<div class="width-25per dark-bg  fl">
+					<div class=" light-color plr-20 m-height ">
+						<div class="block-title mt-40">
+							<h2><span>Our</span> Projects</h2>
+							<p class="italic">
+								Aenean suscipit eget mi act
+							</p>
+						</div>
+						<div class="block-content">
+
+							<p>
+								Aenean suscipit eget mi act fermentum phasellus vulputate turpis tincidunt.
+							</p>
+
+						</div>
+					</div>
+				</div>
+				<div class="width-75per fl grid">
+					<div id="project">
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project1-2.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project1-3.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project1-4.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project1-5.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project1-6.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project7.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+						<div class="items">
+							<figure class="effect-goliath">
+								<img class="img-responsive" src="resources/assets/images/project/project8.jpg" alt="Photo">
+								<figcaption>
+									<h2>Thoughtful <span>Goliath</span></h2>
+									<p>
+										When Goliath comes out, you should run.
+									</p>
+									<a href="#">View more</a>
+								</figcaption>
+							</figure>
+
+						</div>
+					</div>
+				</div>
+
+			</div>
+			<!-- Project Section -->
+			
+			<!-- Partner Section -->
+			<div id="partner-section" class="ptb ptb-xs-60">
+				<div class="container">
+					<div class="row">
+						<div class="col-sm-12">
+							<div class="block-title v-line mb-60 ">
+								<h2><span>Our</span> Partner </h2>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-12">
+							<ul class="logo-group">
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/js.png" alt="">
+								</li>
+								<li class="partner-logo ">
+									<img src="${cPath}/resources/images/ourpatner/tomcat.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/eclipse.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/java.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/mybatise.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/oracle.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/maven.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/spring.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/lombok.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/egov.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/adobe.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/tortoise.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/visual studio.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/notepad.png" alt="">
+								</li>
+								<li class="partner-logo">
+									<img src="${cPath}/resources/images/ourpatner/bootstrap.png" alt="">
+								</li>
+							</ul>
+						</div>
+
+					</div>
+				</div>
+
+			</div>

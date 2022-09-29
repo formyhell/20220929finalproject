@@ -1,0 +1,178 @@
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                수정자          수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 1.      작성자           최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<!-- toastr -->
+<link href="${cPath}/resources/cal/toastr.css" rel="stylesheet" type="text/css">
+<link href="${cPath}/resources/css/alert/subAlert.css" rel="stylesheet" type="text/css">
+<script src="${cPath}/resources/cal/toastr.min.js"></script>
+
+      <div class="page-main-header">
+        <div class="main-header-right row m-0">
+          <div class="main-header-left">
+            <div class="logo-wrapper"><a href="${cPath}/pms/${projId}"><img class="img-fluid" src="${cPath}/resources/assetsPms/images/logo/logo.png" alt=""></a></div>
+            <div class="dark-logo-wrapper"><a href="index.html"><img class="img-fluid" src="${cPath}/resources/assetsPms/images/logo/dark-logo.png" alt=""></a></div>
+          </div>
+          <div class="d-lg-none mobile-toggle pull-right w-auto"><i data-feather="more-horizontal"></i></div>
+          
+          <div class="nav-right col pull-right right-menu p-0">
+            <ul class="nav-menus">
+              <li class="dropdown" style="color: white; float: right;">
+				<i data-feather="bell"></i> <span class="dot-animated"></span>
+				<div class="dropdown-content"></div>
+			  </li>
+              <li class="onhover-dropdown p-0">
+              	<button onclick="logoutForm.submit();" class="btn btn-primary-light" type="button"><i data-feather="log-out"></i>Log out</button>
+             	<form:form id="logoutForm" method="post" action="${cPath}/logout"></form:form>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+<script>
+let h_header = '${_csrf.headerName}';
+let h_token =  '${_csrf.token}'; 
+let h_url = "${cPath}/alert";
+let h_svUrl = "192.168.36.40";
+
+connect();
+alamView();
+
+<%-- 웹소켓 연결 --%>
+function connect() {
+	webSocket = new WebSocket(`ws://\${h_svUrl}/PHOS/alram`);
+	webSocket.onopen = onOpen;
+	webSocket.onmessage = onMessage;
+}
+
+<%-- 웹소켓 종료 --%>
+function disconnect() {
+	webSocket.send(myId + "님이 뛰쳐나갔쪙");
+	webSocket.close();
+}
+
+//연결 시
+function onOpen() {
+	console.log("웹소켓 연결됨~~");
+} 
+
+<%-- 실시간 알림 받기 --%>
+function onMessage() {
+	toastr.options.positionClass = "toast-top-right";
+	
+	let h_msg = event.data;
+	let h_len = h_msg.indexOf(">") + 20;
+	if (h_msg.length > h_len) {
+		h_msg = h_msg.substr(0,h_len) + "...";
+	}
+	toastr.info(h_msg);
+	alamView();
+}
+
+<%-- 알림 전송 --%>
+function send(msg,receiver,url) {
+	let socketMsg = `\${msg},\${receiver},\${url},`;
+	webSocket.send(socketMsg);
+}
+
+<%-- 알람 리스트 조회 --%>
+function alamView() {
+	$.ajax({
+		type:"GET",
+		url: h_url,
+		dataType:'json',
+		success: function(result) {
+			$(".dropdown-content").children().remove();
+			
+			if(result!=null && result.length > 0){
+				let alertChk = 0;
+				result.forEach((rep,idx)=>{
+					makeAlamList(rep);
+					if(rep['alertCheck'] == 0){
+						alertChk++
+					}
+				});
+				if(alertChk>0){
+					$(".dot-animated").attr("style", "display: block !important");
+				}else{
+// 					$(".dot-animated").css('display', 'none !important;');
+					$(".dot-animated").attr("style", "display: none !important");
+				}
+			}else{
+				$(".dropdown-content").append( $("<div>").html("알림이 없습니다."))	
+// 				$(".dot-animated").css('display', 'none !important;');
+				$(".dot-animated").attr("style", "display: none !important");
+			}
+		}, error:function(request, status, err){
+			console.log(request);
+			console.log(status);
+			console.log(err);				
+		}
+	});
+}
+let makeAlamList = function(rep) {
+	let alramUrl = `http://\${h_svUrl}/PHOS/`+rep['alertUrl'];
+	if(alramUrl == null){ alramUrl = "#"; }
+	$(".dropdown-content").append(
+		$("<div>").attr("class",`alertChk_\${rep['alertCheck']}`).append(
+			$("<span>").attr({
+				"style": "font-size: x-small;"}).html(rep['alertTime'])
+			, $("<i>").attr({
+				"class":"fa fa-times" ,
+				"style":"float: right;",
+				"onclick":`deleteAlram(\${rep['alertNo']})`})
+			, "<br>"	
+			, $("<a>").attr({"href":alramUrl, "onclick":`updateAlram(\${rep['alertNo']},\${rep['alertCheck']})`}).append(rep['alertContent'])	
+		)
+	);
+}
+<%-- 알람 삭제 --%>
+function deleteAlram(alertNo) {
+	$.ajax({
+		type:"DELETE",
+		url: h_url,
+		data: JSON.stringify({alertNo:alertNo}),
+		contentType : "application/json;charset=utf-8",
+		beforeSend : function(xhr) { 
+			xhr.setRequestHeader(h_header,h_token);
+		},
+		success: function(result) {
+			console.log(result);
+			alamView();
+		}, error:function(request, status, err){
+			console.log(request);
+			console.log(status);
+			console.log(err);				
+		}
+	});
+}
+<%-- 알람 읽음 처리 --%>
+function updateAlram(alertNo, alertCheck) {
+	if(alertCheck==0){ //안읽음 상태라면
+		$.ajax({
+			type:"PUT",
+			url: h_url,
+			data: JSON.stringify({alertNo:alertNo}),
+			contentType : "application/json;charset=utf-8",
+			beforeSend : function(xhr) { 
+				xhr.setRequestHeader(h_header,h_token);
+			},
+			success: function(result) {
+				console.log(result);
+				alamView();
+			}, error:function(request, status, err){
+				console.log(request);
+				console.log(status);
+				console.log(err);				
+			}
+		});
+	}
+}
+</script>      

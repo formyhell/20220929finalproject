@@ -1,0 +1,77 @@
+package kr.or.ddit.common.mypage.project.recommendProject.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO;
+import kr.or.ddit.common.mypage.project.recommendProject.dao.RecommendProjectDAO;
+import kr.or.ddit.common.mypage.project.recommendProject.vo.RecommendProjectVO;
+import kr.or.ddit.common.vo.PagingVO;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class RecommendProjectServiceImpl implements RecommendProjectService {
+	
+	private final RecommendProjectDAO recomDAO;
+
+	@Override
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO, String genId) {
+		if(genId == null) throw new PreAuthenticatedCredentialsNotFoundException("로그인이 안되어 있음 ");
+		List<RecommendProjectVO> list = recomDAO.checkProj(genId);
+		pagingVO.setTotalRecord(list.size());
+		
+		Map<String,Object> pagingMap = new HashMap<String, Object>();
+		pagingMap.put("pagingVO", pagingVO);
+		List<ProjectVO> finalList;
+		
+		if(list.size()==0) {
+			return null;
+		}else {
+			String projIds = "";
+			projIds += "(";
+			for (RecommendProjectVO vo : list) {
+				String projId = vo.getProjId();
+				if(projIds.length()< 2) {
+					projIds += "'"+projId+"'";
+				}else {				
+					projIds += ", '"+projId+"'";
+				}
+			}
+			projIds += ")";
+			pagingMap.put("projIds", projIds);
+			
+			finalList = recomDAO.getProj(pagingMap);
+			
+			//내용 요약
+			for (ProjectVO vo : finalList) {
+				vo.setProjTitle(vo.getProjTitle().replaceAll("<", "&lt;"));
+				vo.setProjTitle(vo.getProjTitle().replaceAll(">", "&gt;"));
+				vo.setProjContent(vo.getProjContent().replaceAll("<", "&lt;"));
+				vo.setProjContent(vo.getProjContent().replaceAll(">", "&gt;"));
+				if(vo.getProjContent().length()>60) {
+					vo.setProjContent(vo.getProjContent().substring(0,60)+"...");
+				}
+			}
+			
+			pagingVO.setDataList(finalList);
+			return finalList;
+		}
+	}
+
+	@Override
+	public List<ProjectVO> mainProjectList() {
+		List<ProjectVO> list = recomDAO.recommendProjToMain();
+		for (ProjectVO vo : list) {
+			if(vo.getProjContent().length() > 35) {
+				vo.setProjContent(vo.getProjContent().substring(0,35)+"...");
+			}
+		}
+		return list;
+	}
+
+}

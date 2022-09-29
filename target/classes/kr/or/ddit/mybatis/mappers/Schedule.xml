@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.schedule.dao.ScheduleDAO">
+	<!-- 일정 조회 -->
+	<resultMap id="schedule" type="kr.or.ddit.common.mypage.schedule.vo.ScheduleVO" autoMapping="true">
+		<id property="scheNo" column="SCHE_NO" />
+	</resultMap>
+	<select id="selectScheduleList" resultMap="schedule">
+		SELECT
+		    SCHE_NO,
+		    SCHE_TYPE,
+		    SCHE_PROJ,
+		    SCHE_SDATE,
+		    SCHE_FDATE,
+		    SCHE_TITLE,
+		    SCHE_CONTENT,
+		    SCHE_COLOR,
+		    SCHE_MEMID
+		FROM SCHEDULE
+		WHERE SCHE_MEMID = #{memId}
+	</select>
+	
+	<!-- 일정 타입리스트 -->
+	<select id="selectTypeList" resultType="hashMap">
+		SELECT CODE_NAME "typeName", CODE_ID "typeId"
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'SCHETYPE'
+		ORDER BY CODE_NAME ASC
+	</select>
+	<!-- 지원한 프로젝트 리스트 -->
+	<select id="selectProjList" resultType="hashMap">
+		SELECT A.APPLY_PROJ "projId", B.PROJ_TITLE "projName"
+		FROM APPLY_PROJ A, OUTSOURCING_PROJ B
+		WHERE A.APPLY_APPLICANT = #{memId}
+		AND A.APPLY_PROJ=B.PROJ_ID
+	</select>
+	
+	<!-- 일정 추가 -->
+	<insert id="insertSchedule" parameterType="kr.or.ddit.common.mypage.schedule.vo.ScheduleVO">
+		INSERT INTO SCHEDULE (
+		    SCHE_NO
+		    ,SCHE_TYPE
+		    ,SCHE_PROJ
+		    ,SCHE_SDATE
+		    ,SCHE_FDATE
+		    ,SCHE_TITLE
+		    ,SCHE_CONTENT
+		    ,SCHE_COLOR
+		    ,SCHE_MEMID
+		) VALUES (
+		    SCHE_NO_SEQ.NEXTVAL
+		    ,#{scheType,jdbcType=VARCHAR}
+		    ,#{scheProj,jdbcType=VARCHAR}
+		    ,TO_DATE(#{scheSdate,jdbcType=DATE}, 'YYYY/MM/DD')    
+		    ,TO_DATE(#{scheFdate,jdbcType=DATE}, 'YYYY/MM/DD')    
+		    ,#{scheTitle,jdbcType=VARCHAR}
+		    ,#{scheContent,jdbcType=VARCHAR}
+		    ,#{scheColor,jdbcType=VARCHAR}
+		    ,#{scheMemid,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 일정 하나 조회 -->
+	<select id="selectSchedule" resultType="kr.or.ddit.common.mypage.schedule.vo.ScheduleVO">
+		SELECT
+		    SCHE_NO,
+		    SCHE_TYPE,
+		    SCHE_PROJ,
+		    SCHE_SDATE,
+		    SCHE_FDATE,
+		    SCHE_TITLE,
+		    SCHE_CONTENT,
+		    SCHE_COLOR,
+		    SCHE_MEMID
+		FROM SCHEDULE
+		WHERE SCHE_NO = #{scheNo}
+	</select>
+	
+	<!-- 일정 수정 -->
+	<update id="updateSchedule" parameterType="kr.or.ddit.common.mypage.schedule.vo.ScheduleVO" >
+		UPDATE SCHEDULE
+		SET 
+			SCHE_TYPE = #{scheType,jdbcType=VARCHAR},
+		    SCHE_PROJ = #{scheProj,jdbcType=VARCHAR},
+		    SCHE_SDATE = TO_DATE(#{scheSdate,jdbcType=DATE}, 'YYYY/MM/DD'),
+		    SCHE_FDATE = TO_DATE(#{scheFdate,jdbcType=DATE}, 'YYYY/MM/DD'),
+		    SCHE_TITLE = #{scheTitle,jdbcType=VARCHAR},
+		    SCHE_CONTENT = #{scheContent,jdbcType=VARCHAR},
+		    SCHE_COLOR = #{scheColor,jdbcType=VARCHAR}
+		WHERE SCHE_NO = #{scheNo}
+	</update>
+	
+	<!-- 일정 삭제 -->
+	<delete id="deleteSchedule" parameterType="Integer">
+		DELETE FROM SCHEDULE
+		WHERE SCHE_NO = #{scheNo}
+	</delete>
+</mapper>

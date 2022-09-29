@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.pms.issue.dao.IssueDAO">
+
+	<sql id="issue">
+		<trim prefix="AND">
+			<if
+				test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">
+				<choose>
+					<when test="pagingVO.simpleCondition.searchType eq 'issueTitle'">
+						INSTR(ISSUE_TITLE, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'issueState'">
+						INSTR(ISSUE_STATE_NAME, UPPER(#{pagingVO.simpleCondition.searchWord})) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'issueWriter'">
+						INSTR(WRITER_NAME, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'issueWork'">
+						INSTR(WORK_TITLE, UPPER(#{pagingVO.simpleCondition.searchWord})) > 0
+					</when>
+					<otherwise>
+						(
+						INSTR(ISSUE_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(ISSUE_STATE_NAME, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(WRITER_NAME, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(WORK_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</trim>
+	</sql>
+	
+	<!-- 페이징 -->	
+	<select id="selectTotalIssue"  resultType="int">
+		WITH ISSUEWRITER AS (
+		     SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS WRITER_NAME
+		     FROM V_MEMBERALL, ( SELECT ISSUE_WRITER
+		                         FROM ISSUE D LEFT OUTER JOIN WORK E ON (D.ISSUE_WORK = E.WORK_ID)
+		                         WHERE D.ISSUE_PROJ = #{projId}
+		                          ORDER BY D.ISSUE_DATE DESC) A
+		    WHERE MEM_ID = A.ISSUE_WRITER
+		), ISSUECHARGER AS (
+		    SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS CHARGER_NAME
+		    FROM V_MEMBERALL, ( SELECT ISSUE_CHARGER
+		                        FROM ISSUE D LEFT OUTER JOIN WORK E ON (D.ISSUE_WORK = E.WORK_ID)
+		                        WHERE D.ISSUE_PROJ = #{projId}
+		                        ORDER BY D.ISSUE_DATE DESC) A
+		    WHERE MEM_ID = A.ISSUE_CHARGER
+		), ISSUESTATE AS (
+		    SELECT A.CODE_NAME AS ISSUE_STATE_NAME, B.ISSUE_ID
+		    FROM COMMON_CODE A INNER JOIN ISSUE B ON (A.CODE_ID = B.ISSUE_STATE AND A.TYPE_ID = 'ISSUESTATE')
+		)
+		SELECT COUNT(*)
+		FROM (  SELECT ROWNUM RNUM, F.* 
+		        FROM (SELECT A.*, B.WRITER_NAME , C.CHARGER_NAME, D.ISSUE_STATE_NAME
+		                FROM (  SELECT DISTINCT *
+		                        FROM ISSUE D LEFT OUTER JOIN WORK E
+		                          ON D.ISSUE_WORK = E.WORK_ID
+		                        WHERE D.ISSUE_PROJ = #{projId}
+		                         ) A 
+		                        INNER JOIN ISSUEWRITER B ON (A.ISSUE_WRITER = B.MEM_ID)
+		                        INNER JOIN ISSUECHARGER C ON (A.ISSUE_CHARGER = C.MEM_ID)
+		                        INNER JOIN ISSUESTATE D ON (A.ISSUE_ID = D.ISSUE_ID)
+		                WHERE A.ISSUE_STATE != 'DELETE'
+		                <include refid="issue"/>
+		                ORDER BY A.ISSUE_DATE DESC) F ) G
+	</select>
+	
+	<!-- 이슈 목록 조회 -->
+	<select id="selectIssueList" parameterType="Map" resultType="kr.or.ddit.pms.issue.vo.IssueVO">
+		WITH ISSUEWRITER AS (
+		     SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS WRITER_NAME
+		     FROM V_MEMBERALL, ( SELECT ISSUE_WRITER
+		                         FROM ISSUE D LEFT OUTER JOIN WORK E ON (D.ISSUE_WORK = E.WORK_ID)
+		                         WHERE D.ISSUE_PROJ = #{projId}
+		                          ORDER BY D.ISSUE_DATE DESC) A
+		    WHERE MEM_ID = A.ISSUE_WRITER
+		), ISSUECHARGER AS (
+		    SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS CHARGER_NAME
+		    FROM V_MEMBERALL, ( SELECT ISSUE_CHARGER
+		                        FROM ISSUE D LEFT OUTER JOIN WORK E ON (D.ISSUE_WORK = E.WORK_ID)
+		                        WHERE D.ISSUE_PROJ = #{projId}
+		                        ORDER BY D.ISSUE_DATE DESC) A
+		    WHERE MEM_ID = A.ISSUE_CHARGER
+		), ISSUESTATE AS (
+		    SELECT A.CODE_NAME AS ISSUE_STATE_NAME, B.ISSUE_ID
+		    FROM COMMON_CODE A INNER JOIN ISSUE B ON (A.CODE_ID = B.ISSUE_STATE AND A.TYPE_ID = 'ISSUESTATE')
+		)
+		SELECT G.*
+		FROM (  SELECT ROWNUM RNUM, F.* 
+		        FROM (SELECT A.*, B.WRITER_NAME , C.CHARGER_NAME, D.ISSUE_STATE_NAME
+		                FROM (  SELECT DISTINCT *
+		                        FROM ISSUE D LEFT OUTER JOIN WORK E
+		                          ON D.ISSUE_WORK = E.WORK_ID
+		                        WHERE D.ISSUE_PROJ = #{projId}
+		                         ) A 
+		                        INNER JOIN ISSUEWRITER B ON (A.ISSUE_WRITER = B.MEM_ID)
+		                        INNER JOIN ISSUECHARGER C ON (A.ISSUE_CHARGER = C.MEM_ID)
+		                        INNER JOIN ISSUESTATE D ON (A.ISSUE_ID = D.ISSUE_ID)
+		                WHERE A.ISSUE_STATE != 'DELETE'
+		                <include refid="issue"/>
+		                ORDER BY A.ISSUE_DATE DESC) F ) G
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	
+	<!-- 이슈 상세 조회 -->
+	<resultMap type="kr.or.ddit.pms.issue.vo.IssueVO" id="issueList" autoMapping="true">
+		<id property="issueId" column="ISSUE_ID" />
+		<collection property="attatchList" javaType="List" ofType="String" autoMapping="true">
+			<result column="ATT_ID"/>
+		</collection>
+	</resultMap>
+	<select id="selectIssue" resultType="kr.or.ddit.pms.issue.vo.IssueVO">
+		WITH ISSUEWRITER AS (
+		     SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS WRITER_NAME
+		     FROM V_MEMBERALL, ( SELECT ISSUE_WRITER
+		                         FROM ISSUE
+		                         WHERE ISSUE_ID = #{issueId} ) A
+		    WHERE MEM_ID = A.ISSUE_WRITER
+		), ISSUECHARGER AS (
+		    SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS CHARGER_NAME
+		    FROM V_MEMBERALL, ( SELECT ISSUE_CHARGER
+		                        FROM ISSUE
+		                        WHERE ISSUE_ID = #{issueId} ) A
+		    WHERE MEM_ID = A.ISSUE_CHARGER
+		), WORKMANAGER AS (
+		    SELECT B.*, COALESCE(GEN_NAME, COM_NAME) AS WORK_MANAGER_NAME
+		    FROM V_MEMBERALL, ( SELECT WORK_ID, WORK_TITLE, WORK_MANAGER AS WORK_MANAGER_ID
+		                        FROM WORK, ( SELECT ISSUE_WORK
+		                                     FROM ISSUE
+		                                     WHERE ISSUE_ID = #{issueId} ) A
+		                        WHERE WORK_ID = A.ISSUE_WORK ) B
+		    WHERE MEM_ID = B.WORK_MANAGER_ID  
+		), WORKCHARGER AS (
+		    SELECT B.*, COALESCE(GEN_NAME, COM_NAME) AS WORK_CHARGER_NAME
+		    FROM V_MEMBERALL, ( SELECT WORK_ID, WORK_CHARGER AS WORK_CHARGER_ID
+		                        FROM WORK, ( SELECT ISSUE_WORK
+		                                     FROM ISSUE
+		                                     WHERE ISSUE_ID = #{issueId} ) A
+		                         WHERE WORK_ID = A.ISSUE_WORK ) B
+		    WHERE MEM_ID = B.WORK_CHARGER_ID 
+		), ISSUESTATE AS (
+		    SELECT A.CODE_NAME AS ISSUE_STATE_NAME, B.ISSUE_ID
+		    FROM COMMON_CODE A INNER JOIN ISSUE B ON (A.CODE_ID = B.ISSUE_STATE AND A.TYPE_ID = 'ISSUESTATE')
+		), ISSUEIMPORT AS (
+		    SELECT A.CODE_NAME AS ISSUE_IMPORT_NAME, B.ISSUE_ID
+		    FROM COMMON_CODE A INNER JOIN ISSUE B ON (A.CODE_ID = B.ISSUE_IMPORT AND A.TYPE_ID = 'ISSUEIMPORT')
+		), ISSUETYPE AS (
+		    SELECT A.CODE_NAME AS ISSUE_TYPE_NAME, B.ISSUE_ID
+		    FROM COMMON_CODE A INNER JOIN ISSUE B ON (A.CODE_ID = B.ISSUE_TYPE AND A.TYPE_ID = 'ISSUETYPE')
+		)
+		SELECT A.*, B.WRITER_NAME , C.CHARGER_NAME, D.WORK_TITLE, D.WORK_MANAGER_ID, D.WORK_MANAGER_NAME, E.WORK_CHARGER_ID, E.WORK_CHARGER_NAME, F.ISSUE_STATE_NAME, G.ISSUE_IMPORT_NAME, H.ISSUE_TYPE_NAME
+		FROM ISSUE A INNER JOIN ISSUEWRITER B ON(A.ISSUE_WRITER = B.MEM_ID)
+		             INNER JOIN ISSUECHARGER C ON(A.ISSUE_CHARGER = C.MEM_ID)
+		             INNER JOIN WORKMANAGER D ON(A.ISSUE_WORK = D.WORK_ID)
+		             INNER JOIN WORKCHARGER E ON(A.ISSUE_WORK = E.WORK_ID)
+		             INNER JOIN ISSUESTATE F ON(A.ISSUE_ID = F.ISSUE_ID)
+		             INNER JOIN ISSUEIMPORT G ON(A.ISSUE_ID = G.ISSUE_ID)
+		             INNER JOIN ISSUETYPE H ON(A.ISSUE_ID = H.ISSUE_ID)
+		WHERE A.ISSUE_ID = #{issueId}
+		AND A.ISSUE_STATE != 'DELETE'
+	</select>
+	
+	<!-- 일감 전체 조회 -->
+	<select id="selectWorkList" resultType="kr.or.ddit.pms.work.vo.WorkVO">
+		WITH WORKTYPE AS (
+		    SELECT A.CODE_NAME AS TYPE_NAME, A.CODE_ID AS TYPE_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_TYPE AND A.TYPE_ID = 'WORKTYPE')
+		), WORKPRORITY AS (
+		    SELECT A.CODE_NAME AS PRORITY_NAME, A.CODE_ID AS PRORITY_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_PRORITY AND A.TYPE_ID = 'WORKPRIORITY')
+		), WORKSTATE AS (
+		    SELECT A.CODE_NAME AS STATE_NAME, A.CODE_ID AS STATE_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_STATE AND A.TYPE_ID = 'WORKSTATE')
+		), MANAGERNAME AS (
+            SELECT A.MEM_ID AS ID, COALESCE(A.GEN_NAME , A.COM_NAME) AS MANAGER_NAME ,B.WORK_ID
+            FROM V_MEMBERALL A INNER JOIN WORK B ON(A.MEM_ID = B.WORK_MANAGER)
+        ), CHARGERNAME AS (
+            SELECT A.MEM_ID AS ID, COALESCE(A.GEN_NAME , A.COM_NAME) AS CHARGER_NAME ,B.WORK_ID
+            FROM V_MEMBERALL A INNER JOIN WORK B ON(A.MEM_ID = B.WORK_CHARGER)
+        ), REGISTNAME AS (
+            SELECT A.MEM_ID AS ID, COALESCE(A.GEN_NAME , A.COM_NAME) AS REGIST_NAME ,B.WORK_ID
+            FROM V_MEMBERALL A INNER JOIN WORK B ON(A.MEM_ID = B.WORK_REGIST)
+        )
+		SELECT
+				    A.WORK_ID, A.WORK_TITLE, A.WORK_CONTENT
+				    ,  TO_CHAR(A.WORK_SDATE, 'YYYY-MM-DD')WORK_SDATE,TO_CHAR(A.WORK_FDATE, 'YYYY-MM-DD')WORK_FDATE,   A.WORK_MANAGER, E.MANAGER_NAME
+				    ,  B.TYPE_NAME,   C.PRORITY_NAME , A.WORK_PROGRESS
+				    ,  A.WORK_CHARGER, F.CHARGER_NAME,  (SELECT WORK_TITLE FROM WORK WORK WHERE A.WORK_PARENT = WORK_ID)WORK_PARENT,   A.WORK_PROJ
+				    ,A.WORK_REGIST, G.REGIST_NAME,  A.WORK_DATE,  D.STATE_NAME
+				    , A.WORK_TYPE, A.WORK_PRORITY, A.WORK_STATE
+				FROM WORK A INNER JOIN WORKTYPE B ON(A.WORK_ID = B.WORK_ID)
+		                    INNER JOIN WORKPRORITY C ON (A.WORK_ID = C.WORK_ID)
+		                    INNER JOIN WORKSTATE D ON (A.WORK_ID = D.WORK_ID)
+                            INNER JOIN MANAGERNAME E ON (A.WORK_ID = E.WORK_ID)
+                            INNER JOIN CHARGERNAME F ON (A.WORK_ID = F.WORK_ID)
+                            INNER JOIN REGISTNAME G ON (A.WORK_ID = G.WORK_ID)
+				WHERE  A.WORK_PROJ = #{projId}
+	</select>
+	<select id="selectWorkName" resultType="hashMap">
+		SELECT *
+		FROM
+			(
+			SELECT COALESCE(GEN_NAME, COM_NAME) AS workManagerName
+			FROM V_MEMBERALL
+			WHERE MEM_ID = #{workManager}
+			),(
+			SELECT COALESCE(GEN_NAME, COM_NAME) AS workChargerName
+			FROM V_MEMBERALL
+			WHERE MEM_ID = #{workCharger}
+			)
+	</select>
+	
+	<!-- 프로젝트 구성원 전체 조회 -->
+	<select id="selectProjInvolveList" resultType="kr.or.ddit.pms.project.vo.projInvolveVO">
+		SELECT
+		    PROJ_ID,
+		    INVOLVE_MEM,
+		    INVOLVE_SDATE,
+		    INVOLVE_FDATE,
+		    (SELECT COALESCE(GEN_NAME, COM_NAME)
+		            FROM V_MEMBERALL
+		            WHERE MEM_ID = involve_mem
+		     )AS MEM_NAME ,
+		     (SELECT COALESCE(GEN_MAIL, COM_MAIL)
+		            FROM V_MEMBERALL
+		            WHERE MEM_ID = involve_mem
+		     )AS MEM_MAIL
+		FROM
+		    proj_involve
+		WHERE proj_id = #{projId}   
+		AND NVL(INVOLVE_FDATE, SYSDATE +1 ) - SYSDATE > 0  
+	</select>
+	
+	<!-- 이슈 유형 조회 -->
+	<select id="selectIssueTypeList" resultType="hashMap">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'ISSUETYPE'
+	</select>
+	<!-- 이슈 중요도 조회 -->
+	<select id="selectIssueImportList" resultType="hashMap">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'ISSUEIMPORT'
+	</select>
+	
+	<!-- 이슈 등록 -->
+	<insert id="insertIssue" parameterType="kr.or.ddit.pms.issue.vo.IssueVO">
+		<selectKey resultType="String" keyProperty="issueId" order="BEFORE">
+			SELECT 'IS' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(COUNT(*) + 1, 4, '0') ISSUE_ID
+		    FROM ISSUE
+		    WHERE SUBSTR(ISSUE_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT INTO ISSUE (
+		    ISSUE_ID, ISSUE_PROJ,  ISSUE_TITLE
+		    , ISSUE_DATE, ISSUE_STATE, ISSUE_IMPORT
+		    , ISSUE_WRITER, ISSUE_CONTENT, ISSUE_WORK
+		    , ISSUE_CHARGER, ISSUE_TYPE
+		) VALUES (
+		    #{issueId} ,#{issueProj} ,#{issueTitle}
+		    ,#{issueDate} ,#{issueState} ,#{issueImport}
+		    ,#{issueWriter} ,#{issueContent} ,#{issueWork}
+		    ,#{issueCharger} ,#{issueType}
+		)
+	</insert>
+	
+	<!-- 이슈 수정 -->
+	<update id="updateIssue" parameterType="kr.or.ddit.pms.issue.vo.IssueVO">
+		UPDATE ISSUE
+    SET
+        ISSUE_TITLE = #{issueTitle}
+        , ISSUE_IMPORT = #{issueImport}
+        , ISSUE_CONTENT = #{issueContent}
+        , ISSUE_WORK = #{issueWork}
+        , ISSUE_CHARGER = #{issueCharger} 
+        , ISSUE_TYPE = #{issueType}
+	WHERE
+    	ISSUE_ID = #{issueId}
+	</update>
+	
+	<!-- 이슈 삭제 -->
+	<update id="deleteIssue" parameterType="String">
+		UPDATE ISSUE
+		SET ISSUE_STATE = 'DELETE'
+		WHERE ISSUE_ID = #{issueId}
+	</update>
+	
+	<!-- 이슈 해결 -->
+	<insert id="insertIssueSolve" parameterType="kr.or.ddit.pms.issue.vo.IssueSolveVO">
+		INSERT INTO ISSUE_SOLVE (
+		    SOLVE_NO
+		    , SOLVE_FDATE
+		    , SOLVE_CONTENT
+		    , SOLVE_ISSUE
+		) VALUES (
+		    SOLVE_NO_SEQ.NEXTVAL
+		    ,#{solveFdate} 
+		    ,#{solveContent}
+		    ,#{solveIssue}
+		)
+	</insert>
+	<update id="updateIssueState" parameterType="String">
+		UPDATE ISSUE
+    SET
+        ISSUE_STATE = 'RESOLVED'
+	WHERE
+    	ISSUE_ID = #{issueId}
+	</update>
+	
+	<!-- 이슈 해결 상세조회 -->
+	<select id="selectIssueSolve" resultType="kr.or.ddit.pms.issue.vo.IssueSolveVO">
+		SELECT SOLVE_NO, SOLVE_FDATE, SOLVE_CONTENT
+		FROM ISSUE_SOLVE
+		WHERE SOLVE_ISSUE = #{issueId} 
+	</select>
+	
+	
+	<!-- ** 댓글  ** -->
+	<!-- 댓글 등록 -->
+	<insert id="insertIssueReply" parameterType="kr.or.ddit.pms.issue.vo.IssueReplyVO">
+		INSERT INTO ISSUE_REPLY (
+		    REP_NO
+		    , REP_CONTENT
+		    , REP_DATE
+		    , REP_WRITER
+		    , REP_ISSUE
+		) VALUES (
+		    ISSUE_REP_NO_SEQ.NEXTVAL
+		    ,#{repContent} 
+		    ,#{repDate}
+		    ,#{repWriter}
+		    ,#{repIssue}
+		)
+	</insert>
+	
+	<!-- 페이징- 댓글 수 -->
+	<select id="selectTotalIssueReply" resultType="int">
+		SELECT count(*)
+		FROM ISSUE_REPLY
+		WHERE REP_ISSUE = #{issueId}
+	</select>
+	
+	<!-- 댓글 조회 -->
+	<select id="selectIssueReplyList" parameterType="Map" resultType="kr.or.ddit.pms.issue.vo.IssueReplyVO">
+		SELECT F.*
+		FROM (SELECT ROWNUM RNUM , E.*
+		      FROM (
+		          SELECT DISTINCT
+		                    REP_NO
+		                    , REP_CONTENT
+		                    , REP_DATE
+		                    , REP_WRITER
+		                    , REP_ISSUE
+		                    , D.REP_WRITER_NAME
+		            FROM ISSUE_REPLY A, (select B.MEM_ID, COALESCE(B.GEN_NAME, B.COM_NAME) AS REP_WRITER_NAME
+		                                  from V_MEMBERALL B, (select REP_WRITER 
+		                                                        from ISSUE_REPLY
+		                                                        where REP_ISSUE = #{issueId} )C
+		                                  where B.MEM_ID = C.REP_WRITER) D
+		            WHERE REP_ISSUE = #{issueId}
+		            AND A.REP_WRITER = D.MEM_ID
+		            ORDER BY REP_NO DESC
+		            )E
+		        )F
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+		
+	</select>
+	<select id="selectIssueReply" resultType="kr.or.ddit.pms.issue.vo.IssueReplyVO">
+		SELECT
+		     REP_NO
+		    , REP_CONTENT
+			, REP_DATE
+			, REP_WRITER
+			, REP_ISSUE
+		FROM ISSUE_REPLY
+		WHERE REP_NO = #{repNo} 
+	</select>
+	
+	<!-- 댓글 수정 -->
+	<update id="updateIssueReply" parameterType="kr.or.ddit.pms.issue.vo.IssueReplyVO">
+		UPDATE ISSUE_REPLY
+    SET
+        REP_CONTENT = #{repContent}
+	WHERE
+    	REP_NO = #{repNo}
+	</update>
+	
+	<!-- 댓글 삭제 -->
+	<delete id="deleteIssueReply" parameterType="Integer">
+	DELETE FROM ISSUE_REPLY
+	WHERE
+	    REP_NO = #{repNo}
+	</delete>
+	
+	
+	
+	
+	
+	
+	<!-- ** 첨부파일  ** -->
+	<!-- 이슈의 첨부파일 등록 -->
+	<insert id="insertAttatches" parameterType="kr.or.ddit.common.vo.AttatchVO">
+		<selectKey resultType="String" keyProperty="attId" order="BEFORE">
+			SELECT 'AT' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(NVL(MAX(SUBSTR(ATT_ID, 9)),0)+1, 4, '0') ATT_ID
+			FROM ATTATCH
+			WHERE SUBSTR(ATT_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT ALL
+			INTO ATTATCH (
+			    ATT_ID
+			    , ATT_FILENAME
+			    , ATT_SAVENAME
+			    , ATT_MIME
+			    , ATT_FILESIZE
+			) VALUES (
+			    #{attId, jdbcType=VARCHAR}
+			    , #{attFilename, jdbcType=VARCHAR}
+			    , #{attSavename, jdbcType=VARCHAR}
+			    , #{attMime, jdbcType=VARCHAR}
+			    , #{attFilesize, jdbcType=NUMERIC}
+			    
+			)
+		SELECT * FROM DUAL
+	</insert>
+	
+	<!-- 이슈첨부파일 등록 -->
+	<insert id="insertIssueAttatch" parameterType="kr.or.ddit.pms.issue.vo.IssueVO">
+		INSERT ALL
+		<foreach collection="attatchList" item="attatch">
+			INTO ISSUE_ATTATCH (
+			    ISSUE_ID,
+			    ATT_ID
+			) VALUES (
+			    #{issueId, jdbcType=VARCHAR}
+			    , #{attatch.attId, jdbcType=VARCHAR}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<select id="selectIssueFileList" parameterType="kr.or.ddit.pms.issue.vo.IssueVO" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT *
+		FROM ATTATCH A
+		WHERE A.ATT_ID IN (
+		        SELECT ATT_ID
+		        FROM ISSUE_ATTATCH
+		        WHERE ISSUE_ID = #{issueId}
+		    )
+	</select>
+	
+	<!-- 첨부파일 한건의 메타데이터 조회 -->
+	<select id="selectAttatch" parameterType="String" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT
+		    ATT_ID,
+		    ATT_FILENAME,
+		    ATT_SAVENAME,
+		    ATT_MIME,
+		    ATT_FILESIZE
+		FROM
+		    ATTATCH
+		WHERE ATT_ID = #{attId}
+	</select>
+	
+	<!-- 첨부파일 삭제 처리 -->
+	<delete id="deleteIssueAttatches" parameterType="kr.or.ddit.pms.issue.vo.IssueVO">
+		DELETE FROM ISSUE_ATTATCH
+		WHERE ISSUE_ID = #{issueId}
+		AND ATT_ID IN
+		<foreach collection="delAttNos" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	<delete id="deleteAttatches" parameterType="kr.or.ddit.pms.issue.vo.IssueVO">
+		DELETE FROM ATTATCH
+		WHERE ATT_ID IN
+		<foreach collection="delAttNos" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	
+	
+	
+	<!-- 본인이 담당자인 이슈의 수 -->
+	<select id="involveIssueTotal" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+		    SELECT ROWNUM RNUM, A.*, B.WRITER_NAME , C.CHARGER_NAME
+		    FROM (
+		        SELECT *
+                FROM ISSUE D LEFT OUTER JOIN WORK E
+                  ON D.ISSUE_WORK = E.WORK_ID
+                WHERE D.ISSUE_PROJ = #{detailCondition.issueProj}
+		        ORDER BY D.ISSUE_DATE DESC
+		    ) A 
+            , ( SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS WRITER_NAME
+                FROM V_MEMBERALL, (
+                                    SELECT ISSUE_WRITER
+                                    FROM ISSUE D LEFT OUTER JOIN WORK E
+                                      ON D.ISSUE_WORK = E.WORK_ID
+                                    WHERE D.ISSUE_PROJ = #{detailCondition.issueProj}
+                                    ORDER BY D.ISSUE_DATE DESC
+                                ) A 
+                WHERE MEM_ID = A.ISSUE_WRITER
+            ) B
+            , ( SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS CHARGER_NAME
+                FROM V_MEMBERALL, (
+                                        SELECT ISSUE_CHARGER
+                                        FROM ISSUE D LEFT OUTER JOIN WORK E
+                                          ON D.ISSUE_WORK = E.WORK_ID
+                                        WHERE D.ISSUE_PROJ = #{detailCondition.issueProj}
+                                        ORDER BY D.ISSUE_DATE DESC
+                                    ) A 
+                WHERE MEM_ID = A.ISSUE_CHARGER
+            ) C
+            WHERE A.ISSUE_WRITER = B.MEM_ID
+              AND A.ISSUE_CHARGER = C.MEM_ID
+              AND A.ISSUE_STATE != 'DELETE'
+              AND ISSUE_PROJ = #{detailCondition.issueProj}
+              AND ISSUE_CHARGER = #{detailCondition.issueCharger}
+           ) F
+	</select>
+	
+	
+	<!-- 본인이 담당자인 이수 목록 조회 -->
+	<select id="involveIssueList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.pms.issue.vo.IssueVO">
+		SELECT F.*
+      FROM (
+          SELECT ROWNUM RNUM, A.*, B.WRITER_NAME , C.CHARGER_NAME
+          FROM (
+              SELECT DISTINCT *
+                FROM ISSUE D LEFT OUTER JOIN WORK E
+                  ON D.ISSUE_WORK = E.WORK_ID
+                WHERE D.ISSUE_PROJ = #{detailCondition.issueProj}
+              ORDER BY D.ISSUE_DATE DESC
+          ) A 
+            , ( SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS WRITER_NAME
+                FROM V_MEMBERALL, (
+                                    SELECT ISSUE_WRITER
+                                    FROM ISSUE D LEFT OUTER JOIN WORK E
+                                      ON D.ISSUE_WORK = E.WORK_ID
+                                    WHERE D.ISSUE_PROJ = #{detailCondition.issueProj}
+                                    ORDER BY D.ISSUE_DATE DESC
+                                ) A 
+                WHERE MEM_ID = A.ISSUE_WRITER
+            ) B
+            , ( SELECT DISTINCT MEM_ID, COALESCE(GEN_NAME, COM_NAME) AS CHARGER_NAME
+                FROM V_MEMBERALL, (
+                                        SELECT ISSUE_CHARGER
+                                        FROM ISSUE D LEFT OUTER JOIN WORK E
+                                          ON D.ISSUE_WORK = E.WORK_ID
+                                        WHERE D.ISSUE_PROJ = #{detailCondition.issueProj}
+                                        ORDER BY D.ISSUE_DATE DESC
+                                    ) A 
+                WHERE MEM_ID = A.ISSUE_CHARGER
+            ) C
+            WHERE A.ISSUE_WRITER = B.MEM_ID
+              AND A.ISSUE_CHARGER = C.MEM_ID
+              AND A.ISSUE_STATE != 'DELETE'
+              AND ISSUE_PROJ = #{detailCondition.issueProj}
+              AND ISSUE_CHARGER = #{detailCondition.issueCharger}
+            ORDER BY ISSUE_ID DESC
+      ) F 
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,60 @@
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-content {
+	display: none;
+	position: absolute;
+	z-index: 1; /*다른 요소들보다 앞에 배치*/
+	font-weight: 400;
+	background-color: white;
+	min-width: 200px;
+	padding: 5px;
+}
+
+.dropdown-content div {
+	display: block;
+	text-decoration: none;
+	color: rgb(37, 37, 37);
+	font-size: 12px;
+	padding: 12px 20px;
+	border: 2px solid rgba(36, 105, 92, 0.1);
+}
+
+.alertChk_0 {
+	background-color: white;
+}
+.alertChk_1 {
+	background-color: rgba(36, 105, 92, 0.1);
+}
+
+.dropdown-content div:hover {
+	background-color: rgba(36, 105, 92, 0.3)
+}
+
+.dropdown:hover .dropdown-content {
+	display: block;
+}
+
+.fa:hover {
+	color: red;
+	cursor: pointer;
+}
+
+.dot-animated {
+	position: absolute;
+	right: -5px;
+	top: -6px;
+	width: 6px;
+	height: 6px;
+	border-radius: 100%;
+	content: '';
+	background-color: #d22d3d;
+	-webkit-animation: fadeIn 2s ease infinite;
+	animation: fadeIn 2s ease infinite;
+}
+
+.toast-top-right{
+	top:8%;
+}

@@ -1,0 +1,181 @@
+package kr.or.ddit.outsourcing.vo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import kr.or.ddit.common.member.vo.ComMemberVO;
+import kr.or.ddit.common.member.vo.MemReviewVO;
+import kr.or.ddit.common.mypage.memInfo.vo.locationVO;
+import kr.or.ddit.common.validate.DeleteGroup;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.common.validate.UpdateGroup;
+import kr.or.ddit.common.vo.CommonCodeVO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 10.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자                     수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 8.    조채원             최초작성
+ * 2022. 8. 10.   조채원             filterList 추가
+ * 2022. 8. 16.   고혜인             rnum, comMemList 추가
+ * 2022. 8. 29.	   조채원		  projReivewList, MemReview 추가
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Data
+@EqualsAndHashCode(of="projId")
+public class OutProjVO {
+   
+   private int rnum;
+   
+   @NotBlank(groups= {DeleteGroup.class, UpdateGroup.class})
+   private String projId;
+   private String projRegist;
+   @NotBlank
+   private String projEmptype;
+   @NotBlank(groups= {InsertGroup.class})
+   private String projType;
+   @NotBlank
+   private String projRecruitfdate;
+   @NotBlank(groups= {InsertGroup.class})
+   private String projPlanstate;
+//   @NotBlank
+   private Integer projMemnum;
+   @NotBlank(groups= {InsertGroup.class})
+   private String projSdate;
+   @NotBlank(groups= {InsertGroup.class})
+   private String projFdate;
+   @NotNull(groups= {InsertGroup.class})
+   private int projEstimate;
+   @NotBlank(groups= {InsertGroup.class})
+   private String projContent;
+   private String projQualifi;
+   private int projApprove;
+   private String projReject;
+   private Float projRating;
+   private String projRealsdate;
+   private String projRealfdate;
+   private String projLoc;
+   private String projState;
+   private String projRecruitsdate;
+   @NotBlank(groups= {InsertGroup.class})
+   private String projTitle;
+   private int projRealNum;
+   
+   // 기업회원 등급
+   private String comGrd;
+   
+   
+   // 고용 형태 배열 (검색에서 사용)
+   private String[] projEmptypeList;
+   
+   public void setProjEmptypeList(String projEmptype) {
+	   // , 를 기준으로 잘라서 리스트로 만드는거 해야함
+	   if(projEmptype==null || projEmptype.length() ==0) {
+		   return;
+	   }
+	   this.projEmptypeList = projEmptype.split(",");
+   }
+   
+   // 기업회원 등급 배열(검색에서 사용)
+   private String[] comGrdList;
+   
+   public void setComGrdList(String comGrd) {
+	   if(comGrd==null || comGrd.length() ==0) {
+		   return;
+	   }
+	   this.comGrdList = comGrd.split(",");
+   }
+   
+   
+   
+   //공통 코드 관련
+   private List<CommonCodeVO>  outObjList;
+   private List<CommonCodeVO>  outSkillList;
+   
+   
+   
+   // 프로젝트 직무 분야 리스트
+   private List<ObjectVO> objList;
+   // 프로젝트 기술 리스트
+   private List<SkillVO> skillList;
+   
+   // 프로젝트 직무 분야 리스트
+   private List<String> objSingleList;
+   
+   // 프로젝트 기술 리스트
+   private List<String> skillSingleList;
+   
+   // 필터링 단어 리스트
+   private List<String> filterList;
+   
+   // 기업회원
+   private ComMemberVO comMemList;
+   
+   // 프로젝트 리뷰 리스트
+   private List<ProjReviewVO> projReviewList;
+   
+   // 일반 회원 리뷰 리스트
+   private List<MemReviewVO> memReviewList;
+   
+   private List<locationVO> locList;
+
+   
+   private String[] projObj;
+   
+   public void setProjObj(String[] projObj) {
+      if(projObj==null || projObj.length ==0) {
+    	  return;
+      }
+      this.projObj = projObj;
+      this.objList = new ArrayList<>();
+      for(String obj:projObj) {
+         if(obj.isEmpty()) continue;
+         objList.add(new ObjectVO(obj));
+      }
+   }
+   
+   private String[] projSkill;
+
+   public void setProjSkill(String[] projSkill) {
+      if(projSkill==null || projSkill.length ==0) {
+    	  return;
+      }
+      this.projSkill = projSkill;
+      this.skillList = new ArrayList<>();
+      for(String skill:projSkill) {
+         if(skill.isEmpty()) continue;
+         skillList.add(new SkillVO(skill));
+      }
+      
+   }
+
+	
+//	public void setGenLoc(String[] projLoc) {
+//		if(projLoc==null || projLoc.length==0)return;
+//		this.projLoc = projLoc;
+//		this.locList = new ArrayList<>();
+//		for(String loc:projLoc) {
+//			if(loc.isEmpty()) continue;
+//			locList.add(new locationVO(loc));
+//		}
+//	}
+   
+
+
+
+
+}

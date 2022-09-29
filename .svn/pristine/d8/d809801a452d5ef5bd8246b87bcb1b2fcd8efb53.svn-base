@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.common.mypage.memInfo.dao.MemberInfoDAO">
+
+	<select id="selectGenMem" parameterType="string"
+		resultType="kr.or.ddit.common.member.vo.GenMemberVO">
+		SELECT *
+		FROM GEN_MEMBER
+		WHERE GEN_ID = #{memId}
+	</select>
+	<select id="selectComMem" parameterType="string"
+		resultType="kr.or.ddit.common.member.vo.ComMemberVO">
+		SELECT *
+		FROM COM_MEMBER
+		WHERE COM_ID = #{memId}
+	</select>
+
+	<update id="updateGenMember"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		UPDATE GEN_MEMBER SET
+		GEN_NAME=#{genName,jdbcType=VARCHAR},
+		GEN_NICK=#{genNick,jdbcType=VARCHAR},
+		GEN_MAIL=#{genMail,jdbcType=VARCHAR},
+		GEN_HP=#{genHp,jdbcType=VARCHAR},
+		GEN_INTRO=#{genIntro,jdbcType=VARCHAR},
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(genImg)">		
+				 GEN_IMG = #{genImg,jdbcType=VARCHAR}
+			</if>
+		
+		WHERE
+		GEN_ID = #{memId}
+	</update>
+
+
+	<update id="updateComMember"
+		parameterType="kr.or.ddit.common.member.vo.ComMemberVO">
+		UPDATE COM_MEMBER SET
+		COM_COMNAME=#{comComname,jdbcType=VARCHAR},
+		COM_NICK=#{comNick,jdbcType=VARCHAR},
+		COM_COMCEO=#{comComceo,jdbcType=VARCHAR},
+		COM_MAIL=#{comMail,jdbcType=VARCHAR},
+		COM_COMTEL=#{comComtel,jdbcType=VARCHAR},
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(comImg)">		
+				 COM_IMG = #{comImg,jdbcType=VARCHAR}
+			</if>
+		WHERE
+		COM_ID = #{memId}
+
+	</update>
+
+	<select id="selectMemberForAuth"
+		parameterType="kr.or.ddit.common.member.vo.MemberVO"
+		resultType="kr.or.ddit.common.member.vo.MemberVO">
+		SELECT MEM_ID,MEM_PASS,MEM_TYPE,ENABLED
+		FROM V_MEMBER
+		WHERE
+		MEM_ID = #{memId}
+	</select>
+
+	<update id="deleteGenMember" parameterType="string">
+		UPDATE GEN_MEMBER SET
+		GEN_DELETE = 1,
+		GEN_DELETEDATE = SYSDATE
+		WHERE
+		GEN_ID = #{memId}
+	</update>
+
+	<update id="deleteComMember" parameterType="string">
+		UPDATE COM_MEMBER SET
+		COM_DELETE = 1,
+		COM_DELETEDATE = SYSDATE
+		WHERE
+		COM_ID = #{memId}
+
+	</update>
+
+
+	<!-- <resultMap type="kr.or.ddit.common.member.vo.GenMemberVO" id="genMap" 
+		autoMapping="true"> -->
+	<!-- <id property="genId" column="GEN_ID"/> -->
+	<!-- <collection property="objList" javaType="List" ofType="kr.or.ddit.common.mypage.memInfo.vo.GenObjVO" 
+		autoMapping="true"> -->
+	<!-- <id property="objCode" column="GEN_OBJ.OBJ_CODE"/> -->
+	<!-- </collection> -->
+	<!-- <collection property="skillList" javaType="List" ofType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO" 
+		autoMapping="true"> -->
+	<!-- <id property="skillCode" column="GEN_SKILL.SKILL_CODE"/> -->
+	<!-- </collection> -->
+	<!-- </resultMap> -->
+
+	<!-- 직무분야, 기술 관련 -->
+	<select id="genObjList" parameterType="String" resultType="kr.or.ddit.common.mypage.memInfo.vo.GenObjVO">
+		WITH GENOBJ AS (
+		SELECT A.CODE_NAME AS GENOBJ_NAME, A.CODE_ID AS GENOBJ_ID, B.GEN_ID
+		FROM COMMON_CODE A INNER JOIN GEN_OBJ B ON (A.CODE_ID = B.OBJ_CODE)
+		)
+		SELECT
+		DISTINCT B.GENOBJ_NAME AS OBJ_NAME,
+		B.GENOBJ_ID AS OBJ_CODE,
+		A.GEN_ID
+		FROM GEN_OBJ A INNER JOIN GENOBJ B ON(A.GEN_ID = B.GEN_ID)
+		WHERE A.GEN_ID = #{genId}
+	</select>
+	<select id="genSkillList" parameterType="String" resultType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO">
+		WITH GENSKILL AS (
+		SELECT A.CODE_NAME AS GENSKILL_NAME, A.CODE_ID AS GENSKILL_ID, B.GEN_ID
+		FROM COMMON_CODE A INNER JOIN GEN_SKILL B ON (A.CODE_ID = B.SKILL_CODE)
+		)
+		SELECT
+	    DISTINCT B.GENSKILL_NAME AS SKILL_NAME, 
+	    B.GENSKILL_ID AS SKILL_CODE,
+	    A.GEN_ID
+		FROM GEN_SKILL A INNER JOIN GENSKILL B ON(A.GEN_ID = B.GEN_ID)
+		WHERE A.GEN_ID = #{genId}
+	</select>
+	
+	<!-- 선호지역 -->
+	<select id = "genLocList" parameterType="String" resultType="kr.or.ddit.common.mypage.memInfo.vo.locationVO">
+		WITH GENLOC AS (
+		SELECT A.CODE_NAME AS GENLOC_NAME, A.CODE_ID AS GENLOC_ID, B.GEN_ID
+		FROM COMMON_CODE A INNER JOIN LOCATION B ON (A.CODE_ID = B.LOC_CODE)		
+		)
+		SELECT
+		DISTINCT B.GENLOC_NAME AS LOC_NAME,
+		B.GENLOC_ID AS LOC_CODE,
+		A.GEN_ID
+		FROM LOCATION A INNER JOIN GENLOC B ON(A.GEN_ID = B.GEN_ID)
+		WHERE A.GEN_ID = #{genId}
+	</select>
+
+
+	<insert id="insertSkill"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		INSERT ALL
+		<foreach collection="skillList" item="skill">
+			INTO GEN_SKILL(
+			 <if test="skill.skillCode != null and skill.skillCode != ''">
+			SKILL_CODE,
+			</if>
+			GEN_ID
+			) VALUES(
+			 <if test="skill.skillCode != null and skill.skillCode != ''">
+			#{skill.skillCode}
+			</if>
+			,#{genId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+	<insert id="insertObj"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		INSERT ALL
+		<foreach collection="objList" item="obj">
+			INTO GEN_OBJ(
+			<if test="obj.objCode != null and obj.objCode != ''">
+			OBJ_CODE,
+			</if>
+			GEN_ID
+			) VALUES(
+			 <if test="obj.objCode != null and obj.objCode != ''">
+			#{obj.objCode}
+			</if>
+			,#{genId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+<!-- 선호지역 -->
+	<insert id="insertLoc"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		INSERT ALL
+		<foreach collection="locList" item="loc">
+			INTO LOCATION(
+			LOC_CODE,
+			GEN_ID
+			) VALUES(
+			#{loc.locCode}
+			,#{genId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+
+
+	<delete id="delSkill" parameterType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO">
+		DELETE FROM GEN_SKILL
+		WHERE
+		SKILL_CODE=#{skillCode}
+		AND
+		GEN_ID = #{genId}
+	</delete>
+	
+	<delete id="delObj" parameterType="kr.or.ddit.common.mypage.memInfo.vo.GenObjVO">
+		DELETE FROM GEN_OBJ
+		WHERE
+		OBJ_CODE=#{objCode}
+		AND
+		GEN_ID = #{genId}
+	</delete>
+	
+	<delete id="delLoc" parameterType="kr.or.ddit.common.mypage.memInfo.vo.locationVO">
+		DELETE FROM LOCATION
+		WHERE
+		LOC_CODE=#{locCode}
+		AND
+		GEN_ID = #{genId}
+	</delete>
+	
+	<select id="selectComImg" parameterType="String" resultType="kr.or.ddit.common.member.vo.ComMemberVO">
+	SELECT DISTINCT A.COM_IMG, A.COM_ID , COM_IMG, B.PROJ_REGIST, B.PROJ_ID
+	FROM COM_MEMBER A INNER JOIN OUTSOURCING_PROJ B ON (A.COM_ID = B.PROJ_REGIST)
+	AND B.PROJ_ID = #{projId}
+	</select>
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

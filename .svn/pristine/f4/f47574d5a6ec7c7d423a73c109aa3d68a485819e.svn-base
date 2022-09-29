@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.pms.report.dao.ReportDAO">
+	
+	<sql id="report">
+		<where>
+			REPORT_PROJ = #{detailCondition.reportProj}
+<!-- 			AND REPORT_STATE != 'DELETE' -->
+        	<if test="simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+	        	<choose>
+					<when test="simpleCondition.searchType eq 'reportTitle'">
+						AND INSTR(REPORT_TITLE, #{simpleCondition.searchWord}) > 0
+					</when>			        		
+					<when test="simpleCondition.searchType eq 'reportWriter'">
+						AND INSTR(REPORT_WRITER, #{simpleCondition.searchWord}) > 0
+					</when>			        		
+					<otherwise>
+						AND INSTR(REPORT_TITLE, #{simpleCondition.searchWord}) > 0
+						OR INSTR(REPORT_WRITER, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+	        	</choose>
+        	</if>
+        </where>
+	</sql>
+	
+	<select id="selectTotalReport" resultType="int">
+		SELECT COUNT(*)
+		FROM REPORT
+		<include refid="report"/>
+	</select>
+	
+	
+	<select id="selectReportList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.pms.report.vo.ReportVO">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		        WITH WROITERNAME AS (
+				    SELECT A.MEM_ID AS ID, COALESCE(A.GEN_NAME , A.COM_NAME) AS WRITER_NAME ,B.REPORT_ID
+				    FROM V_MEMBERALL A INNER JOIN REPORT B ON(A.MEM_ID = B.REPORT_WRITER)
+				)
+				SELECT A.REPORT_ID, A.REPORT_PROJ, A.REPORT_TITLE, A.REPORT_CONTENT
+						            ,TO_CHAR(A.REPORT_DATE, 'YYYY-MM-DD')REPORT_DATE, A.REPORT_WRITER , B.WRITER_NAME
+						        FROM REPORT A INNER JOIN WROITERNAME B ON(A.REPORT_ID = B.REPORT_ID)
+				<include refid="report"/>
+		        ORDER BY REPORT_DATE DESC
+		    ) A
+		) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+		ORDER BY REPORT_DATE DESC
+	</select>
+	
+	<select id="selectReport" parameterType="String" resultType="kr.or.ddit.pms.report.vo.ReportVO">
+		WITH WROITERNAME AS (
+			SELECT A.MEM_ID AS ID, COALESCE(A.GEN_NAME , A.COM_NAME) AS WRITER_NAME ,B.REPORT_ID
+			FROM V_MEMBERALL A INNER JOIN REPORT B ON(A.MEM_ID = B.REPORT_WRITER)
+		)
+		SELECT
+		    A.REPORT_ID,
+		    A.REPORT_PROJ,
+		    A.REPORT_TITLE,
+		    A.REPORT_CONTENT,
+		    A.REPORT_DATE,
+		    A.REPORT_WRITER,
+		    B.WRITER_NAME
+		FROM REPORT A INNER JOIN WROITERNAME B ON(A.REPORT_ID = B.REPORT_ID)
+		WHERE A.REPORT_ID = #{reportId}
+	</select>
+	
+	<insert id="insertReport" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		<selectKey resultType="String" keyProperty="reportId" order="BEFORE">
+			SELECT 'RP' || TO_CHAR(SYSDATE, 'yymmdd') ||  LPAD(COUNT(*) + 1, 4, '0') REPORT_ID
+		    FROM REPORT
+		    WHERE SUBSTR(REPORT_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT INTO REPORT (
+		    REPORT_ID, REPORT_PROJ, REPORT_TITLE
+		    ,REPORT_CONTENT ,REPORT_DATE ,REPORT_WRITER
+		) VALUES (
+		     #{reportId}, #{reportProj}, #{reportTitle}
+		    , #{reportContent}, SYSDATE, #{reportWriter}
+		)		
+	</insert>
+	
+	
+	<update id="updateReport" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		UPDATE report
+		    SET
+		        REPORT_TITLE = #{reportTitle}, REPORT_CONTENT = #{reportContent}, REPORT_DATE = SYSDATE
+		WHERE
+		    REPORT_ID = #{reportId}
+	</update>
+	
+	<delete id="deleteReport" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		DELETE FROM REPORT
+		WHERE
+		    report_id = #{reportId}
+	</delete>
+	
+	<select id="involveReportTotal" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="int">
+		SELECT COUNT(*)
+		FROM REPORT
+		WHERE REPORT_WRITER = #{detailCondition.reportWriter}
+		AND REPORT_PROJ = #{detailCondition.reportProj}
+	</select>
+	
+	<select id="involveReportList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.pms.report.vo.ReportVO">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		        WITH WROITERNAME AS (
+				    SELECT A.MEM_ID AS ID, COALESCE(A.GEN_NAME , A.COM_NAME) AS WRITER_NAME ,B.REPORT_ID
+				    FROM V_MEMBERALL A INNER JOIN REPORT B ON(A.MEM_ID = B.REPORT_WRITER)
+				)
+				SELECT A.REPORT_ID, A.REPORT_PROJ, A.REPORT_TITLE, A.REPORT_CONTENT
+						            ,TO_CHAR(A.REPORT_DATE, 'YYYY-MM-DD')REPORT_DATE, A.REPORT_WRITER , B.WRITER_NAME
+						        FROM REPORT A INNER JOIN WROITERNAME B ON(A.REPORT_ID = B.REPORT_ID)
+			WHERE REPORT_WRITER = #{detailCondition.reportWriter}
+			AND REPORT_PROJ = #{detailCondition.reportProj}
+			 ) A
+		) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+<!-- 	파일 업로드 관련 -->
+	<insert id="insertAttatches" parameterType="kr.or.ddit.common.vo.AttatchVO">
+		<selectKey resultType="String" keyProperty="attId" order="BEFORE">
+			SELECT 'AT' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(NVL(MAX(SUBSTR(ATT_ID, 9)),0)+1, 4, '0') ATT_ID
+			FROM ATTATCH
+			WHERE SUBSTR(ATT_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT ALL
+			INTO ATTATCH (
+			    ATT_ID
+			    , ATT_FILENAME
+			    , ATT_SAVENAME
+			    , ATT_MIME
+			    , ATT_FILESIZE
+			) VALUES (
+			    #{attId, jdbcType=VARCHAR}
+			    , #{attFilename, jdbcType=VARCHAR}
+			    , #{attSavename, jdbcType=VARCHAR}
+			    , #{attMime, jdbcType=VARCHAR}
+			    , #{attFilesize, jdbcType=NUMERIC}
+			    
+			)
+		SELECT * FROM DUAL
+	</insert>
+	
+	<insert id="insertReportAttatch" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		INSERT ALL
+		<foreach collection="attatchList" item="attatch">
+		INTO REPORT_ATTATCH (
+		    REPORT_ID,
+		    ATT_ID
+		) VALUES (
+		    #{reportId, jdbcType=VARCHAR}
+		    , #{attatch.attId, jdbcType=VARCHAR}
+		)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	
+	<select id="selectReportFileList" parameterType="kr.or.ddit.pms.report.vo.ReportVO" resultType="kr.or.ddit.common.vo.AttatchVO" >
+		SELECT *
+		FROM ATTATCH A
+		WHERE A.ATT_ID IN (
+		        SELECT ATT_ID
+		        FROM REPORT_ATTATCH
+		        WHERE REPORT_ID = #{reportId}
+		    )
+	</select>
+	
+	
+	<select id="selectAttatch" parameterType="String" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT
+		    ATT_ID,
+		    ATT_FILENAME,
+		    ATT_SAVENAME,
+		    ATT_MIME,
+		    ATT_FILESIZE
+		FROM
+		    ATTATCH
+		WHERE ATT_ID = #{attId}
+	</select>
+	
+	
+	<delete id="deleteReportAttatches" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		DELETE FROM REPORT_ATTATCH
+		WHERE REPORT_ID = #{reportId}
+		AND ATT_ID IN
+		<foreach collection="delAttNos" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteAttatches" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		DELETE FROM ATTATCH
+		WHERE ATT_ID IN
+		<foreach collection="delAttNos" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteReportAttatchAll" parameterType="kr.or.ddit.pms.report.vo.ReportVO">
+		DELETE FROM report_attatch
+		WHERE
+		    report_id = #{reportId}
+	</delete>
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+

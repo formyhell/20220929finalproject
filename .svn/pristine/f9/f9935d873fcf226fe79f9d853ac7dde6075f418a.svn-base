@@ -1,0 +1,586 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* 2022. 8. 27.     고혜인      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+
+<link rel="stylesheet" href="${cPath }/resources/assetsPms/css/icofont.css">
+<%-- <script src="${cPath }/resources/assetsPms/js/jquery-3.5.1.min.js" type="text/javascript"></script> --%>
+<script src="${cPath }/resources/js/jquery-3.6.0.min.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+
+<style> 
+	.profileImg {
+		width: 85px;
+		height: 85px;
+		border-radius: 70%;
+		border-style:solid;
+		border-width:2px;
+		border-color: #314555;
+	}
+</style>
+<link href="${cPath }/resources/css/modal/myModal.css" rel="stylesheet">
+<link href="${cPath }/resources/css/pre/preStyle.css" rel="stylesheet">
+
+<sec:authentication property="principal" var="authMember" />
+<div id="services-section" class="pt-xs-60" style="padding-top: 5vh">
+<div class="container">
+	<div class="row">
+		<div class="col-sm-13">
+			<div class="block-title v-line mb-45"> 
+				<h2>Community</h2> 
+				<p class="italic"> 
+					자유게시판
+				</p> 
+				
+			</div>
+			<div class="col-sm-12 blog-post-hr post-section">
+				<div class="blog-post mb-30">
+					<div class="post-meta">
+
+						<span>by <c:out value="${cmnt.cmntWriter }" />, </span> 
+						<span><c:out value="${cmnt.cmntDate }" /></span> 
+						<span><i class="icofont icofont-eye-alt"></i> <c:out value="${cmnt.cmntHit }" />, </span> 
+						<span><i class="fa fa-thumbs-up"></i> <c:out value="${cmnt.cmntRec }" />, </span> 
+						<span><i class="fa fa-bell"></i> <c:out value="${cmnt.cmntReport }" /></span>
+						<div class="float-right">
+							<sec:authorize access="isAuthenticated()">
+<%-- 								<c:if test="${authMember.realMember.memType.get(0) eq 'ROLE_GENMEM' }"> --%>
+									<c:if test="${cmnt.cmntWriter eq authMember.realMember.memId }">
+										<button onclick="location='${cPath }/community/${cmnt.cmntNo }/form'" class="btn btn-blueOcean">수정</button>
+										<form:form action="${cPath }/community/${cmnt.cmntNo}" method="post" modelAttribute="cmnt" class="i-block" id="delForm">
+											<input type="hidden" name="_method" value="delete" id="delForm" />
+
+											<input type="submit" value="삭제" data-href="${cPath }/community/${cmnt.cmntNo }" class="btn btn-grayDay" id="delBtn"/>
+											<form:input type="hidden" path="cmntNo" id="cmntNo" value="${cmnt.cmntNo }" />
+										</form:form>
+									</c:if>
+<%-- 								</c:if> --%>
+<%-- 								<c:if test="${authMember.realMember.memType.get(0) eq 'ROLE_COMMEM' }"> --%>
+<%-- 									<c:if test="${cmnt.cmntWriter eq authMember.realMember.comNick }"> --%>
+<%-- 										<button onclick="location='${cPath }/community/${cmnt.cmntNo }/form'" class="btn btn-blueOcean">수정</button> --%>
+
+<%-- 										<form:form action="${cPath }/community/${cmnt.cmntNo}" method="post" modelAttribute="cmnt" class="i-block" id="delForm"> --%>
+<!-- 											<input type="hidden" name="_method" value="delete" /> -->
+
+<%-- 											<input type="submit" value="삭제" data-href="${cPath }/community/${cmnt.cmntNo }" class="btn btn-grayDay" id="delBtn" /> --%>
+<%-- 											<form:input type="hidden" path="cmntNo" id="cmntNo" value="${cmnt.cmntNo }" /> --%>
+<%-- 										</form:form> --%>
+<%-- 									</c:if> --%>
+<%-- 								</c:if> --%>
+							</sec:authorize>
+						</div>
+
+						<div class="post-header" style="color: black;">
+							<h2>
+								${cmnt.cmntTitle }
+							</h2>
+						</div>
+						<div class="post-entry padding-20" style="color: black;">
+							${cmnt.cmntContent }
+							
+						</div>
+						<!-- 추천, 신고 -->
+						
+						<div class="text-center">
+							<button id="cmntRec" class="line-btn"  style="display: inline-block;" ><i class="fa fa-thumbs-up"></i>추천<span id="recRst">${cmnt.cmntRec }</span></button>
+							<button id="cmntReport" class="line-btn" onclick="f_modalOpen()"  style="display: inline-block;"><i class="fa fa-bell"></i>신고<span id="repRst">${cmnt.cmntReport }</span></button>
+						</div>
+					<hr />
+					</div>
+
+					<div class="clearfix"></div>
+
+					<!-- 댓글 -->
+					<div class="post-comment mtb-30">
+
+							<form method="post" id="repInput">
+								<sec:csrfInput />
+								<div class="mtb-60">
+									<div class="row mt-30">
+										<div>
+											<div class="col-md-12">
+												<input type="hidden" id="repCmntno" name="repCmntno" value="${cmnt.cmntNo }"> 
+												<textarea placeholder="내용을 입력해주세요" name="repContent" id="repContent" class="form-full" required></textarea>
+											</div>
+											<div class="col-md-12">
+												<button type="submit" class="btn btn-primary">저장</button>
+												<button type="reset" class="btn btn-warning">취소</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</form>
+
+						<div id="replyView" class="post-comment mtb-30">
+						</div>
+						<div id="replyPaging" class="pagingArea pagination-nav text-left col-md-12"></div>
+					</div>
+					<div class="clearfix"></div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</div></div>
+
+<!-- 신고사유 입력할 모달 -->
+<div id="mymodal">
+	<div class="my-content">
+		<div class="modal-content padding-20 width-75per" >
+			<div class="modal-header">
+				<h5 class="modal-title">
+					신고 사유
+					<button type="button" class="btn btn-secondary float-right" onclick="f_check()">&times;</button>
+				</h5>
+			</div>
+				<div class="modal-body">
+					<textarea id="trepReason" style="width: 100%;" placeholder="신고 사유를 입력해주세요"></textarea>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-blueOcean" id="trepBtn">저장</button>
+				</div>
+		</div>
+	</div>
+</div>
+
+<script src="${cPath }/resources/js/board/delAlert.js"></script>
+<script> //jstl 태그 선언
+let header = '${_csrf.headerName}';
+let token =  '${_csrf.token}'; 
+
+let repCmntNo = '${cmntNo}';
+// let loginUser = '${authMember.realMember.memId }';
+
+let memType = '${authMember.realMember.memType.get(0)}';
+
+var repWriter = "${authMember.realMember.memId }";
+// <c:if test="${authMember.realMember.memType.get(0) eq 'ROLE_COMMEM' }">
+// 	repWriter = "${authMember.realMember.comNick}";	
+// </c:if>
+// <c:if test="${authMember.realMember.memType.get(0) eq 'ROLE_GENMEM' }">
+// 	repWriter = "${authMember.realMember.genNick}";
+// </c:if>
+// <c:if test="${authMember.realMember.memType.get(0) eq 'ROLE_ADMIN' }">
+// 	repWriter = "${authMember.realMember.adminId }";
+// </c:if>
+
+var page = 1;
+
+let repInput = $("#repInput");
+let replyView = $("#replyView");
+let replyPaging = $("#replyPaging");
+
+
+function f_modalOpen(){
+    mymodal.style.display="block";
+}
+function f_check(){
+    mymodal.style.display="none";
+}
+
+// $(document).on("click", ".line-btn", function() {
+// 	console.log("일단 눌렀음");
+// 	console.log($(this).attr("class"));
+	
+// 	if($(this).hasClass("active") === true) {
+// 		$(this)
+// 	} else {
+// 		$(this).addClass("active");		
+// 	}
+// });
+
+//추천
+$(document).on("click", "#cmntRec", function(){
+	event.preventDefault();
+
+	let data = JSON.stringify({
+		recMem:repWriter
+		, recCmnt:repCmntNo
+	});
+	let cmntRec = $("#recRst").text();
+	console.log("cmntRec ==>> ", cmntRec);
+	$.ajax({
+		type:"post",
+		dataType:"text",
+		url: "${cPath}/community/"+repCmntNo+"/rec",
+		data:data,
+		contentType: 'application/json;charset=utf-8',
+		beforeSend : function(xhr){
+			xhr.setRequestHeader(header,token);
+		},
+		success: function(result) {
+			if(result == "추천되었습니다"){
+				$("#recRst").text(Number(cmntRec)+1);
+				$("#cmntRec").addClass("active");
+				successAlert(result);
+			} else if(result == "추천 취소되었습니다"){
+				$("#recRst").text(Number(cmntRec)-1);
+				$("#cmntRec").removeClass("active");
+				infoAlert(result);
+			}
+
+		},
+		error:function(request, status, err){
+			console.log("추천오류");
+			console.log(request);
+			console.log(status);
+			console.log(err);				
+		}
+	});
+	
+})
+
+//신고
+$(document).on("click", "#trepBtn", function(){
+	event.preventDefault();
+
+	let trepReason = $("#trepReason").val();
+	let data = JSON.stringify({
+		trepReason:trepReason
+		, trepCmnt : repCmntNo
+		, trepReporter : repWriter
+	});
+	
+	console.log(data);
+	let repRst = $("#repRst").text();
+	$.ajax({
+		type:"post",
+		dataType:"text",
+		url:"${cPath}/community/"+repCmntNo+"/report",
+		data:{
+			data: data
+		},
+// 		contentType: 'application/json;charset=utf-8',
+		beforeSend : function(xhr){
+			xhr.setRequestHeader(header,token);
+		},
+		success: function(result) {
+			$("#trepReason").val("");
+			
+			if(result == "신고되었습니다"){
+				$("#repRst").text(Number(repRst)+1);	
+				$("#cmntRec").addClass("active");
+				successAlert(result); 
+			}else {
+				infoAlert(result); 
+			}
+			
+			f_check();
+			
+		},
+		error:function(request, status, err){
+			warningAlert("신고 오류입니다");
+			console.log(request);
+			console.log(status);
+			console.log(err);				
+		}
+	});
+	
+})
+
+
+//댓글
+$(document).ready(function() {
+	getRep(page);
+});
+
+let url = "${cPath}/community/"+repCmntNo+"/reply";
+
+
+
+
+let currentPage = 1;
+//댓글 등록
+repInput.on("submit", function() {
+	event.preventDefault();
+// 	let inputData = repInput.serializeObject();
+	console.log("===========작성자=============", repWriter);
+	
+	let repContent = $("#repContent").val();
+
+	$.ajax({
+		type:"post",
+		url:url,
+		data:JSON.stringify({
+			repWriter:repWriter
+			, repCmntno : repCmntNo
+			, repContent : repContent
+		}),
+		contentType: 'application/json;charset=utf-8',
+		beforeSend : function(xhr){
+			xhr.setRequestHeader(header,token);
+		},
+		success: function(result) {
+			console.log("등록완료")
+			console.log(result);
+			
+			$("#repContent").val(""); //내용 비우기
+// 			replyPaging.html("");	  //페이징 비우기
+			
+ 			getRep(currentPage);	  //내용 추가
+		},
+		error:function(request, status, err){
+			console.log(request);
+			console.log(status);
+			console.log(err);			
+		}
+	});
+});
+
+//댓글 페이징
+let pagingArea = $(".pagingArea").on("click", "a", function(event) {
+	currentPage = $(this).data("page");
+	getRep(currentPage);
+});
+
+// 댓글 리스트 확인
+function getRep(page){
+	
+	$.ajax({
+		type:"get"
+		, url : url + "?page=" + page
+		, dataType:'json'
+		, contentType : "application/json;charset=utf-8"
+		, success: function(result) {
+			
+			let img = null;
+			replyView.children().remove();
+			replyPaging.children().remove();
+
+			console.log("댓글 수 ==> ",result); //확인용
+			console.log("pagingVO", result.pagingVO);
+			let divTag =
+				replyView.append(
+					$("<h4>").text("댓글").append(
+							$("<span>").addClass("comment-numb").text("("+result.pagingVO.totalRecord+")")
+							, $("<hr>")
+					)
+				);
+			
+			
+			if(result.repList.length == 0){
+				replyView.append($("<div>").text("새로운 댓글을 달아보세요!"));
+			
+			} else {
+				$.each(result["repList"], function(idx, rep) {
+				if(rep.genImg != null){
+					img = "${cPath}/resources/images/" + rep.genImg; 
+				} else if(rep.comImg != null){
+					img = "${cPath}/resources/images/" + rep.comImg; 
+				} else {
+					img = "${cPath}/resources/assetsPms/images/dashboard/1.png";
+				}
+					replyView.append(
+						$("<ul>").attr("class","comment-list mt-30").append(
+							$("<li>").append(
+								$("<div>").attr("class","comment-avatar").append(
+									$("<img>").attr({
+										"src" : img
+										, "class": "profileImg"
+									})	
+								)
+								, $("<div>").append(
+									$("<div>").attr({
+										"class":"comment-detail"
+										, "id" : "commentField_" + rep.repNo
+										}).append(
+										$("<div>").text(rep.repWriter)
+										, $("<div>").attr("class", "post-meta").append(
+											$("<span>").text(rep.repDate)
+											, $("<a>").attr({
+												"class":"comment-reply-btn"
+												, "id" : "childReply_"+rep.repNo }).append(
+											)
+										)
+										, $("<pre>").attr("id","repContent_"+rep.repNo).text(rep.repContent)
+									)
+								)
+								, $("<div>").append(function(b_idx, b_str) {
+									
+									if(repWriter == rep.repWriter){	
+										return [
+							                $("<button>").attr({
+							                	"type":"button",
+							                	"id": "upModeBtn_"+rep.repNo,
+							                    "class": "btn btn-blueOcean",
+							                    "data-rno":rep.repNo,
+							                    "onclick" : `repUpForm(\${rep.repNo},'\${rep.repContent}')`
+							                }).html("수정"),
+							                $("<button>").attr({
+							                	"type":"button",
+							                	"id": "repDelBtn_"+rep.repNo,
+							                	"class": "btn btn-grayDay",
+							                    "data-rno":rep.repNo, 
+							                    "onclick" : "repDelClick("+rep.repNo+")"
+							                }).html("삭제")                         			
+										];
+									}
+								})
+							)		
+						)		
+					)
+					
+				});
+				
+				replyPaging.append( result.pagingVO.pagingHTMLBS );
+			}
+			
+			
+		},
+		error:function(request, status, err){
+			console.log("댓글 조회 실패");
+			console.log(request);
+			console.log(status);
+			console.log(err);				
+		}
+	});
+}
+
+
+//댓글 수정폼
+function repUpForm(repNo, repContent) {
+	$("#repContent_"+repNo).hide();
+	$("#replyUpdateView").show();
+	$("#upModeBtn_"+repNo).hide();
+	$("#repDelBtn_"+repNo).hide();
+	
+	console.log("여기까지 왔음");
+	
+	$("#commentField_"+repNo).append(
+		$("<div>").attr("id","cancel_"+repNo).append(
+			$("<textarea>").attr({
+				"id": "updateArea_"+repNo,
+				"class": "form-control",
+				"required": "required",
+			}).val(repContent)
+			, $("<button>").attr({
+				"onclick":"repUpClick("+repNo+")"
+				, "class":"btn btn-blueOcean"
+				, "id":"saveUpBtn_"+repNo
+				, "data-rno":repNo
+			}).html("저장")
+			, $("<button>").attr({
+				"onclick":"cancelBtn("+repNo+")"
+				, "class":"btn btn-grayDay"
+				, "id":"cancelBtn_"+repNo
+				, "data-rno":repNo
+			}).html("취소")
+		)
+	);
+
+    
+}
+function cancelBtn(repNo) {
+	$("#repContent_"+repNo).show();
+	$("#repDelBtn_"+repNo).show();
+	$("#upModeBtn_"+repNo).show();
+
+	$("#cancel_"+repNo).remove();
+}
+
+
+//댓글 수정
+function repUpClick(repNo) {
+	console.log("댓글 수정중...");
+	
+	let updateArea = $("#updateArea_"+repNo).val();
+	console.log(updateArea);
+	
+	Swal.fire({
+        icon: 'success',
+        title: '수정되었습니다'
+	}).then((result) => {
+		if (result.isConfirmed) {
+			$.ajax({
+				type:"put",
+				url:url,
+				data:JSON.stringify({
+					repNo:repNo
+					, repContent : updateArea
+				}),
+				contentType: 'application/json;charset=utf-8',
+				beforeSend : function(xhr){
+					xhr.setRequestHeader(header,token);
+				},
+				success: function(result) {
+					getRep(1);
+				},
+				error:function(request, status, err){
+					console.log("수정 실패");
+					console.log(request);
+					console.log(status);
+					console.log(err);				
+				}
+			});
+        }
+	});
+	
+
+}
+
+//댓글 삭제
+function repDelClick(repNo) {
+	Swal.fire({
+		title:'삭제하시겠습니까?',
+		icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '확인',
+        cancelButtonText: '취소'
+	}).then((result) => {
+		if (result.isConfirmed) {
+			$.ajax({
+				type:"delete"
+				, url:url
+				, data:JSON.stringify({repNo:repNo})
+				, contentType:"application/json;charset=utf-8"
+				, beforeSend : function(xhr){
+					xhr.setRequestHeader(header, token);
+				}
+				, success: function(result) {
+					getRep(1);
+				}
+				, error:function(request, status, err){
+					console.log("댓글 삭제 실패");
+					console.log(request);
+					console.log(status);
+					console.log(err);				
+				}
+			})
+        }
+	})
+}
+function successAlert(msg){
+	 Swal.fire({
+         icon: 'success',
+         title: msg
+     });
+}
+function infoAlert(msg){
+	 Swal.fire({
+         icon: 'info',
+         title: msg
+     });
+}
+function warningAlert(msg){
+	 Swal.fire({
+         icon: 'warning',
+         title: msg,
+         text: '다시 시도해주세요'
+     });
+}
+
+
+
+</script>

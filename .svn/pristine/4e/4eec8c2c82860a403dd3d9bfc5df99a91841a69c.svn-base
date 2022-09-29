@@ -1,0 +1,99 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 1.      홍승조      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+ <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+
+                 
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="card" id="cardBody">
+				<div class="card-header">
+					<span>BY ${report.reportWriter }, </span> <span id="issueDate">${report.reportDate }</span>
+					<h5>${report.reportTitle }</h5>
+				</div>
+				<sec:authentication property="principal" var="authMember" /> 
+					<div class="card-body">
+						<div class="form theme-form">
+							<div class="row">
+								<div class="col-sm-6">
+									<div class="mb-3">
+										<label>프로젝트 </label> 
+											<div class="yu_div_css">${report.reportProj }</div>
+									</div>
+								</div>
+								<div class="col-sm-6">
+									<div class="mb-3">
+										<label>작성자</label> 
+										<div class="yu_div_css">${report.reportWriter }</div>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-sm-12">
+									<div class="mb-3">
+										<label>내용</label> 
+										<div class="yu_div_css">${report.reportContent }</div>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-sm">
+									<div class="mb-3">
+										<label>첨부파일</label>
+											<div class="yu_div_css">
+											    <c:if test="${not empty report.attatchList }">
+													<c:forEach items="${report.attatchList }" var="attatch" varStatus="vs">
+														<a href="${cPath}/pms/${report.reportProj}/report/${attatch.attId}/attatch">${attatch.attFilename }</a>
+														<c:if test="${not vs.last }">  </c:if>
+													</c:forEach>
+												</c:if>
+											</div>
+									</div>
+								</div>
+							</div>
+							
+							
+							<div class="row">
+								<div class="col">
+									<div class="text-end">
+										<c:if test="${report.reportWriter eq authMember.realMember.memId }">
+											<button class="btn btn-primary" onclick="location='${cPath }/pms/${projId}/report/${report.reportId}/form'">수정</button>
+										
+<%-- 											<form:form action="${cPath }/pms/${report.reportProj }/report/${report.reportId }" method="post" id="deleteId" --%>
+<%-- 												modelAttribute="report" style="display: inline-block;" > --%>
+<!-- 												<input type="hidden" name="_method" value="delete" /> -->
+<!-- 												<input type="button" value="삭제" onclick="deleteCheck()" -->
+<%-- 														class="btn btn-info" data-href="${cPath }/pms/${report.reportProj }/report/${report.reportId }" /> --%>
+<%-- 												<form:input type="hidden" path="reportId" value="${report.reportId }" /> --%>
+<%-- 											</form:form> --%>
+											<form:form action="${cPath }/pms/${report.reportProj }/report/${report.reportId }"
+											method="post" modelAttribute="report" style="display: inline-block;">
+											<input type="hidden" name="_method" value="delete" />
+											<input type="submit"
+												data-href="${cPath }/pms/${report.reportProj }/report/${report.reportId }" class="btn btn-info"
+												value="삭제" />
+
+										</form:form>
+											
+										</c:if>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+			</div>
+		</div>
+	</div>
+</div>

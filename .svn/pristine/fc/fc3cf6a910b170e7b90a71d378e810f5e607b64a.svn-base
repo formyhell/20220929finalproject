@@ -1,0 +1,63 @@
+package kr.or.ddit.outsourcing.contract.service;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.outsourcing.contract.dao.ContractDAO;
+import kr.or.ddit.outsourcing.vo.ContractVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 25.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                    수정자              		 수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 25.     조채원       		최초생성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ContractServiceImpl implements ContractService {
+	private final ContractDAO contractDao;
+
+	@Override
+	public String getApplicant(String applyId) {
+		if(applyId == null) {
+			throw new RuntimeException(String.format("%d를 가진 지원이 없습니다.", applyId));
+		}
+		return contractDao.selectApplicant(applyId);
+	}
+
+	@Override
+	public ServiceResult createContract(ContractVO contract) {
+		if(contract == null) {
+			throw new RuntimeException("계약 작성이 잘못되었습니다.");
+		}
+		int rowcnt = contractDao.insertContract(contract);
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public ContractVO getContract(String applyId) {
+		return contractDao.selectOne(applyId);
+	}
+
+	@Override
+	public ContractVO getContractwithId(String contractId, String comId) {
+		ContractVO contract = contractDao.selectOnewithId(contractId);
+		contract.setComSign(contractDao.selectComSign(comId));
+		String genId = contractDao.selectApplicant(contract.getContractApplyid());
+		contract.setGenSign(contractDao.selectGenSign(genId));
+		return contract;
+	}
+	
+	
+
+}

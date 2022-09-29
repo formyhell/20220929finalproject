@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.portfolio.dao.AwardDAO">
+	<select id="selectAll" parameterType="String" resultType="kr.or.ddit.common.member.vo.AwardVO">
+		SELECT AWARD_NO, AWARD_MEM, AWARD_NAME, AWARD_INSTI, TO_CHAR(AWARD_DATE, 'YYYY-MM-DD') AWARD_DATE, AWARD_DETAIL
+		FROM AWARD
+		WHERE AWARD_MEM = #{memId}
+	</select>
+	
+	<select id="selectAward" parameterType="kr.or.ddit.common.member.vo.AwardVO" resultType="kr.or.ddit.common.member.vo.AwardVO">
+		SELECT AWARD_NO, AWARD_MEM, AWARD_NAME, AWARD_INSTI, TO_CHAR(AWARD_DATE, 'YYYY-MM-DD') AWARD_DATE, AWARD_DETAIL
+		FROM AWARD
+		WHERE AWARD_MEM = #{awardMem}
+		AND AWARD_NAME = #{awardName}
+		AND AWARD_INSTI = #{awardInsti}
+	</select>
+	
+	<insert id="insertAward" parameterType="kr.or.ddit.common.member.vo.AwardVO">
+		INSERT INTO AWARD (
+		    AWARD_NO
+		    , AWARD_MEM
+		  <if test="awardDate != null and awardDate != ''">
+		    , AWARD_DATE
+		  </if>
+		   <if test="awardDetail != null and awardDetail != ''">
+		    , AWARD_DETAIL
+		  </if>
+		    , AWARD_NAME
+		    , AWARD_INSTI
+		) VALUES (
+		    AWARD_NO_SEQ.NEXTVAL
+		    , #{awardMem,jdbcType=VARCHAR}
+		  <if test="awardDate != null and awardDate != ''">
+		    , TO_DATE(#{awardDate,jdbcType=DATE}, 'YYYY/MM/DD')
+		  </if>
+		   <if test="awardDetail != null and awardDetail != ''">
+		    , #{awardDetail,jdbcType=VARCHAR}
+		  </if>
+		  	, #{awardName,jdbcType=VARCHAR}
+		  	, #{awardInsti,jdbcType=VARCHAR}
+		)	
+	</insert>
+	
+	<delete id="deleteAward" parameterType="int">
+		DELETE FROM AWARD WHERE AWARD_NO = #{awardNo}
+	</delete>
+</mapper>

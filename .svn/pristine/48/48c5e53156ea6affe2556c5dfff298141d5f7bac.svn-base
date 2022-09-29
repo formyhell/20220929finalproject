@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.recommendProject.dao.RecommendProjectDAO">
+	<resultMap type="kr.or.ddit.common.mypage.project.recommendProject.vo.RecommendProjectVO" id="RecomProj" autoMapping="true">
+		<id property="projId" column="PROJ_ID"/>
+		<result property="total" column="TOTAL"/>
+	</resultMap>
+	<resultMap type="kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO" id="projectMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID"/>
+	</resultMap>
+	<select id="checkProj" parameterType="string" resultMap="RecomProj">
+	  SELECT A.PROJ_ID AS PROJ_ID, sum(total) AS TOTAL
+		FROM
+		(SELECT DISTINCT PROJ_ID, 10 as total
+		     FROM PROJECT_OBJ
+		    WHERE PROJ_OBJ in (SELECT OBJ_CODE
+		                         FROM GEN_OBJ
+		                        WHERE GEN_ID = #{genId})
+		UNION ALL           
+		SELECT DISTINCT PROJ_ID,  1 as total
+		    FROM PROJECT_SKILL
+		   WHERE PROJ_SKILL in (SELECT SKILL_CODE
+		                          FROM GEN_SKILL
+		                         WHERE GEN_ID = #{genId})
+		UNION ALL
+		SELECT DISTINCT PROJ_ID, 2 as total
+		     FROM OUTSOURCING_PROJ
+		    WHERE PROJ_LOC in(SELECT LOC_CODE
+		                        FROM LOCATION
+		                       WHERE GEN_ID = #{genId})
+		) A, OUTSOURCING_PROJ B
+		WHERE A.PROJ_ID = B.PROJ_ID
+		  AND B.PROJ_STATE = 'RECRUIT'
+		  AND total >= 10
+		GROUP BY A.PROJ_ID
+		ORDER BY TOTAL DESC
+	</select>
+	<select id="getProj" parameterType="map" resultMap="projectMap">
+		SELECT X.*
+		FROM (
+		    SELECT ROWNUM RNUM, Y.*
+		    FROM (
+		SELECT 
+			PROJ_ID, PROJ_REGIST, PROJ_EMPTYPE
+			, PROJ_TYPE
+            , TO_CHAR(PROJ_RECRUITFDATE, 'yyyy.mm.dd') AS PROJ_RECRUITFDATE
+            , PROJ_PLANSTATE
+			, PROJ_MEMNUM 
+            , TO_CHAR(PROJ_SDATE, 'yyyy.mm.dd') AS PROJ_SDATE
+            , TO_CHAR(PROJ_FDATE, 'yyyy.mm.dd') AS PROJ_FDATE
+			, PROJ_ESTIMATE, PROJ_CONTENT, PROJ_QUALIFI
+			, PROJ_APPROVE, PROJ_REJECT, PROJ_RATING
+			, PROJ_REALSDATE, PROJ_REALFDATE, PROJ_LOC
+			, PROJ_STATE
+            , TO_CHAR(PROJ_RECRUITSDATE, 'yyyy.mm.dd') AS PROJ_RECRUITSDATE
+            , PROJ_TITLE
+		FROM OUTSOURCING_PROJ
+		WHERE PROJ_ID in ${projIds}
+			) Y
+		) X
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	<select id="recommendProjToMain" resultMap="projectMap">
+		SELECT A.proj_id, A.proj_regist, A.proj_emptype,
+		       A.proj_type, A.proj_recruitfdate, A.proj_planstate,
+		       A.proj_memnum, A.proj_sdate, A.proj_fdate,
+			   A.proj_estimate, A.proj_content, A.proj_qualifi,
+			   A.proj_approve, A.proj_reject, A.proj_rating,
+			   A.proj_realsdate, A.proj_realfdate, A.proj_loc,
+			   A.proj_state, A.proj_recruitsdate, A.proj_title,
+			   A.proj_realnum,B.COM_IMG 
+		  FROM outsourcing_proj A, COM_MEMBER B
+		 <![CDATA[WHERE ROWNUM <= 8]]>
+		 AND B.COM_ID = A.PROJ_REGIST
+		 AND A.PROJ_RECRUITSDATE > SYSDATE
+         AND A.PROJ_APPROVE = 1
+		 ORDER BY PROJ_RECRUITSDATE
+	</select>
+</mapper>

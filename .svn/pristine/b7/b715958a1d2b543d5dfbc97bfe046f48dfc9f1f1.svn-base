@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.portfolio.dao.EducationDAO">
+	<select id="selectAll" parameterType="String" resultType="kr.or.ddit.common.member.vo.EducationVO">
+			SELECT A.EDU_NO
+				, A.EDU_MEM
+                , B.CODE_NAME AS EDU_TYPE
+				, A.EDU_SCNAME
+				, A.EDU_MAJOR
+                , C.CODE_NAME AS EDU_STATE
+				, A.EDU_SDATE
+				, A.EDU_FDATE
+		FROM EDUCATION A LEFT OUTER JOIN COMMON_CODE B ON A.EDU_TYPE = B.CODE_ID
+                         LEFT OUTER JOIN COMMON_CODE C ON A.EDU_STATE = C.CODE_ID 
+			WHERE EDU_MEM = #{memId}
+	</select>
+	
+	<select id="selectEduTypeList" resultType="hashMap">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'EDUTYPE'
+	</select>
+	
+	<select id="selectEduStateList" resultType="hashMap">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'EDUSTATE'
+	</select>
+	
+	<select id="selectEducation" parameterType="kr.or.ddit.common.member.vo.EducationVO" resultType="kr.or.ddit.common.member.vo.EducationVO">
+		SELECT A.EDU_NO
+				, A.EDU_MEM
+                , B.CODE_NAME AS EDU_TYPE
+				, A.EDU_SCNAME
+				, A.EDU_MAJOR
+                , C.CODE_NAME AS EDU_STATE
+				, A.EDU_SDATE
+				, A.EDU_FDATE
+		FROM EDUCATION A LEFT OUTER JOIN COMMON_CODE B ON A.EDU_TYPE = B.CODE_ID
+                         LEFT OUTER JOIN COMMON_CODE C ON A.EDU_STATE = C.CODE_ID
+		WHERE EDU_MEM = #{eduMem}
+		AND EDU_SCNAME = #{eduScname}
+		AND EDU_MAJOR = #{eduMajor}
+	</select>
+	
+	<insert id="insertEducation" parameterType="kr.or.ddit.common.member.vo.EducationVO">
+		INSERT INTO EDUCATION (
+					    EDU_NO
+					    , EDU_MEM
+					    , EDU_TYPE
+					    , EDU_SCNAME
+					    , EDU_MAJOR
+					    , EDU_STATE
+					    , EDU_FDATE
+					    , EDU_SDATE
+					) VALUES (
+					    EDU_NO_SEQ.nextval
+					    , #{eduMem,jdbcType=VARCHAR}
+					    , #{eduType,jdbcType=VARCHAR}
+					    , #{eduScname,jdbcType=VARCHAR}
+					    , #{eduMajor,jdbcType=VARCHAR}
+					    , #{eduState,jdbcType=VARCHAR}
+					    , #{eduFdate,jdbcType=VARCHAR}
+					    , #{eduSdate,jdbcType=VARCHAR}
+					)
+	</insert>
+	
+	<delete id="deleteEducation" parameterType="int">
+		DELETE FROM EDUCATION WHERE EDU_NO = #{eduNo}
+	</delete>
+</mapper>

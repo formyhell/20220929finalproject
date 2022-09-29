@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.portfolio.dao.CareerDAO">
+	<select id="selectAll" parameterType="String" resultType="kr.or.ddit.common.member.vo.CareerVO">
+		SELECT CAR_NO
+				, CAR_MEM
+				, CAR_COM
+				, TO_CHAR(CAR_SDATE, 'YYYY-MM-DD') CAR_SDATE
+				, TO_CHAR(CAR_FDATE, 'YYYY-MM-DD') CAR_FDATE
+				, CAR_DEP
+				, CAR_POSITION
+				, CAR_DETAIL
+				FROM CAREER
+				WHERE CAR_MEM = #{memId}
+	</select>
+	
+	<select id="selectCareer" parameterType="kr.or.ddit.common.member.vo.CareerVO" resultType="kr.or.ddit.common.member.vo.CareerVO">
+		SELECT CAR_NO
+				, CAR_MEM
+				, CAR_COM
+				, TO_CHAR(CAR_SDATE, 'YYYY-MM-DD') CAR_SDATE
+				, TO_CHAR(CAR_FDATE, 'YYYY-MM-DD') CAR_FDATE
+				, CAR_DEP
+				, CAR_POSITION
+				, CAR_DETAIL
+		FROM CAREER
+		WHERE CAR_MEM = #{carMem}
+		AND CAR_COM = #{carCom}
+		AND CAR_DEP = #{carDep}
+	</select>
+	
+	<insert id="insertCareer" parameterType="kr.or.ddit.common.member.vo.CareerVO">
+		INSERT INTO CAREER (
+				    CAR_NO
+				    , CAR_MEM
+				    , CAR_COM
+				    , CAR_SDATE
+				 <if test="carFdate != null and carFdate != ''">
+				    , CAR_FDATE
+				 </if>
+				    , CAR_POSITION
+				 <if test="carDetail != null and carDetail != ''">
+				    , CAR_DETAIL
+				 </if>
+				    , CAR_DEP
+				) VALUES (
+				    CAR_NO_SEQ.nextval
+				    , #{carMem,jdbcType=VARCHAR}
+				    , #{carCom,jdbcType=VARCHAR}
+				    , TO_DATE(#{carSdate,jdbcType=DATE}, 'YYYY/MM/DD')
+				 <if test="carFdate != null and carFdate != ''">
+				    , TO_DATE(#{carFdate,jdbcType=DATE}, 'YYYY/MM/DD')
+				 </if>
+				    , #{carPosition,jdbcType=VARCHAR}
+				 <if test="carDetail != null and carDetail != ''">
+				    , #{carDetail,jdbcType=VARCHAR}
+				 </if>
+				    , #{carDep,jdbcType=VARCHAR}
+				)
+	</insert>
+	
+	<update id="updateCar" parameterType="kr.or.ddit.common.member.vo.CareerVO">
+		UPDATE CAREER
+		SET CAR_MEM = #{carMem,jdbcType=VARCHAR}
+		    , CAR_COM = #{carCom,jdbcType=VARCHAR}
+		    , CAR_SDATE = TO_DATE(#{carSdate,jdbcType=DATE}, 'YYYY/MM/DD')
+		  <if test="carFdate != null and carFdate != ''">
+		    , CAR_FDATE = TO_DATE(#{carFdate,jdbcType=DATE}, 'YYYY/MM/DD')
+		  </if>
+		    , CAR_DEP = #{carDep}
+		   <if test="carDetail != null and carDetail != ''">
+		    , CAR_DETAIL = #{carDetail,jdbcType=VARCHAR}
+		   </if>
+		    , CAR_POSITION = #{carPosition,jdbcType=VARCHAR}
+		WHERE CAR_NO  = #{carNo}
+	</update>
+	
+	<delete id="deleteCareer" parameterType="int">
+		DELETE FROM CAREER WHERE CAR_NO = #{carNo}
+	</delete>
+</mapper>

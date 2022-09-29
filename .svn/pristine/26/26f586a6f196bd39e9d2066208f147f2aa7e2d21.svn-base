@@ -1,0 +1,98 @@
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.     고혜인      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>   
+
+
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="blog-single">
+				<div class="blog-box blog-details">
+
+					<div class="card">
+						<div class="card-body">
+							<div class="blog-details">
+
+								<security:authentication property="principal" var="authMember" />
+
+								<c:if test="${pf.pfMem eq authMember.realMember.memId}">
+								<div style="float: right;">
+									<button class="btn btn-primary" type="button" onclick="location='${cPath}/gen/myinfo/portfolio/${pf.pfId }/form'">수정</button>
+									<form:form action="${cPath }/gen/myinfo/portfolio/${pf.pfId }" method="post" modelAttribute="pf" style="display:inline;">
+										<security:csrfInput/>
+										<input type="hidden" name="_method" value="delete" />
+										<input type="submit" value="삭제" data-href="${cPath }}/gen/myinfo/portfolio/${pf.pfId }" class="btn btn-light">
+										<form:input path="pfId" type="hidden" value="${pf.pfId }" />
+									</form:form>
+								</div>
+								</c:if>
+								
+								<h4>${pf.pfTitle}</h4>
+								<ul class="blog-social">
+									<li class="m-l-1"><i class="icofont icofont-tasks-alt"></i>${pf.pfSdate} <span>~</span> ${pf.pfSdate}</li>
+									<c:if test="${not empty pf.pfClient}">
+										<li class="m-l-1"><i class="icofont icofont-people"></i>${pf.pfClient }</li>
+									</c:if>
+									<c:if test="${not empty pf.pfResulturl}">
+										<li class="m-l-1"><i class="icofont icofont-external-link"></i><a href="${pf.pfResulturl }" target="_blank">결과물 확인</a></li>
+									</c:if>
+								</ul>
+								<ul>
+									<c:if test="${not empty pf.attatchList}">
+										<c:forEach items="${pf.attatchList}" var="att" varStatus="vs">
+ 											<a href="${cPath }/gen/myinfo/portfolio/${pf.pfId}/att/${att.attId}"><li class="m-l-1">${att.attFilename }</li></a>
+											
+										</c:forEach>
+									</c:if>
+								</ul>
+								
+								<ul class="blog-social primary-color">
+									<c:set value="${pf.objCodeList}" var="objCode"/>
+									<c:forEach items="${objCode}" var="obj"> <!-- item에 objCode.objCode 쓰면 오류남 -->									
+										<li class="font-light badge badge-primary m-5 p-1">${obj.objCode}</li>
+									</c:forEach>
+								</ul>
+								
+								<ul class="blog-social">
+									<c:set value="${pf.skillCodeList}" var="skillCode"/>
+									<c:forEach items="${skillCode}" var="skill">									
+										<li class="font-light badge badge-dark m-5 p-1">${skill.skillCode}</li>
+									</c:forEach>
+								</ul>
+
+								<div class="single-blog-content-top m-10">
+									<p>${pf.pfContent}</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+<!-- 			<div class="row text-center"> -->
+<!-- 				<div class="gallery my-gallery card-body row" itemscope=""> -->
+<!--                     <figure class="col-xl-3 col-md-4 xl-33" itemprop="associatedMedia" itemscope=""> -->
+                    
+<%--                     	<a href="${cPath }/resources/assetsPms/images/big-lightgallry/01.jpg" itemprop="contentUrl" data-size="1600x950"> --%>
+<%--                     		<img class="img-thumbnail" src="${cPath }/resources/assetsPms/images/lightgallry/01.jpg" itemprop="thumbnail" alt="Image description"> --%>
+<!--                     	</a> -->
+<!--                     </figure> -->
+<!--                   </div> -->
+
+<!-- 				</div> -->
+					</div>
+				</div>
+			</div>
+			<!-- Contact Section -->
+				
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

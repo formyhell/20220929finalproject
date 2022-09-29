@@ -1,0 +1,256 @@
+package kr.or.ddit.pms.issue.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.pms.issue.dao.IssueDAO;
+import kr.or.ddit.pms.issue.vo.IssueReplyVO;
+import kr.or.ddit.pms.issue.vo.IssueSolveVO;
+import kr.or.ddit.pms.issue.vo.IssueVO;
+import kr.or.ddit.pms.project.vo.projInvolveVO;
+import kr.or.ddit.pms.work.vo.WorkVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class IssueServiceImpl implements IssueService {
+
+	@Inject
+	IssueDAO dao;
+	
+	@Value("#{appInfo['attatchPath']}")
+	private File saveFolder;
+	
+	// 파일 저장 메서드
+	private int processAttatches(IssueVO issue) throws IOException {
+		List<AttatchVO> attatchList = issue.getAttatchList();
+		if(attatchList==null || attatchList.isEmpty() || attatchList.size()<=0) return 0;
+		int rowcnt = 0;
+		
+		log.info("for 시작 *******");
+		for(AttatchVO attatch : attatchList) {
+			log.info("$$$$$$$$$$$$$$$$$$$$$$$rowcnt : {}",rowcnt);
+				rowcnt += dao.insertAttatches(attatch); // ATTATCH
+				
+		}
+		dao.insertIssueAttatch(issue);
+		
+		// 2진 데이터(파일 자체) 저장 : d:/saveFiles
+		for(AttatchVO attatch : attatchList) {
+			attatch.saveTo(saveFolder);
+		}
+		return rowcnt;
+	}
+	// 파일 삭제
+	private void removeAttatches(IssueVO issue) {
+		String[] delAttNos = issue.getDelAttNos();
+		if(delAttNos==null || delAttNos.length == 0) return;
+		
+		List<String> saveNames = Arrays.stream(delAttNos).map((attId)->{
+											AttatchVO attatch = dao.selectAttatch(attId);
+											return attatch.getAttSavename();
+										}).collect(Collectors.toList());
+		dao.deleteIssueAttatches(issue);
+		dao.deleteAttatches(issue);
+		
+		for(String saveName : saveNames) {
+			File saveFile = new File(saveFolder, saveName);
+			FileUtils.deleteQuietly(saveFile);
+		}
+	}
+			
+	// 이슈 목록 조회
+	@Override
+	public List<IssueVO> retrieveIssueList(Map<String, Object> map) {
+		PagingVO<IssueVO> pagingVO = (PagingVO<IssueVO>) map.get("pagingVO");
+		pagingVO.setTotalRecord(dao.selectTotalIssue(map));
+		List<IssueVO> issueList = dao.selectIssueList(map);
+		
+		pagingVO.setDataList(issueList);
+		map.put("pagingVO", pagingVO);
+//		log.info("issueList : {}",issueList);
+		return issueList;
+	}
+
+	// 이슈 상세 조회
+	@Override
+	public IssueVO retrieveIssue(String issueId) {
+		IssueVO issue = dao.selectIssue(issueId);
+		if(issue==null) {
+			throw new RuntimeException("존재하지 않는 이슈");
+		}
+		List<AttatchVO> fileList = dao.selectIssueFileList(issue);
+		issue.setAttatchList(fileList);
+		return issue;
+	}
+
+	@Override
+	public List<WorkVO> retrieveWorkList(String projId) {
+		List<WorkVO> workList = dao.selectWorkList(projId);
+		if(workList==null) {
+			throw new RuntimeException("존재하지 일감");
+		}
+		return workList;
+	}
+
+	@Override
+	public List<projInvolveVO> retrieveProjInvolveList(String projId) {
+		List<projInvolveVO> involveList = dao.selectProjInvolveList(projId);
+		if(involveList==null) {
+			throw new RuntimeException("존재하지 참여자");
+		}
+		return involveList;
+	}
+
+	// 이슈 등록
+	@Transactional
+	@Override
+	public ServiceResult createIssue(IssueVO issue) {
+		List<AttatchVO> attatchList = issue.getAttatchList();
+		log.info("***********************attatchList : {}",attatchList);
+		int rowcnt = dao.insertIssue(issue);
+		try {
+				processAttatches(issue);
+			log.info("파일 업로드는 완료!");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public AttatchVO issueFileDownload(String attId) {
+		AttatchVO attatch = dao.selectAttatch(attId);
+		if (attatch == null) {
+			throw new RuntimeException(String.format("%s 첨부파일이 없음", attId));
+		}
+		return attatch;
+	}
+
+	// 이슈 수정
+	@Transactional
+	@Override
+	public ServiceResult modifyIssue(IssueVO issue) {
+		IssueVO saved = dao.selectIssue(issue.getIssueId());
+		
+		if(saved==null)
+			throw new RuntimeException(String.format("%d 이슈 없음.",issue.getIssueId()));
+		
+		int rowcnt = dao.updateIssue(issue);
+		
+		try {
+			removeAttatches(issue);
+			processAttatches(issue);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	// 이슈 삭제
+	@Transactional
+	@Override
+	public ServiceResult removeIssue(String issueId) {
+		int rowcnt=0;
+		IssueVO issue = dao.selectIssue(issueId);
+		if (issue != null) {
+			rowcnt = dao.deleteIssue(issueId);
+		} else {
+			throw new RuntimeException(String.format("%d 이슈 없음",issueId));
+		}
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	// 이슈 해결
+	@Transactional
+	@Override
+	public ServiceResult createIssueSolve(IssueSolveVO solve) {
+		IssueVO saved = dao.selectIssue(solve.getSolveIssue());
+		if(saved==null)
+			throw new RuntimeException(String.format("%d 이슈 없음.",solve.getSolveIssue()));
+		IssueSolveVO issueSolve = dao.selectIssueSolve(solve.getSolveIssue());
+		if(issueSolve!=null)
+			throw new RuntimeException(String.format("%d 이슈 해결 존재함.",solve.getSolveIssue()));
+		int rowcnt = dao.insertIssueSolve(solve);
+		ServiceResult result;
+		if(rowcnt > 0) {
+			dao.updateIssueState(solve.getSolveIssue());
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAIL;
+		}
+		return result;
+	}
+	
+	@Override
+	public IssueSolveVO retrieveIssueSolve(String issueId) {
+		IssueSolveVO solve = dao.selectIssueSolve(issueId);
+		if(solve==null) {
+			throw new RuntimeException(String.format("%d 이슈 해결 없음.",solve.getSolveIssue()));
+		}
+		return solve;
+	}
+
+	
+	
+// 댓글
+	@Override
+	public ServiceResult createIssueReply(IssueReplyVO reply) {
+		int rowcnt = dao.insertIssueReply(reply);
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	@Override
+	public ServiceResult modifyIssueReply(IssueReplyVO reply) {
+		IssueReplyVO Issuereply = dao.selectIssueReply(reply.getRepNo());
+		if(Issuereply==null)
+			throw new RuntimeException(String.format("%d 댓글 없음.",reply.getRepNo()));
+		int rowcnt = dao.updateIssueReply(reply);
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	@Override
+	public ServiceResult removeIssueReply(int repNo) {
+		IssueReplyVO Issuereply = dao.selectIssueReply(repNo);
+		if(Issuereply==null)
+			throw new RuntimeException(String.format("%d 댓글 없음.",repNo));
+		int rowcnt = dao.deleteIssueReply(repNo);
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	@Transactional
+	@Override
+	public List<IssueReplyVO> retrieveIssueReplyList(Map<String, Object> map) {
+		PagingVO<IssueReplyVO> pagingVO = (PagingVO<IssueReplyVO>) map.get("pagingVO");
+		pagingVO.setTotalRecord(dao.selectTotalIssueReply(map));
+		List<IssueReplyVO> replyList = dao.selectIssueReplyList(map);
+		pagingVO.setDataList(replyList);
+		map.put("pagingVO", pagingVO);
+		return replyList;
+	}
+	
+	@Override
+	public IssueReplyVO retrieveIssueReply(int repNo) {
+		IssueReplyVO reply = dao.selectIssueReply(repNo);
+		if(reply==null)
+			throw new RuntimeException(String.format("%d 댓글 없음.",repNo));
+		return reply;
+	}
+
+}

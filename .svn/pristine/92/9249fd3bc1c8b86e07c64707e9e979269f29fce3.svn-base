@@ -1,0 +1,88 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 29.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="${cPath}/resources/assetsPms/js/todo/todo.js"></script>
+<script src="../assets/js/icons/feather-icon/feather.min.js"></script>
+
+</head>
+<body>
+<div class="container-fluid">
+            <div class="email-wrap bookmark-wrap">
+              <div class="row">
+                <div class="col-xl-3 xl-30">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>To-Do</h5>
+                  </div>
+                  <div class="card-body pt-0">
+                    <div class="todo">
+                      <div class="todo-list-wrapper">
+                        <div class="todo-list-container">
+                          <div class="mark-all-tasks">
+                            <div class="mark-all-tasks-container"><span class="mark-all-btn" id="mark-all-finished" role="button"><span class="btn-label">Mark all as finished</span><span class="action-box completed"><i class="icon"><i class="icon-check"></i></i></span></span></div>
+                          </div>
+                          <div class="todo-list-body">
+                            <ul id="todo-list">
+                              <li class="task">
+                                <div class="task-container">
+                                  <h4 class="task-label">Weekly Bigbazar Shopping </h4><span class="task-action-btn"><span class="action-box large complete-btn" title="Mark Complete"><i class="icon"><i class="icon-check"></i></i></span></span>
+                                </div>
+                              </li>
+                              <li class="task">
+                                <div class="task-container">
+                                  <h4 class="task-label">Go Outside Picnic on Sunday</h4><span class="task-action-btn"><span class="action-box large complete-btn" title="Mark Complete"><i class="icon"><i class="icon-check"></i></i></span></span>
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
+                          <div class="todo-list-footer">
+                            <div class="add-task-btn-wrapper"><span class="add-task-btn">
+                                <button class="btn btn-primary"><i class="icon-plus"></i> Add new task</button></span></div>
+                            <div class="new-task-wrapper">
+                              <textarea id="new-task" placeholder="Enter new task here. . ."></textarea><span class="btn btn-danger cancel-btn" id="close-task-panel">Close</span><span class="btn btn-success ms-3 add-new-task-btn" id="add-task">Add Task</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="notification-popup hide">
+                        <p><span class="task"></span><span class="notification-text"></span></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                
+                <div class="col-xl-9 col-md-12 box-col-8 xl-70">
+                  <div class="email-right-aside bookmark-tabcontent contacts-tabs">
+                    <div class="card email-body radius-left">
+                      <div class="ps-0">
+                        <div class="tab-content">
+                          <div class="tab-pane fade active show" id="pills-personal" role="tabpanel" aria-labelledby="pills-personal-tab">
+                            <div class="card mb-0">
+                              <div class="card-header d-flex">
+                                <h5>Personal</h5><span class="f-14 pull-right mt-0">5 Contacts</span>
+                              </div>
+                              
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+</body>
+</html>

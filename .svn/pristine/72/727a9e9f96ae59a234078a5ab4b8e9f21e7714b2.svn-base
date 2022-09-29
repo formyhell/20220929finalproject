@@ -1,0 +1,42 @@
+package kr.or.ddit.common.community.vo;
+
+import java.io.Serializable;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import kr.or.ddit.common.validate.DeleteGroup;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.common.validate.UpdateGroup;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@EqualsAndHashCode(of="cmntNo")
+@ToString(exclude="cmntContent")
+@NoArgsConstructor
+@AllArgsConstructor(access=AccessLevel.PRIVATE)
+public class CommunityVO implements Serializable{
+
+	private int rnum;
+	
+	@NotNull(groups= {UpdateGroup.class, DeleteGroup.class})
+	private Integer cmntNo;
+	@NotBlank(groups= {InsertGroup.class, UpdateGroup.class})
+	private String cmntTitle;
+	@NotBlank(groups= {InsertGroup.class, UpdateGroup.class})
+	private String cmntContent;
+	private String cmntDate;
+	private Integer cmntHit;
+	private Integer cmntRec;
+	private Integer cmntReport;
+	@NotBlank
+	private String cmntWriter;
+	
+	private CommunityTrepVO cmntTrep;
+}

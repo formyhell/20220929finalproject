@@ -1,0 +1,128 @@
+
+let listBody = $("#listBody");
+let pagingArea = $("#pagingList").on("click", "a", function(event){
+	let page = $(this).data("page");
+	searchForm.find("[name=page]").val(page);
+	searchForm.submit();
+});
+let searchUI = $("#searchUI");
+
+let searchForm = $("#searchForm").ajaxForm({
+	beforeSend : function(xhr) { xhr.setRequestHeader(header,token);}
+	, dataType : "json"
+	, success : function(resp, status, jqXHR) {
+		let pagingVO = resp;
+		let boardList = pagingVO.dataList;
+		let trTags = [];
+		if(pagingVO.totalRecord > pagingVO.screenSize){
+			document.getElementById("pagingList").style.display= "block";
+		}else{				
+			document.getElementById("pagingList").style.display= "none";
+		}
+		if(boardList && boardList.length>0){
+			$(boardList).each(function(index, board){
+				trTags.push(makeSingleTr(index, board));
+			});
+		}else{
+			let trTag = $("<tr>").html(
+				$("<td>").html("아직 관심 등록한 프로젝트가 존재하지 않습니다.")	
+			);
+			trTags.push(trTag);
+		}
+		listBody.html(trTags);
+		pagingArea.html(pagingVO.pagingHTMLBS);
+	},
+	error : function(jqXHR, status, error) {
+		console.log(jqXHR);
+		console.log(status);
+		console.log(error);
+	}
+	}).submit();
+
+
+
+let makeSingleTr = function(index, board){
+	var trTable;
+	var deletedproj = board.projState=="DELETE";
+	var proj = null;
+	var projState = null;
+	
+	if(deletedproj){
+		proj = $("<td>").append(
+				$("<div>").attr("class","media").append(
+					$("<div>").attr("class","media-body").append(
+							$("<span>").html(board.projTitle)
+							,$("<p>").html("프로젝트가 삭제되었습니다.")
+						)
+					)
+				)
+			,$("<td>").append(
+				$("<span>").attr("style","color: red").html(board.projState)
+			)
+	}else{	
+		proj = $("<td>").append(
+				$("<div>").attr("class","media").attr("onclick",`location.href='${CPATH}/outsourcing/${board.projId}/project'`).append(
+					$("<div>").attr("class","media-body").append(
+						$("<span>").html(board.projTitle)
+						,$("<p>").html("등록일: "+ board.projRegist)
+						,$("<p>").html("모집 마감일: "+ board.projRecruitfdate)
+						,$("<p>").html("예상 프로젝트 기간: "+ board.projSdate + "-" + board.projFdate)
+					)
+				)
+			)
+	};
+	
+	if(board.projState=='RECRUIT'){
+		projState = $("<td>").append($("<span>").attr("style","color: green").html(board.projState));
+	}else if(board.projState=='FINISH'|| deletedproj){
+		projState = $("<td>").append($("<span>").attr("style","color: red").html(board.projState));
+	}else{
+		projState = $("<td>").append($("<span>").html(board.projState));
+	};
+	
+	trTable = $("<tr>").append(
+		proj, projState
+		, $("<td>").append(
+				$("<button>").attr("class","btn-grayDay").attr("onClick","deletelike('"+board.projId+"')").html("삭제")
+			)
+	);
+	
+	if(deletedproj){
+		return trTable.attr("style", "background-color: #F2F2F2");
+	}else{
+		return trTable;
+	}
+}
+
+let searchBtn = $("#searchBtn").on("click", function(event){
+	searchForm.get(0).reset();
+	let inputs = searchUI.find(":input[name]");
+	$(inputs).each(function(idx, input){
+		let name = $(this).attr("name");
+		let value = $(this).val();
+		searchForm.find("[name="+name+"]").val(value);
+	});
+	searchForm.submit();
+});
+
+function refreshMemList(){
+	$('#like').load(location.href+' #like');
+}
+
+function deletelike(projId){
+	$.ajax({
+		beforeSend : function(xhr){xhr.setRequestHeader(header,token);}
+        ,url: CPATH+'/gen/myinfo/interestProject'
+        ,dataType: "JSON"
+		,data:{"projId" : projId}
+        ,type: 'POST'
+        ,success : function(data){
+        	searchForm.submit();
+        }
+        ,error : function(){
+          alert("에러")
+       }
+       });
+	searchForm.submit();
+}
+

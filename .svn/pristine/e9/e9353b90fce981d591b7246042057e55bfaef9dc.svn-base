@@ -1,0 +1,23 @@
+package kr.or.ddit.common.community.vo;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@EqualsAndHashCode(of="trepNo")
+//@ToString(exclude="trepReason")
+@NoArgsConstructor
+@AllArgsConstructor(access=AccessLevel.PRIVATE)
+public class CommunityTrepVO {
+
+	private Integer trepNo;
+	private String trepReason;
+	private String trepDate;
+	private Integer trepState;
+	private Integer trepCmnt;
+	private String trepReporter;
+}

@@ -1,0 +1,288 @@
+package kr.or.ddit.outsourcing.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.dao.CommonCodeDAO;
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO;
+import kr.or.ddit.common.validate.DeleteGroup;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.common.validate.UpdateGroup;
+import kr.or.ddit.common.vo.CommonCodeVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.common.vo.SimpleSearchCondition;
+import kr.or.ddit.outsourcing.service.OutProjService;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.pms.project.vo.PMSProjectVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 신창규
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      306-06       최초작성
+ * 2022. 8. 6.      홍승조       컨트롤러 통합
+ * 2022. 8. 16.     고혜인       리스트 조회/상세조회 추가
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@Slf4j
+@RequestMapping("/outsourcing")
+public class OutsourcingController {
+	
+	@Inject
+	private OutProjService service;
+	
+	@Inject
+	CommonCodeDAO commonCodeDao;
+	
+	@ModelAttribute("outProj")
+	public OutProjVO outProj() {
+		return new OutProjVO();
+	}
+
+	@ModelAttribute("outObjList")
+	public List<CommonCodeVO> outObjList(){
+		return commonCodeDao.jobFeild();
+	}
+	
+	@ModelAttribute("outSkillList")
+	public List<CommonCodeVO> outSkillList(){
+		return commonCodeDao.skill();
+	}
+	
+	
+	
+	
+	
+	//insert form으로 가는 컨트롤러
+	@GetMapping("form")
+	public String projectForm(
+			@ModelAttribute("outProj") OutProjVO outProj
+			) {
+		return "outsourcing/projectForm";
+	}
+	
+	
+	
+	
+	//프로젝트 등록
+	@PostMapping
+	public String projectInsert(
+			@Validated(InsertGroup.class) @ModelAttribute("outProj") OutProjVO outProj
+			, Errors errors
+			, Model model
+			, RedirectAttributes redirectAttributes
+			, Authentication authentication 
+			) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal(); //projRegist 받아와야해서 쓰는거
+		MemberVO member = userPrincipal.getRealMember();
+		outProj.setProjRegist(member.getMemId());
+		
+		String viewName = null;
+		
+		log.info("프로젝트 인서트할 때 에러~~~~~~"+ errors);
+		
+		if(!errors.hasErrors()) {
+			service.create(outProj);
+			viewName = "redirect:/outsourcing";
+		}else {
+			viewName = "outsourcing/projectForm";
+		}
+		log.info("왜 빈값임?@@@@@@@@@@@@@@@@"+ outProj );
+//		log.info("에러 여기있네@@@@@@@@@@@@@@@@@@@ : "+errors);
+		return viewName;
+	}
+	
+	
+	
+	// 기존 정보가 있는 수정 폼
+	@GetMapping("{outProjId}/form")
+	public String outsourcingEdit(
+			@PathVariable String outProjId
+			,@ModelAttribute("outProj") OutProjVO outProj
+			, Model model
+			) {
+		outProj = service.findByPK(outProjId);
+		model.addAttribute("outProj", outProj);
+		return "outsourcing/outsourcingEdit";
+	}
+
+	
+	
+	
+	// 새로 입력한 정보로 update
+	@PostMapping("{outProjId}")
+	public String outsourcingUpdate(
+			@PathVariable String outProjId
+			,@Validated(UpdateGroup.class) @ModelAttribute("outProj") OutProjVO outProj
+			,Errors errors
+			,Model model
+			) {
+		log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~outProj"+ outProj);
+		log.info(errors+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		String viewName = null;
+		if (!errors.hasErrors()) {
+			service.modify(outProj);
+			viewName = "redirect:/outsourcing/{outProjId}";
+		} else {
+			viewName = "redirect:/outsourcing/{outProjId}/form";
+		}
+		return viewName;
+	}
+
+	
+	
+	
+	
+	
+	
+	// 삭제하고 성공시 어디로 실패시 어디로
+	@PostMapping("projdel/{outProjId}")
+	public String outsourcingDelete(
+//			@Validated(DeleteGroup.class) @ModelAttribute("outProj") OutProjVO outProj
+//			, Errors errors
+			@PathVariable String outProjId
+			, @ModelAttribute("password") String password
+			, Authentication authentication
+			,RedirectAttributes redirectAttributes
+//			,@RequestParam(value="password", required=false) String password
+			) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		
+		String ipass = password;
+		ServiceResult result = service.remove(member,ipass,outProjId);
+		
+		
+		
+		String viewName = null;
+		switch (result) {
+		case INVALIDPASSWORD:
+			redirectAttributes.addFlashAttribute("message", "비번 오류");
+			viewName = "redirect:/outsourcing/creaed/{outProjId}";
+			break;
+//		case FAIL:
+//			redirectAttributes.addFlashAttribute("message", "서버 오류");
+//			viewName = "redirect:/outsourcing/creaed/{outProjId}";
+//			break;
+
+		default:
+			viewName = "redirect:/outsourcing/creaed";
+			break;
+		} 
+		log.info(result+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@결과이다");
+		return viewName;
+	}
+		
+		
+//		String viewName = null;
+//		if(!errors.hasErrors()) {
+//			service.remove(outProj.getProjId());
+//			redirectAttributes.addFlashAttribute("message", "삭제되었습니다");
+//			viewName = "redirect:/outsourcing/creaed";
+//		}else {
+//			redirectAttributes.addFlashAttribute("message", "오류 밀면");
+//			viewName = "redirect:/outsourcing/creaed/{outProjId}";
+//		}
+//		
+//		return viewName;
+//	}
+
+
+	
+	
+	
+	
+	
+	
+	@ModelAttribute("simpleCondition")
+	public SimpleSearchCondition simpleCondition() {
+		return new SimpleSearchCondition();
+	}
+	
+	//리스트 조회
+	@GetMapping
+	public String outsourcingList(
+
+			@ModelAttribute("simpleCondition") SimpleSearchCondition simpleCondition
+			, @RequestParam(value="searchType", required=false)String searchType
+			, @RequestParam(value="searchWord", required=false)String searchWord
+			, @RequestParam(value="page", required=false, defaultValue="1") int currentPage
+			, Model model
+	) {
+		PagingVO<OutProjVO> pagingVO = new PagingVO<>(3,2); //테스트용
+		pagingVO.setSimpleCondition(simpleCondition);
+		
+		pagingVO.setCurrentPage(currentPage);
+		service.findAll(pagingVO);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "outsourcing/outsourcingList";
+	}
+	
+	//상세조회
+	@GetMapping("{projId}/project")
+	public String outsourcingView(@PathVariable String projId, Model model) {
+		OutProjVO proj = service.findByPK(projId);
+		model.addAttribute("proj", proj);
+		
+		return "outsourcing/outsourcingView";
+	}
+	
+	
+	@GetMapping("creaed")
+	public String CreatedProjectList(
+			@RequestParam(name="page", required=false, defaultValue="1")int currentPage	
+			, @RequestParam(value="searchType", required=false)String searchType
+			, @RequestParam(value="searchWord", required=false)String searchWord
+			, @ModelAttribute("simpleCondition") SimpleSearchCondition simpleCondition
+			, Authentication authentication
+			,Model model
+			) {
+		PagingVO<OutProjVO> pagingVO = new PagingVO<>(7, 5);
+		pagingVO.setCurrentPage(currentPage);
+		pagingVO.setSimpleCondition(simpleCondition);
+		
+		String projRegist = authentication.getName();
+		
+		
+		service.createdProjectList(pagingVO, projRegist);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		return "outsourcing/createdProjectList";
+		
+	}
+	
+	
+	
+}

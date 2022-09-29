@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.pms.work.dao.WorkDAO">
+	<sql id="work">
+		<where>
+			WORK_PROJ = #{detailCondition.workProj}
+			AND WORK_STATE != 'DELETE'
+        	<if test="simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+	        	<choose>
+					<when test="simpleCondition.searchType eq 'workTitle'">
+						AND INSTR(WORK_TITLE, #{simpleCondition.searchWord}) > 0
+					</when>			        		
+					<when test="simpleCondition.searchType eq 'workCharger'">
+						AND INSTR(WORK_CHARGER, #{simpleCondition.searchWord}) > 0
+					</when>			        		
+					<otherwise>
+						AND INSTR(WORK_TITLE, #{simpleCondition.searchWord}) > 0
+						OR INSTR(WORK_CHARGER, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+	        	</choose>
+        	</if>
+        </where>
+	</sql>
+	
+	<select id="selectTotalWork" resultType="int">
+		SELECT COUNT(*)
+		FROM WORK
+		<include refid="work"/>
+	</select>
+	
+	<select id="selectWorkTiltleList" parameterType="String" resultType="kr.or.ddit.pms.work.vo.WorkVO">
+		SELECT WORK_ID, WORK_TITLE
+		FROM WORK
+		WHERE WORK_PROJ = #{workProj}
+		AND WORK_STATE != 'DELETE'
+	</select>
+	
+
+	<select id="selectWorkList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.pms.work.vo.WorkVO">
+		WITH WORKTYPE AS (
+		    SELECT A.CODE_NAME AS TYPE_NAME, A.CODE_ID AS TYPE_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_TYPE AND A.TYPE_ID = 'WORKTYPE')
+		), WORKPRORITY AS (
+		    SELECT A.CODE_NAME AS PRORITY_NAME, A.CODE_ID AS PRORITY_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_PRORITY AND A.TYPE_ID = 'WORKPRIORITY')
+		), WORKSTATE AS (
+		    SELECT A.CODE_NAME AS STATE_NAME, A.CODE_ID AS STATE_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_STATE AND A.TYPE_ID = 'WORKSTATE')
+		)
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		        SELECT A.WORK_ID, A.WORK_TITLE, TO_CHAR(A.WORK_SDATE, 'YYYY-MM-DD')WORK_SDATE, (B.TYPE_NAME)WORK_TYPE
+		            ,(C.PRORITY_NAME)WORK_PRORITY, A.WORK_PROGRESS, A.WORK_CHARGER, A.WORK_PROJ, A.WORK_DATE, (D.STATE_NAME)WORK_STATE
+		        FROM WORK A INNER JOIN WORKTYPE B ON(A.WORK_ID = B.WORK_ID)
+		                    INNER JOIN WORKPRORITY C ON (A.WORK_ID = C.WORK_ID)
+		                    INNER JOIN WORKSTATE D ON (A.WORK_ID = D.WORK_ID)
+			    <include refid="work"/>
+		        ORDER BY A.WORK_DATE DESC
+		    ) A
+		) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+		ORDER BY WORK_DATE DESC
+		
+	</select>
+	
+	<resultMap type="kr.or.ddit.pms.work.vo.WorkVO" id="workList" autoMapping="true">
+		<id property="workId" column="WORK_ID" />
+		<collection property="attatchList" javaType="List" ofType="String" autoMapping="true">
+			<result column="ATT_ID"/>
+		</collection>
+	</resultMap>
+	<select id="selectWork" parameterType="kr.or.ddit.pms.work.vo.WorkVO" resultType="kr.or.ddit.pms.work.vo.WorkVO">
+		WITH WORKTYPE AS (
+		    SELECT A.CODE_NAME AS TYPE_NAME, A.CODE_ID AS TYPE_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_TYPE AND A.TYPE_ID = 'WORKTYPE')
+		), WORKPRORITY AS (
+		    SELECT A.CODE_NAME AS PRORITY_NAME, A.CODE_ID AS PRORITY_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_PRORITY AND A.TYPE_ID = 'WORKPRIORITY')
+		), WORKSTATE AS (
+		    SELECT A.CODE_NAME AS STATE_NAME, A.CODE_ID AS STATE_ID, B.WORK_ID
+		    FROM COMMON_CODE A INNER JOIN WORK B ON (A.CODE_ID = B.WORK_STATE AND A.TYPE_ID = 'WORKSTATE')
+		)
+		SELECT
+				    A.WORK_ID, A.WORK_TITLE, A.WORK_CONTENT
+				    ,  TO_CHAR(A.WORK_SDATE, 'YYYY-MM-DD')WORK_SDATE,TO_CHAR(A.WORK_FDATE, 'YYYY-MM-DD')WORK_FDATE,   A.WORK_MANAGER
+				    ,  B.TYPE_NAME,   C.PRORITY_NAME , A.WORK_PROGRESS
+				    ,  A.WORK_CHARGER,  (SELECT WORK_TITLE FROM WORK WORK WHERE A.WORK_PARENT = WORK_ID)WORK_PARENT,   A.WORK_PROJ
+				    ,A.WORK_REGIST,  A.WORK_DATE,  D.STATE_NAME
+				    , A.WORK_TYPE, A.WORK_PRORITY, A.WORK_STATE
+				FROM WORK A INNER JOIN WORKTYPE B ON(A.WORK_ID = B.WORK_ID)
+		                    INNER JOIN WORKPRORITY C ON (A.WORK_ID = C.WORK_ID)
+		                    INNER JOIN WORKSTATE D ON (A.WORK_ID = D.WORK_ID)
+				WHERE  A.WORK_PROJ = #{workProj}
+				AND A.WORK_ID = #{workId}
+	</select>
+	
+	
+	<insert id="insertWork" parameterType="kr.or.ddit.pms.work.vo.WorkVO">
+		<selectKey resultType="String" keyProperty="workId" order="BEFORE">
+			SELECT 'WO' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(COUNT(*) + 1, 4, '0') WORK_ID
+		    FROM WORK
+		    WHERE SUBSTR(WORK_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT INTO WORK (
+		    WORK_ID, WORK_TITLE,  WORK_CONTENT
+		    , WORK_SDATE, WORK_FDATE, WORK_MANAGER
+		    , WORK_TYPE, WORK_PRORITY, WORK_PROGRESS
+		    , WORK_CHARGER, WORK_PARENT, WORK_PROJ
+		    , WORK_REGIST,  WORK_DATE, WORK_STATE
+		) VALUES (
+		    #{workId} ,#{workTitle} ,#{workContent}
+		    ,#{workSdate} ,#{workFdate} ,#{workManager}
+		    ,#{workType} ,#{workPrority} ,#{workProgress}
+		    ,#{workCharger} ,#{workParent} ,#{workProj}
+		    ,#{workRegist} ,SYSDATE ,#{workState}
+		)
+	</insert>
+	
+	
+	<update id="updateWork" parameterType="kr.or.ddit.pms.work.vo.WorkVO">
+		UPDATE WORK
+		    SET WORK_TITLE = #{workTitle, jdbcType=VARCHAR}, WORK_CONTENT = #{workContent, jdbcType=VARCHAR}, WORK_SDATE = #{workSdate, jdbcType=DATE}
+		        , WORK_FDATE = #{workFdate, jdbcType=DATE}, WORK_MANAGER = #{workManager, jdbcType=VARCHAR}, WORK_TYPE = #{workType, jdbcType=VARCHAR}
+		        , WORK_PRORITY = #{workPrority, jdbcType=VARCHAR}, WORK_PROGRESS = #{workProgress, jdbcType=NUMERIC}, WORK_CHARGER = #{workCharger, jdbcType=VARCHAR}
+		        , WORK_PARENT = #{workParent, jdbcType=VARCHAR}, WORK_REGIST = #{workRegist, jdbcType=VARCHAR}
+		        , WORK_DATE = SYSDATE, WORK_STATE = #{workState, jdbcType=VARCHAR}
+		WHERE
+		    WORK_ID = #{workId}
+	</update>
+	
+	
+	<delete id="deleteWork" parameterType="kr.or.ddit.pms.work.vo.WorkVO">
+		UPDATE WORK
+		    SET 
+		    	WORK_STATE = 'DELETE'
+		    WHERE WORK_ID = #{workId}
+		    AND WORK_PROJ = #{workProj}
+	</delete>
+	
+	
+	
+	
+	
+<!-- 	공통코드 관련 -->
+<!-- 	일감 유형 -->
+	<select id="selectWorkTypeList" resultType="kr.or.ddit.common.vo.CommomCodeVO">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'WORKTYPE'
+	</select>
+	
+<!-- 	일감 우선순위 -->
+	<select id="selectWorkPriorityList" resultType="kr.or.ddit.common.vo.CommomCodeVO">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'WORKPRIORITY'
+	</select>
+	
+<!-- 	일감 상태 -->
+	<select id="selectWorkStateList" resultType="kr.or.ddit.common.vo.CommomCodeVO">
+		SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'WORKSTATE'
+	</select>
+	
+	
+	
+	
+	
+	
+<!-- 	파일 업로드 관련 -->
+	<insert id="insertAttatches" parameterType="kr.or.ddit.common.vo.AttatchVO">
+		<selectKey resultType="String" keyProperty="attId" order="BEFORE">
+			SELECT 'AT' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(NVL(MAX(SUBSTR(ATT_ID, 9)),0)+1, 4, '0') ATT_ID
+			FROM ATTATCH
+			WHERE SUBSTR(ATT_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT ALL
+			INTO ATTATCH (
+			    ATT_ID
+			    , ATT_FILENAME
+			    , ATT_SAVENAME
+			    , ATT_MIME
+			    , ATT_FILESIZE
+			) VALUES (
+			    #{attId, jdbcType=VARCHAR}
+			    , #{attFilename, jdbcType=VARCHAR}
+			    , #{attSavename, jdbcType=VARCHAR}
+			    , #{attMime, jdbcType=VARCHAR}
+			    , #{attFilesize, jdbcType=NUMERIC}
+			    
+			)
+		SELECT * FROM DUAL
+	</insert>
+	
+	<insert id="insertWorkAttatch" parameterType="kr.or.ddit.pms.work.vo.WorkVO">
+		INSERT ALL
+		<foreach collection="attatchList" item="attatch">
+		INTO WORK_ATTATCH (
+		    WORK_ID,
+		    ATT_ID
+		) VALUES (
+		    #{workId, jdbcType=VARCHAR}
+		    , #{attatch.attId, jdbcType=VARCHAR}
+		)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<select id="selectWorkFileList" parameterType="kr.or.ddit.pms.work.vo.WorkVO" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT *
+		FROM ATTATCH A
+		WHERE A.ATT_ID IN (
+		        SELECT ATT_ID
+		        FROM WORK_ATTATCH
+		        WHERE WORK_ID = #{workId}
+		    )
+	</select>
+	
+	<select id="selectAttatch" parameterType="String" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT
+		    ATT_ID,
+		    ATT_FILENAME,
+		    ATT_SAVENAME,
+		    ATT_MIME,
+		    ATT_FILESIZE
+		FROM
+		    ATTATCH
+		WHERE ATT_ID = #{attId}
+	</select>
+	
+	<delete id="deleteWorkAttatches" parameterType="kr.or.ddit.pms.work.vo.WorkVO">
+		DELETE FROM WORK_ATTATCH
+		WHERE WORK_ID = #{workId}
+		AND ATT_ID IN
+		<foreach collection="delAttNos" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteAttatches" parameterType="kr.or.ddit.pms.work.vo.WorkVO">
+		DELETE FROM ATTATCH
+		WHERE ATT_ID IN
+		<foreach collection="delAttNos" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	
+		
+	
+<!-- ** 댓글  ** -->
+	<!-- 댓글 등록 -->
+	<insert id="insertWorkReply" parameterType="kr.or.ddit.pms.work.vo.WorkReplyVO">
+		INSERT INTO WORK_REPLY (
+		    REP_NO
+		    , REP_CONTENT
+		    , REP_DATE
+		    , REP_WRITER
+		    , REP_WORK
+		) VALUES (
+		    WORK_REP_NO_SEQ.NEXTVAL
+		    ,#{repContent} 
+		    ,#{repDate}
+		    ,#{repWriter}
+		    ,#{repWork}
+		)
+	</insert>
+	
+	<!-- 페이징- 댓글 수 -->
+	<select id="selectTotalWorkReply" resultType="int">
+		SELECT count(*)
+		FROM WORK_REPLY
+		WHERE REP_WORK = #{workId}
+	</select>
+	
+	<!-- 댓글 조회 -->
+	<select id="selectWorkReplyList" parameterType="Map" resultType="kr.or.ddit.pms.work.vo.WorkReplyVO">
+		SELECT F.*
+		FROM (SELECT ROWNUM RNUM , E.*
+		      FROM (
+		          SELECT DISTINCT
+		                    REP_NO
+		                    , REP_CONTENT
+		                    , REP_DATE
+		                    , REP_WRITER
+		                    , REP_WORK
+		                    , D.REP_WRITER_NAME
+		            FROM WORK_REPLY A, (select B.MEM_ID, COALESCE(B.GEN_NAME, B.COM_NAME) AS REP_WRITER_NAME
+		                                  from V_MEMBERALL B, (select REP_WRITER 
+		                                                        from WORK_REPLY
+		                                                        where REP_WORK = #{workId} )C
+		                                  where B.MEM_ID = C.REP_WRITER) D
+		            WHERE REP_WORK = #{workId}
+		            AND A.REP_WRITER = D.MEM_ID
+		            ORDER BY REP_NO DESC
+		            )E
+		        )F
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+		
+	</select>
+	<select id="selectWorkReply" resultType="kr.or.ddit.pms.work.vo.WorkReplyVO">
+		SELECT
+		     REP_NO
+		    , REP_CONTENT
+			, REP_DATE
+			, REP_WRITER
+			, REP_WORK
+		FROM WORK_REPLY
+		WHERE REP_NO = #{repNo} 
+	</select>
+	
+	<!-- 댓글 수정 -->
+	<update id="updateWorkReply" parameterType="kr.or.ddit.pms.work.vo.WorkReplyVO">
+		UPDATE ISSUE_REPLY
+    SET
+        REP_CONTENT = #{repContent}
+	WHERE
+    	REP_NO = #{repNo}
+	</update>
+	
+	<!-- 댓글 삭제 -->
+	<delete id="deleteWorkReply" parameterType="Integer">
+	DELETE FROM WORK_REPLY
+	WHERE
+	    REP_NO = #{repNo}
+	</delete>
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

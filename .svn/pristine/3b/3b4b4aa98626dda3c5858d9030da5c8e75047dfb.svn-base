@@ -1,0 +1,79 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://www.springframework.org/security/tags"
+	prefix="security"%>
+
+<script src="http://cdn.ckeditor.com/4.19.1/standard/ckeditor.js"></script>
+
+<div id="services-section" class="pt-xs-60" style="padding-top: 8vh">
+	<div class="container">
+		<div class="row padding-20">
+			<div class="col-sm-12">
+				<div class="block-title v-line mb-45">
+					<h2>Community</h2>
+					<p class="italic">자유게시판</p>
+				</div>
+				<div>
+
+					<form:form modelAttribute="cmnt" method="post" action="${cPath }/community" enctype="multipart/form-data">
+
+						<div class="col-md-12">
+							<div class="form-group">
+								<label for="title">제목</label>
+								<div class="ui-input-group">
+									<form:input path="cmntTitle" required="required"
+										style="width: 100%;" />
+									<form:errors path="cmntTitle" element="span" cssClass="error" />
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="content">내용</label>
+								<div class="ui-input-group">
+									<form:textarea path="cmntContent" required="required"
+										placeholder="상업성 광고, 저속한 표현, 특정인에 대한 비방 등의 게시글은 관리자에 의해 통보없이 삭제될 수 있습니다." />
+									<form:errors path="cmntContent" element="span" cssClass="error" />
+								</div>
+							</div>
+						</div>
+
+						<security:authentication property="principal" var="authMember" />
+						<c:if
+							test="${authMember.realMember.memType.get(0) eq 'ROLE_GENMEM'}">
+							<form:input path="cmntWriter" type="hidden"
+								value="${authMember.realMember.genNick }" />
+						</c:if>
+						<c:if
+							test="${authMember.realMember.memType.get(0) eq 'ROLE_COMMEM'}">
+							<form:input path="cmntWriter" type="hidden"
+								value="${authMember.realMember.comNick }" />
+						</c:if>
+						<div class="float-right">
+							<input type="submit" value="저장" class="btn btn-blueOcean " /> <input
+								type="reset" value="취소" class="btn btn-grayDay" />
+						</div>
+					</form:form>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	CKEDITOR.replace('cmntContent',{
+	// 		extraPlugins : 'confighelper',
+		filebrowserImageUploadUrl : "${cPath}/file/image?command=imageUpload&${_csrf.parameterName}=${_csrf.token}",
+	});
+
+</script>
+<script src="${cPath }/resources/js/ckeditor/editorConfig.js"></script>

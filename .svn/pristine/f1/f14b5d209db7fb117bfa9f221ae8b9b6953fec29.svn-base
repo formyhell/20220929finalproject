@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.pms.project.dao.ProjInvolveDAO">
+	
+	<select id="selectProjInvolveList" parameterType="String" resultType="kr.or.ddit.pms.project.vo.projInvolveVO">
+		SELECT
+		    A.PROJ_ID,
+		    A.INVOLVE_MEM,
+		    B.MEM_NAME,
+		    TO_CHAR(A.INVOLVE_SDATE, 'YYYY-MM-DD') INVOLVE_SDATE,
+		    TO_CHAR(A.INVOLVE_FDATE, 'YYYY-MM-DD') INVOLVE_FDATE,
+		    NVL(INVOLVE_ROLE, '역할 없음') INVOLVE_ROLE
+		FROM PROJ_INVOLVE A , (
+		    SELECT 
+		        DISTINCT MEM_ID,
+		        COALESCE(GEN_NAME, COM_NAME) AS MEM_NAME
+		    FROM V_MEMBERALL, PROJ_INVOLVE A
+		    WHERE A.INVOLVE_MEM = MEM_ID
+		    )B
+		WHERE PROJ_ID = #{projId}
+		AND NVL(INVOLVE_FDATE, SYSDATE +1 ) - SYSDATE > 0
+		AND A.INVOLVE_MEM = B.MEM_ID
+		ORDER BY INVOLVE_SDATE DESC
+	</select>
+	
+	
+	<update id="updateRole" parameterType="kr.or.ddit.pms.project.vo.projInvolveVO">
+		UPDATE PROJ_INVOLVE
+		    SET
+		        INVOLVE_ROLE = #{involveRole, jdbcType=VARCHAR}
+		WHERE PROJ_ID =#{projId, jdbcType=VARCHAR}
+		AND   INVOLVE_MEM = #{involveMem, jdbcType=VARCHAR}
+	</update>
+	
+	
+</mapper>

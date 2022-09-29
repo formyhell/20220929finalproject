@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.portfolio.dao.LicenseDAO">
+	<select id="selectAll" parameterType="String" resultType="kr.or.ddit.common.member.vo.LicenseVO">
+		SELECT LIC_NO, LIC_MEM, LIC_NAME, LIC_INSTI, TO_CHAR(LIC_DATE, 'YYYY-MM-DD') LIC_DATE
+		FROM LICENSE
+		WHERE LIC_MEM = #{memId}
+	</select>
+	
+	<select id="selectOne" parameterType="int" resultType="kr.or.ddit.common.member.vo.LicenseVO">
+		SELECT LIC_NO, LIC_MEM, LIC_NAME, LIC_INSTI, TO_CHAR(LIC_DATE, 'YYYY-MM-DD') LIC_DATE
+		FROM LICENSE
+		WHERE LIC_NO = #{licNo}
+	</select>
+	
+	<select id="selectLic" parameterType="kr.or.ddit.common.member.vo.LicenseVO" resultType="kr.or.ddit.common.member.vo.LicenseVO">
+		SELECT LIC_NO, LIC_MEM, LIC_NAME, LIC_INSTI, TO_CHAR(LIC_DATE, 'YYYY-MM-DD') LIC_DATE
+		FROM LICENSE
+		WHERE LIC_MEM = #{licMem}
+		  AND LIC_NAME = #{licName}
+		  AND LIC_INSTI = #{licInsti}
+	</select>
+	
+	<insert id="insertLic" parameterType="kr.or.ddit.common.member.vo.LicenseVO">		
+			INSERT INTO LICENSE (
+				LIC_NO
+				, LIC_MEM	    
+				, LIC_DATE
+				, LIC_NAME
+				, LIC_INSTI		
+			) VALUES(
+				LIC_NO_SEQ.NEXTVAL
+				, #{licMem,jdbcType=VARCHAR}	    
+				, TO_DATE(#{licDate,jdbcType=DATE}, 'YYYY/MM/DD')
+				, #{licName,jdbcType=VARCHAR}
+				, #{licInsti,jdbcType=VARCHAR}
+			)  
+	</insert>
+	
+	<update id="updateLic" parameterType="kr.or.ddit.common.member.vo.LicenseVO">
+		UPDATE LICENSE 
+			SET LIC_NAME = #{licName,jdbcType=VARCHAR}	
+			    , LIC_DATE = TO_DATE(#{licDate,jdbcType=DATE}, 'YYYY/MM/DD')
+			    , LIC_INSTI = #{licInsti,jdbcType=VARCHAR}
+			WHERE LIC_NO = #{licNo}
+	</update>
+	
+	<delete id="deleteLic" parameterType="int">
+		DELETE FROM LICENSE WHERE LIC_NO = #{licNo}
+	</delete>
+</mapper>

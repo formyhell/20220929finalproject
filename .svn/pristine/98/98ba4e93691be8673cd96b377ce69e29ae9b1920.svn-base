@@ -1,0 +1,205 @@
+package kr.or.ddit.common.member.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.dao.MemDAO;
+import kr.or.ddit.common.member.dao.MemberDAO;
+import kr.or.ddit.common.member.service.MemService;
+import kr.or.ddit.common.member.vo.ComMemberVO;
+import kr.or.ddit.common.member.vo.GenMemberVO;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.validate.InsertGroup;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 
+ * @author 김유진
+ * @since 2022. 8. 6.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                 수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.       김유진              최초작성
+ * 2022. 8. 4.       홍승조              update delete url 연결
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Controller
+@RequestMapping("/member")
+public class MemController {
+	
+	@Inject
+	MemService service;
+	@Inject
+	MemberDAO dao;
+	
+	@ModelAttribute("genMember")
+	public GenMemberVO genMember() {
+		return new GenMemberVO();
+	}
+	@ModelAttribute("comMember")
+	public ComMemberVO comMember() {
+		return new ComMemberVO();
+	}
+	
+	@Inject
+	PasswordEncoder passEncoder;
+	
+	// 수정 폼
+	@GetMapping("memId/form")
+	public String memberEdit() {
+		return "common/member/memberEdit";
+	}
+	
+	// 수정
+	@PutMapping("memId/form")
+	public String memberUpdate() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/member";
+		} else {
+			viewName = "common/member/memberEdit";
+		}
+		return viewName;
+	}
+	
+	// 탈퇴
+	@DeleteMapping("memId")
+	public String memberDelete() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/member";
+		} else {
+			viewName = "redirect:/member";
+		}
+		return viewName;
+	}
+	
+	// 회원가입 form
+	@GetMapping("form")
+	public String memberForm() {
+		return "common/member/memberForm";
+	}
+	
+	// 일반 회원가입
+	@Transactional
+	@PostMapping("form/gen")
+	public String memberInsert(
+			@Validated(InsertGroup.class) @ModelAttribute("genMember") GenMemberVO genMember
+			, Errors errors
+	) {
+		log.info("genMember: "+ genMember);
+		log.info("getGenPass: "+ genMember.getGenPass());
+		boolean vaild =  !errors.hasErrors();
+		String viewName = null;
+		log.info("vaild: "+ vaild);
+		if(vaild){ //검증 통과Í
+			genMember.setGenPass(passEncoder.encode(genMember.getGenPass())); //암호화
+			ServiceResult result = service.createGenMember(genMember);
+//			ServiceResult result = ServiceResult.OK;
+			log.info("result: "+ result);
+			switch (result) {
+			case PKDUPLICATED: 
+				viewName = "common/member/memberForm";
+				break;
+			case FAIL: //서버상의 문제
+				viewName = "common/member/memberForm";
+				break;
+			default: //OK
+				viewName = "redirect:/login"; 
+				break;
+			}	
+		}else {
+			viewName = "common/member/memberForm";
+		}
+		return viewName;
+	}
+	// 기업 회원가입
+	@Transactional
+	@PostMapping("form/com")
+	public String memberInsert(
+			@Validated(InsertGroup.class) @ModelAttribute("comMember") ComMemberVO comMember
+			, Errors errors
+	) {
+		log.info("comMember: "+ comMember);
+		log.info("comGenPass: "+ comMember.getComPass());
+		boolean vaild =  !errors.hasErrors();
+		String viewName = null;
+		log.info("vaild: "+ vaild);
+		if(vaild){ //검증 통과Í
+			comMember.setComPass(passEncoder.encode(comMember.getComPass())); //암호화
+			log.info("passEncoder: "+ comMember.getComPass());
+			ServiceResult result = service.createComMember(comMember);
+//			ServiceResult result = ServiceResult.OK;
+			log.info("result: "+ result);
+			switch (result) {
+			case PKDUPLICATED: 
+				viewName = "common/member/memberForm";
+				break;
+			case FAIL: //서버상의 문제
+				viewName = "common/member/memberForm";
+				break;
+			default: //OK
+				viewName = "redirect:/login"; 
+				break;
+			}	
+		}else { 
+			viewName = "common/member/memberForm";
+		}
+		return viewName;
+	}
+	
+	// 아이디 중복 체크
+	@Transactional
+	@ResponseBody
+	@PostMapping("find")
+	public boolean findMember(String memId) {
+		log.info("memId: {}", memId);
+		boolean result = false;
+		MemberVO member = dao.findPk(memId);
+		if(member==null) {
+			result = true;
+		}
+		return result;
+		
+	}
+			
+	// 닉네임 중복 체크
+	@Transactional
+	@ResponseBody
+	@PostMapping("findNick")
+	public boolean findNickMember(String memNick) {
+		log.info("memNick: {}", memNick);
+		boolean result = false;
+		MemberVO member = dao.findNick(memNick);
+		if(member==null) {
+			result = true;
+		}
+		return result;
+		
+	}
+	
+
+
+
+}

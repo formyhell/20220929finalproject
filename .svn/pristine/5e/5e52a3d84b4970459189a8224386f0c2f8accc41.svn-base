@@ -1,0 +1,100 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* 2022. 8. 4.		홍승조	입력폼 추가
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<form:form modelAttribute="PMSProject" action="${cPath }/pmsProject/${PMSProject.projId }/form" method="post" id="pmsForm">
+	<input type="hidden" name="_method" value="put" />
+<div class="container">
+<table class="table">
+	<tr>
+		<th>프로젝트_이름</th>
+		<td>
+			<form:input path="projName" />
+			<form:errors path="projName" element="span" cssClass="error" />
+		</td>
+	</tr>
+	<tr>
+		<th>프로젝트_종료일</th>
+		<td>
+			<form:input type="date" path="projFdate" />
+			<form:errors path="projFdate" element="span" cssClass="error" />
+		</td>
+	</tr>
+	<tr>
+		<th>프로젝트_비밀번호</th>
+		<td>
+			<input type="password" name="projPass"  id="projPass"/>
+			<form:errors path="projPass" element="span" cssClass="error" />
+		</td>
+	</tr>
+	<tr>
+		<th>프로젝트_상태코드</th>
+		<td>
+			<select name="projState" >
+				<option value="PROGRESS">진행중</option>
+				<option value="FINISH">완료</option>
+			</select>
+			<form:errors path="projState" element="span" cssClass="error" />
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2">
+			<input type="button" value="저장" onclick="fn_submit()">
+			<input type="reset" value="취소">
+		</td>
+	</tr>
+</table>
+</div>
+</form:form>
+<script>
+/*
+$("#pmsForm").find("input[type!='password']", function(){
+	var is_empty = false;
+	if(!$(this).val()){
+		is_empty = true;
+	}
+	alert(is_empty);
+});
+var pass = "<c:out value='${PMSProject.projPass}'/>";
+if(is_empty){
+	$("#password").val(pass);
+}
+*/
+
+function fn_submit(){
+	
+	var frm = $("#pmsForm")[0];
+	
+	
+	
+	
+	if($("#projPass").val() == ""){
+		var pass = "${PMSProject.projPass}";
+		 $("#projPass").val(pass);
+// 		alert(frm.projPass.value);
+	}
+	
+	
+	
+	frm.submit();
+	
+	
+}
+
+</script>
+
+
+
+
+
+
+
+

@@ -1,0 +1,94 @@
+package kr.or.ddit.common.alert.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import kr.or.ddit.common.alert.service.AlertService;
+import kr.or.ddit.common.alert.vo.AlertVO;
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class TextEchoWebSocketHandler extends TextWebSocketHandler implements WebSocketConfigurer{
+	//문자 메시지를 처리하기 위한 구현체	
+	@Inject
+	AlertService service;
+	
+	// 로그인한 전체
+	List<WebSocketSession> list = new ArrayList<WebSocketSession>();
+	// 1대1
+	Map<String, WebSocketSession> userSessionMap = new HashMap<String, WebSocketSession>();
+	
+	@Override // OnOpen 참고
+	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+		list.add(session);
+		String memId = session.getPrincipal().getName();
+		userSessionMap.put(memId, session);
+	}
+	
+	@Override //문자메시지 처리 핸들러 // OnMessage 참고
+	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+		String payload = message.getPayload();
+		log.info("msg: {}", payload);
+		
+		if(StringUtils.isNoneEmpty(payload)) {
+			String[] strs = payload.split(",");
+			if(strs != null) {
+				String msg = strs[0];
+				String receiver = strs[1];
+				String url = strs[2];
+				
+				log.info("!!!!!!!!!!!! strs:{}",msg);
+				log.info("!!!!!!!!!!!! strs:{}",receiver);
+				log.info("!!!!!!!!!!!! strs:{}",url);
+				
+				AlertVO alert = new AlertVO();
+				alert.setAlertContent(msg);
+				alert.setAlertReceiver(receiver);
+				alert.setAlertUrl(url);
+				ServiceResult result = service.createAlert(alert);
+
+				WebSocketSession receiverSession = userSessionMap.get(receiver);
+
+				if(result == ServiceResult.OK && receiverSession != null) {
+					String rtnMsg = "<a href = http://192.168.36.40/PHOS/" + url + ">" + msg +"</a>";
+					receiverSession.sendMessage(new TextMessage(session.getAcceptedProtocol() + rtnMsg));
+				}
+//				for (WebSocketSession webSocketSession : list) {
+//					webSocketSession.sendMessage(new TextMessage(session.getAcceptedProtocol() + rtnMsg));
+//				}
+			}
+		}
+	}
+	
+	@Override // OnClose 참고
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+		log.info("떠난다~");
+		list.remove(session);
+	}
+	
+	@Override //전송 에러 발생시 처리 핸들러 // OnError 참고
+	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+		log.info("@@@@@@ 웹소켓 전송 에러남");
+	}
+	
+
+	@Override
+	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+		registry.addHandler(this, "/alram").setAllowedOrigins("*");
+	}
+	
+
+}

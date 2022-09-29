@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.interestProject.dao.InterestProjectDAO">
+	<resultMap type="kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO" id="projectMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID"/>
+	</resultMap>
+	<resultMap type="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO" id="interestMap" autoMapping="true"/>
+	
+	<insert id="insertInterest" parameterType="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO">
+		INSERT INTO INTEREST_PROJ (interest_proj, interest_genmem) VALUES (#{interestProj},#{interestGenmem})
+	</insert>
+	<select id="selectProjectList" parameterType="map" resultMap="projectMap">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		    	SELECT PROJ_ID, PROJ_REGIST, PROJ_EMPTYPE
+						, PROJ_TYPE
+			            , TO_CHAR(PROJ_RECRUITFDATE, 'yyyy.mm.dd') AS PROJ_RECRUITFDATE
+			            , PROJ_PLANSTATE
+						, PROJ_MEMNUM 
+			            , TO_CHAR(PROJ_SDATE, 'yyyy.mm.dd') AS PROJ_SDATE
+			            , TO_CHAR(PROJ_FDATE, 'yyyy.mm.dd') AS PROJ_FDATE
+						, PROJ_ESTIMATE, PROJ_CONTENT, PROJ_QUALIFI
+						, PROJ_APPROVE, PROJ_REJECT, PROJ_RATING
+						, PROJ_REALSDATE, PROJ_REALFDATE, PROJ_LOC
+						, PROJ_STATE
+			            , TO_CHAR(PROJ_RECRUITSDATE, 'yyyy.mm.dd') AS PROJ_RECRUITSDATE
+			            , PROJ_TITLE
+				FROM OUTSOURCING_PROJ C, INTEREST_PROJ D
+				WHERE C.PROJ_ID = D.INTEREST_PROJ
+				AND D.INTEREST_GENMEM = #{genId}
+		    ) A
+		) B
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+		AND B.PROJ_ID NOT IN (SELECT NVL(F.PROJ_OUTPROJ, 0)
+                                FROM PROJ_INVOLVE E, PMSPROJ F 
+                               WHERE E.INVOLVE_MEM = #{genId} 
+                                 AND F.PROJ_ID= E.PROJ_ID)
+	</select>
+	<select id="selectProjectCount" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM OUTSOURCING_PROJ A, INTEREST_PROJ B 
+		WHERE A.PROJ_ID = B.INTEREST_PROJ
+		AND B.INTEREST_GENMEM = #{genId}
+	</select>
+	
+	<delete id="deleteInterest" parameterType="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO">
+		DELETE FROM interest_proj
+		 WHERE interest_proj =#{interestProj}
+		   AND interest_genmem =#{interestGenmem}
+	</delete>
+	<delete id="deleteGen" parameterType="string">
+		DELETE FROM interest_proj
+		WHERE interest_genmem =#{genId}
+	</delete>
+	<delete id="deleteProj" parameterType="string">
+		DELETE FROM interest_proj
+		WHERE interest_proj =#{interestProj}
+	</delete>
+	<select id="getByProjWithGen" parameterType="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO" resultMap="interestMap">
+		SELECT *
+		FROM interest_proj
+		WHERE interest_proj =#{interestProj}
+		  AND interest_genmem =#{interestGenmem}
+	</select>
+</mapper>

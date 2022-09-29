@@ -1,0 +1,157 @@
+package kr.or.ddit.common.mypage.portfolio.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.common.mypage.portfolio.vo.PfObjVO;
+import kr.or.ddit.common.mypage.portfolio.vo.PfSkillVO;
+import kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.CommonCodeVO;
+import kr.or.ddit.common.vo.PagingVO;
+
+/**
+ * 
+ * @author 고혜인
+ * @since 2022. 8. 18.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 18.      작성자명       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Mapper
+public interface PortfolioDAO {
+
+	/**
+	 * 포트폴리오 등록
+	 * @param pf
+	 * @return
+	 */
+	public int insertPf(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 직무분야 등록
+	 * @param 
+	 * @return
+	 */
+	public int insertPfObj(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 기술 등록
+	 * @param 
+	 * @return
+	 */
+	public int insertPfSkill(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 수 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectPfCount(PagingVO<PortfolioVO> pagingVO);
+	
+	/**
+	 * 포트폴리오 리스트 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<PortfolioVO> selectPfList(PagingVO<PortfolioVO> pagingVO);
+	
+	/**
+	 * 포트폴리오 상세 조회
+	 * @param pfId
+	 * @return
+	 */
+	public PortfolioVO selectPf(String pfId);
+	
+	/**
+	 * 포트폴리오 수정
+	 * @param pf
+	 * @return
+	 */
+	public int updatePf(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 기술, 직무분야 수정
+	 * @param pf
+	 * @return
+	 */
+	public int updatePfObj(PortfolioVO pf);
+	public int updateSkill(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 기술, 직무분야 삭제(게시글 수정 시)
+	 * @param pf
+	 * @return
+	 */
+	public int deleteObjs(PortfolioVO pf);
+	public int deleteSkills(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 기술, 직무분야 삭제(게시글 삭제 시)
+	 * @param pfId
+	 * @return
+	 */
+	public int deleteObj(String pfId);
+	public int deleteSkill(String pfId);
+	
+	/**
+	 * 포트폴리오 삭제
+	 * @param pfId
+	 * @return
+	 */
+	public int deletePf(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 첨부파일 등록
+	 * @param attatch
+	 * @return
+	 */
+	public int insertAttatches(AttatchVO attatch); //첨부파일 테이블에 저장
+	public int insertPfAttatches(PortfolioVO pf);  //포트폴리오첨부파일(PF_ATTATCH)에 저장
+	
+	/**
+	 * 첨부파일 한 건의 메타데이터 조회
+	 * @param attId
+	 * @return
+	 */
+	public AttatchVO selectAttatch(String attId);
+	
+	/**
+	 * 파일 리스트 조회
+	 * @param pf
+	 * @return
+	 */
+	public List<AttatchVO> selectPfFileList(PortfolioVO pf);
+	
+	/**
+	 * 첨부파일 ID 찾기
+	 * @param pfId
+	 * @return
+	 */
+	public String selectAttIds(String pfId);
+	
+	/**
+	 * 포트폴리오 삭제 시 모든 첨부파일 ID 불러옴
+	 * @param pf
+	 * @return
+	 */
+	public String[] selectDelAttIds(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 첨부파일 삭제
+	 * @param pf
+	 * @return
+	 */
+	public int deleteAttatches(PortfolioVO pf); //첨부파일 테이블
+	public int deletePfAttatches(PortfolioVO pf);// 포폴첨부파일 테이블
+	
+	
+}

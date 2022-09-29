@@ -1,0 +1,296 @@
+package kr.or.ddit.common.community.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kr.or.ddit.common.community.service.CommunityService;
+import kr.or.ddit.common.community.vo.CommunityRecVO;
+import kr.or.ddit.common.community.vo.CommunityTrepVO;
+import kr.or.ddit.common.community.vo.CommunityVO;
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.validate.DeleteGroup;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.common.validate.UpdateGroup;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.common.vo.SimpleSearchCondition;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 작성자명
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      홍승조       컨트롤로생성
+ * 2022. 8. 2.      홍승조       url 연결
+ * 2022. 8. 6.      홍승조       컨트롤러 통합
+ * 2022. 8. 26.     고혜인	내용 추가
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Controller
+@RequestMapping("/community")
+public class CommunityController {
+	private ObjectMapper objectMapper = new ObjectMapper();
+	@Inject
+	private CommunityService service;
+	
+	@ModelAttribute("cmnt")
+	public CommunityVO cmnt() {
+		return new CommunityVO();
+	}
+	
+	@GetMapping("form")
+	public String communityForm() {
+		return "common/community/communityForm";
+	}
+	
+	@PostMapping
+	public String communityInsert(
+			@Validated(InsertGroup.class) @ModelAttribute("cmnt") CommunityVO cmnt
+			, Errors error
+			) {
+		String viewName = null;
+		
+		if (!error.hasErrors()) {
+			ServiceResult result = service.createCmnt(cmnt);
+			
+			switch (result) {
+			case OK:
+				break;
+
+			default:
+				break;
+			}
+			
+			viewName = "redirect:/community";
+		} else {
+			viewName = "common/community/communityForm";
+		}
+		return viewName;
+	}
+	
+
+	@GetMapping("{cmntNo}/form")
+	public String communityEdit(
+			@PathVariable int cmntNo
+			, Model model
+	) {
+		CommunityVO cmnt = service.retrieveCmnt(cmntNo);
+		model.addAttribute("cmnt", cmnt);
+		
+		return "common/community/communityEdit";
+	}
+	
+	@PutMapping("{cmntNo}")
+	public String communityUpdate(
+			@Validated(UpdateGroup.class) @ModelAttribute("cmnt") CommunityVO cmnt
+			, Errors error
+			, Model model
+			) {
+		String viewName = null;
+		if (!error.hasErrors()) {
+			service.modifyCmnt(cmnt);
+			viewName = "redirect:/community/{cmntNo}";
+		} else {
+			viewName = "common/community/communityEdit";
+		}
+		return viewName;
+		
+	}
+	
+	
+	@DeleteMapping("{cmntNo}")
+	public String communityDelete(
+			@Validated(DeleteGroup.class) @ModelAttribute("cmnt") CommunityVO cmnt
+			, Errors errors
+			, RedirectAttributes redirectAttributes
+			) {
+		String viewName = null;
+		
+		if(!errors.hasErrors()) {
+			service.removeCmnt(cmnt);
+			redirectAttributes.addAttribute("message","삭제되었습니다");
+			viewName = "redirect:/community";
+		} else {
+			redirectAttributes.addAttribute("message", "오류가 발생했습니다");
+			viewName = "redirect:/community/{cmntNo}";
+		}
+		
+		return viewName;
+	}
+	
+
+	@GetMapping
+	public String communityList(
+			@ModelAttribute("simpleCondition") SimpleSearchCondition simpleCondition
+			, @RequestParam(value="searchType", required=false)String searchType
+			, @RequestParam(value="searchWord", required=false)String searchWord
+			, @RequestParam(value="page", required=false, defaultValue="1") int currentPage
+			, Model model) 
+	{
+		PagingVO<CommunityVO> pagingVO = new PagingVO<>();
+		pagingVO.setSimpleCondition(simpleCondition);
+		pagingVO.setCurrentPage(currentPage);
+		service.findAllCmnt(pagingVO);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "common/community/communityList";
+	}
+	
+	@GetMapping("{cmntNo}")
+	public String communityView(
+			@PathVariable int cmntNo
+			, Model model
+	) {
+		CommunityVO cmnt = service.retrieveCmnt(cmntNo);
+		model.addAttribute("cmnt", cmnt);
+		
+		return "common/community/communityView";
+	}
+	
+	@ResponseBody
+	@PostMapping(value="{trepCmnt}/report", produces = "application/json; charset=utf8")
+	public String communityReport(
+			 @RequestParam Map<String, Object> param
+	) throws JsonProcessingException, Exception {
+		
+		log.info("log : {}", param);
+		log.info("param data getClass : {}", param.get("data").getClass());
+		CommunityTrepVO ctVO = null;
+
+		ctVO = objectMapper.readValue(param.get("data").toString(), CommunityTrepVO.class);
+//		try {
+//		} catch (JsonProcessingException e) {
+//			e.printStackTrace();
+//		}
+		
+		log.info("ctVO : {}", param.get("data"));
+		log.info("ctVO ===> {}", ctVO);
+		String message = "";
+
+		List<CommunityTrepVO> saved = service.selectReportCmnt(ctVO.getTrepCmnt());
+		log.info("신고 된 글 리스트 입니다~~~ {} ", saved);
+		
+		
+		if(saved.size() == 0 || saved.isEmpty()) {
+			message = trepResult(ctVO);
+			
+		} else {
+			List<String> trepRepoterList = new ArrayList<>();
+
+			for(CommunityTrepVO single : saved) {
+				trepRepoterList.add(single.getTrepReporter());
+			}
+			if(trepRepoterList.contains(ctVO.getTrepReporter())) {
+				message = "이미 신고된 글입니다";
+			} else {
+				message = trepResult(ctVO);
+			}
+		}
+		return message;
+	}
+	
+	/**
+	 * 신고 성공여부 체크
+	 * @param trep
+	 * @return message
+	 */
+	private String trepResult(CommunityTrepVO trep) {
+		ServiceResult result = service.reportCmnt(trep);
+		
+		String message = null;
+		switch (result) {
+		case OK:
+			message = "신고되었습니다";
+			break;
+
+		default:
+			message = "신고 실패";
+			break;
+		}
+		return message;
+	}
+	
+	@Transactional
+	@ResponseBody
+	@PostMapping(value="{trepCmnt}/rec", produces = "application/json; charset=utf8")
+	public String communityRec(
+			@RequestBody CommunityRecVO rec
+	) {
+		
+		log.info("======================================");
+		log.info("=================={}===================", rec);
+		String message = null;
+
+		List<CommunityRecVO> recList = service.selectRecCmnt(rec.getRecCmnt());
+		
+		if(recList.size() == 0 || recList.isEmpty()) {
+			message = recResult(rec);
+			log.info("---------------if 에러---------------------");
+		} else {
+			List<String> recMemList = new ArrayList<>();
+			
+			for(CommunityRecVO single : recList) {
+				recMemList.add(single.getRecMem());
+			}
+			if(recMemList.contains(rec.getRecMem())) {
+				service.deRecCmnt(rec);
+				message = "추천 취소되었습니다";
+			} else {
+				message = recResult(rec);
+			}
+			
+		}
+		return message;
+	}
+	
+	@Transactional
+	private String recResult(CommunityRecVO rec) {
+		ServiceResult result = service.inRecCmnt(rec);
+		
+		String message = null;
+		
+		switch (result) {
+		case OK:
+			message = "추천되었습니다";
+			break;
+			
+		default:
+			message = "다시 시도해주세요";
+			break;
+		}
+		
+		return message;
+	}
+}

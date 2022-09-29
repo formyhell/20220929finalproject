@@ -1,0 +1,325 @@
+package kr.or.ddit.common.mypage.project.manageProject.controller;
+
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.MemReviewVO;
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.project.manageProject.service.ProjectManageService;
+import kr.or.ddit.common.validate.DeleteGroup;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.common.validate.UpdateGroup;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.common.vo.SimpleSearchCondition;
+import kr.or.ddit.outsourcing.service.OutProjService;
+import kr.or.ddit.outsourcing.vo.ApplicantVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.outsourcing.vo.ProjReviewVO;
+import kr.or.ddit.pms.issue.vo.IssueVO;
+import lombok.extern.slf4j.Slf4j;
+
+//(일반, 기업 공통) 현재 진행중인 내가 참여한 프로젝트 목록을 불러옴
+/**
+ * @author 신창규
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * 
+ *      <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      306-06       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ *      </pre>
+ */
+@Slf4j
+@Controller
+@RequestMapping("/myinfo/project")
+public class ProjectManageController {
+	@Inject
+	ProjectManageService service;
+	
+	@Inject
+	OutProjService oservice;
+
+	@ModelAttribute("simpleCondition")
+	public SimpleSearchCondition simpleCondition() {
+		return new SimpleSearchCondition();
+	}
+
+	@RequestMapping
+	public String processHTML(Authentication authentication) {
+		String viewName = null;
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+
+		if ("ROLE_GENMEM".equals(member.getMemType().get(0).toString())) {
+			viewName = "common/mypage/gen/genProj";
+		} else if ("ROLE_COMMEM".equals(member.getMemType().get(0).toString())) {
+			viewName = "common/mypage/com/comProj";
+		}
+		return viewName;
+	}
+
+	@GetMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public PagingVO<OutProjVO> progressProjectList(Authentication authentication,
+			@RequestParam(name = "page", required = false, defaultValue = "1") int currentPage,
+			@RequestParam(value = "searchType", required = false) String searchType,
+			@RequestParam(value = "searchWord", required = false) String searchWord,
+			@ModelAttribute("simpleCondition") SimpleSearchCondition simpleCondition) {
+		PagingVO<OutProjVO> pagingVO = new PagingVO<>(6, 5);
+		pagingVO.setCurrentPage(currentPage);
+		pagingVO.setSimpleCondition(simpleCondition);
+
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		log.info(member.getMemType().toString());
+
+		Map<String, Object> pagingMap = new HashMap<>();
+		pagingMap.put("pagingVO", pagingVO);
+		pagingMap.put("member", member);
+
+		service.findAll(pagingMap);
+
+		return pagingVO;
+	}
+
+	@GetMapping("{projId}")
+	public String projectDetail(
+			@PathVariable String projId
+			, Authentication authentication
+			, Model model
+			) {
+		String viewName = null;
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+
+		OutProjVO proj = service.findOne(projId);
+		model.addAttribute("memId", member.getMemId());
+		model.addAttribute("proj", proj);
+		List<ApplicantVO> applyList = new ArrayList<ApplicantVO>();
+		
+		if ("ROLE_GENMEM".equals(member.getMemType().get(0).toString())) {
+			viewName = "common/mypage/gen/projDetail";	
+		} else if ("ROLE_COMMEM".equals(member.getMemType().get(0).toString())) {
+			applyList = service.findApplyList(projId);
+			model.addAttribute("applyList", applyList);
+			viewName = "common/mypage/com/projDetail";
+		}
+		return viewName;
+	}
+
+	@PostMapping(value = "gen/{projId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public Map<String, Object> insertProjRev(
+			@Validated(InsertGroup.class) @RequestBody ProjReviewVO projReview,
+			Errors errors
+			, Authentication authentication) {
+		boolean valid = !errors.hasErrors();
+		ProjReviewVO projRev = null;
+		ServiceResult result = null;
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		if (valid) {
+			MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+			MemberVO member = userPrincipal.getRealMember();
+			projReview.setRevWriter(member.getMemId());
+			result = service.createProjRev(projReview);
+
+			switch (result) {
+			case DUPLICATED:
+				resultMap.put("message", "이미 등록한 리뷰입니다.");
+				break;
+			case NOTEXIST:
+				resultMap.put("message", "리뷰 작성이 잘못되었습니다.");
+				break;
+			case FAIL:
+				resultMap.put("message", "리뷰 작성에 실패했습니다.");
+				break;
+			default:
+				resultMap.put("message", "리뷰 작성에 성공했습니다.");
+				projRev = service.getProjRev(projReview);
+				resultMap.put("projRev", projRev);
+				break;
+			}
+		}
+		return resultMap;
+	}
+	
+	@PostMapping(value = "com/{projId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public Map<String, Object> insertComRev(
+			@Validated(InsertGroup.class) @RequestBody MemReviewVO memReview,
+			Errors errors) {
+		boolean valid = !errors.hasErrors();
+		MemReviewVO memRev = null;
+		ServiceResult result = null;
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		if (valid) {
+			result = service.createGenRev(memReview);
+
+			switch (result) {
+			case DUPLICATED:
+				resultMap.put("message", "이미 등록한 리뷰입니다.");
+				break;
+			case NOTEXIST:
+				resultMap.put("message", "리뷰 작성이 잘못되었습니다.");
+				break;
+			case FAIL:
+				resultMap.put("message", "리뷰 작성에 실패했습니다.");
+				break;
+			default:
+				resultMap.put("message", "리뷰 작성에 성공했습니다.");
+				memRev = service.getGenRev(memReview);
+				log.info("memRev: " + memRev);
+				resultMap.put("memRev", memRev);
+				break;
+			}
+		}
+		return resultMap;
+	}
+
+	
+	@PutMapping(value = "gen/{projId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public ProjReviewVO updateProjRev(
+			@Validated(UpdateGroup.class) @RequestBody ProjReviewVO projReview
+			, Errors errors,
+			Authentication authentication
+			) {
+		boolean valid = !errors.hasErrors();
+		if (valid) {
+			MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+			MemberVO member = userPrincipal.getRealMember();
+			projReview.setRevWriter(member.getMemId());
+			projReview = service.updateProjRev(projReview);
+		}
+		return projReview;
+	}
+
+	@PutMapping(value = "com/{projId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public MemReviewVO updateGenRev(
+			@Validated(UpdateGroup.class) @RequestBody MemReviewVO memReview
+			, Errors errors
+			) {
+		MemReviewVO memRev = null;
+		boolean valid = !errors.hasErrors();
+		if (valid) {
+			memRev = service.updateGenRev(memReview);
+		}
+		return memRev;
+	}
+	
+	@DeleteMapping(value = "gen/{projId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public Map<String, Object> deleteGenRev(
+			@Validated(DeleteGroup.class) @RequestBody ProjReviewVO projReview
+			, Errors errors
+			) {
+		boolean valid = !errors.hasErrors();
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+
+		if (valid) {
+			ServiceResult result = service.deleteProjRev(projReview.getRevId());
+
+			switch (result) {
+			case NOTEXIST:
+				resultMap.put("message", "없는 리뷰입니다.");
+				break;
+			case FAIL:
+				resultMap.put("message", "리뷰 삭제에 실패했습니다.");
+				break;
+			default:
+				resultMap.put("message", "리뷰 삭제에 성공했습니다.");
+				break;
+			}
+		}
+		return resultMap;
+	}
+	
+	@DeleteMapping(value = "com/{projId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public Map<String, Object> deleteComRev(
+			@Validated(DeleteGroup.class) @RequestBody MemReviewVO memReview
+			, Errors errors
+			) {
+		boolean valid = !errors.hasErrors();
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+
+		if (valid) {
+			ServiceResult result = service.deleteGenRev(memReview.getGenrevId());
+
+			switch (result) {
+			case NOTEXIST:
+				resultMap.put("message", "없는 리뷰입니다.");
+				break;
+			case FAIL:
+				resultMap.put("message", "리뷰 삭제에 실패했습니다.");
+				break;
+			default:
+				resultMap.put("message", "리뷰 삭제에 성공했습니다.");
+				break;
+			}
+		}
+		return resultMap;
+	}
+	
+	
+	//프로젝트 종료
+	@PostMapping("projectFinish")
+	public String projectFinish(@ModelAttribute("outProj") OutProjVO outProj
+			, @ModelAttribute("password") String password
+			, Authentication authentication
+			, RedirectAttributes redirectAttributes
+			) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		String pass = password;
+		String projId = outProj.getProjId();
+		log.info("projId@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" + projId);
+		ServiceResult result = oservice.finish(member,outProj,pass);
+		String viewName = null;
+		switch (result) {
+		case INVALIDPASSWORD:
+			redirectAttributes.addFlashAttribute("message", "비밀번호 오류. 다시 시도해주세요");
+			viewName = "redirect:/myinfo/project/" + projId;
+			break;
+
+		default:
+			redirectAttributes.addFlashAttribute("message", "프로젝트가 종료되었습니다.");
+			viewName = "redirect:/myinfo/project";
+			break;
+		} 
+		log.info(result+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@결과이다");
+		return viewName;
+	} 
+
+	
+}

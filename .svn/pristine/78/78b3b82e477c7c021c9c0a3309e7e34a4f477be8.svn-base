@@ -1,0 +1,39 @@
+package kr.or.ddit.common.mypage.project.manageProject.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.project.manageProject.dao.ProjectManageDAO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProjectManageServiceImpl implements ProjectManageService {
+	private final ProjectManageDAO projDAO;
+	
+	public List<OutProjVO> findAll(Map<String, Object> pagingMap) {
+		PagingVO<OutProjVO> pagingVO = (PagingVO<OutProjVO>) pagingMap.get("pagingVO");
+		MemberVO member = (MemberVO) pagingMap.get("member");
+		List<OutProjVO> projList = null;
+		if(member == null) {
+			throw new RuntimeException("해당 멤버가 없습니다.");
+		} else if("ROLE_GENMEM".equals(member.getMemType().get(0).toString())) {
+			pagingVO.setTotalRecord(projDAO.genSelectTotalProj(pagingMap));
+			projList = projDAO.genSelectAll(pagingMap);
+		} else if("ROLE_COMMEM".equals(member.getMemType().get(0).toString())) {
+			pagingVO.setTotalRecord(projDAO.comSelectTotalProj(pagingMap));
+			projList = projDAO.comSelectAll(pagingMap);
+		}
+		
+		pagingVO.setDataList(projList);
+		pagingMap.put("pagingVO", pagingVO);
+		return projList;
+	}
+}

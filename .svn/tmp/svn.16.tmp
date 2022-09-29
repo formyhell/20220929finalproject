@@ -1,0 +1,173 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 생성
+* 2022. 8. 9.      고혜인      jsp 내용 추가
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>  
+
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+
+  <!-- Intro Section -->
+  <section class="inner-intro bg-img light-color overlay-before parallax-background">
+    <div class="container">
+      <div class="row title">
+        <h1 data-title="QNA"><span>QNA</span></h1>
+      </div>
+    </div>
+  </section>
+
+ <style>
+.pagingArea {
+	text-align: center;
+}
+
+table {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+table, td, th {
+	border-collapse: collapse;
+/* 	border: 1px solid black; */
+}
+card {
+	margin-left: 300px;
+	margin-right: 300px;
+}
+regist {
+	float: right;
+}
+#searchWord {
+	border: 1px;
+}
+form-full input-lg {
+	z-index:1000;
+}
+</style>
+<div id="services-section" class="pt-xs-60" style="padding-top: 8vh">
+<div class="container">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="block-title v-line mb-45"> 
+				<h2>Q<span>&</span>A</h2> 
+				<p class="italic"> 
+					질문 게시판
+				</p> 
+			</div>
+			<div>
+				<div class="card-header">
+<!-- 					<h5>QNA</h5> -->
+					<div>
+						<button class="btn-greenlight float-right" id="insertQna" >등록하기</button>
+					</div>
+					<!-- 검색 -->
+					<div id="searchUI" class="form-field">
+					<form:select path="simpleCondition.searchType" class="selectbox">
+						<form:option value="">전체</form:option>
+						<form:option value="qnaTitle" label="제목" />
+						<form:option value="qnaContent" label="내용" />
+						<form:option value="qnaWriter" label="작성자" />
+					</form:select>
+					<form:input style="border: 1px solid #DEDEDE;" placeholder="Search Here" path="simpleCondition.searchWord" />
+					<input type="button" id="searchBtn" class="btn-greenlight" value="검색">
+					
+					</div>
+				</div>
+				<!-- 리스트 -->
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+		<tr>
+			<th scope="col">번호</th>
+			<th scope="col">제목</th>
+			<th scope="col">작성자</th> <%-- 작성자 닉네임 --%>
+			<th scope="col">작성일</th>
+		</tr>
+								
+						</thead>
+						<tbody>
+		<c:set value="${pagingVO.dataList }" var="qnaList" />
+		<c:choose>
+			<c:when test="${not empty qnaList}">
+				<c:forEach items="${qnaList }" var="qna">
+					<tr>
+						<td>${qna.qnaNo }</td>
+						<c:url value="/qna/${qna.qnaNo }" var="qnaURL" />
+						<td><a href="${qnaURL }"><c:out value="${qna.qnaTitle }" /></a></td>
+						<td><c:out value="${qna.qnaWriter }" /></td>
+						<td><c:out value="${qna.qnaDate }" /></td>
+					</tr>
+				</c:forEach>
+			</c:when>
+			<c:otherwise>
+				<tr>
+					<td colspan="4">문의글이 없음</td>
+				</tr>
+			</c:otherwise>
+		</c:choose>
+						</tbody>
+						<!-- 페이징 -->
+						<tfoot>
+							<tr>
+								<td colspan="5">
+									<div class="pagingArea pagination-nav text-left mt-60 mtb-xs-30">
+										${pagingVO.pagingHTMLBS }</div>
+								</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+
+
+
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/qna" method="get">
+	<input type="hidden" name="page" />
+	<form:input type="hidden" path="searchType"/>
+	<form:input type="hidden" path="searchWord"/>
+
+</form:form>
+
+<script>
+	let searchForm = $("#searchForm");
+	let pagingArea = $(".pagingArea").on("click", "a", function(event){
+		let page = $(this).data("page");
+		searchForm.find("[name=page]").val(page);
+		searchForm.submit();
+	});
+	
+	let searchUI = $("#searchUI").on("click", "#searchBtn", function(event){
+		searchForm.get(0).reset();
+		let inputs = searchUI.find(":input[name]");
+		$(inputs).each(function(idx, input){
+			let name = $(this).attr("name");
+			let value = $(this).val();
+			searchForm.find("[name="+name+"]").val(value);
+		});
+		searchForm.submit();
+	});
+	
+	$("#insertQna").on("click", function() {
+		console.log("클릭");
+		
+		<security:authorize access="isAnonymous()"> 
+			location='${cPath}/login'; //비회원은 로그인 창으로
+		</security:authorize>
+		
+		<security:authorize access="isAuthenticated()">
+			location='${cPath }/qna/form'; //회원은 QNA작성
+		</security:authorize>	
+	});
+</script>

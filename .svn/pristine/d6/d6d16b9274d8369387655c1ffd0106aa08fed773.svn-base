@@ -1,0 +1,50 @@
+package kr.or.ddit.common.mypage.project.manageProject.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 17.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                    수정자              		 수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 17.    조채원       			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Mapper
+public interface ProjectManageDAO {
+	/**
+	 * 일반 회원의 레코드 수 조회
+	 * @return
+	 */
+	public int genSelectTotalProj(Map<String, Object> pagingMap);
+	
+	/**
+	 * 기업 회원의 레코드 수 조회
+	 * @return
+	 */
+	public int comSelectTotalProj(Map<String, Object> pagingMap);
+	
+	/**
+	 * 일반 회원의 프로젝트 목록 조회
+	 * @param genId
+	 * @return
+	 */
+	public List<OutProjVO> genSelectAll(Map<String, Object> pagingMap);	
+	
+	/**
+	 * 기업 회원의 프로젝트 목록 조회
+	 * @param comId
+	 * @return
+	 */
+	public List<OutProjVO> comSelectAll(Map<String, Object> pagingMap);
+}

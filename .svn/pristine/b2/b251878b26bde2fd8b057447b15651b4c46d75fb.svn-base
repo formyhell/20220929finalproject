@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+
+	<context:component-scan base-package="kr.or.ddit" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+	
+		<mvc:annotation-driven></mvc:annotation-driven>
+	
+	<!-- 스프링 시큐리티 애너테이션을 활성화
+	 - pre-post-annotations="enabled" -> 골뱅이PreAuthorize, 골뱅이PostAuthorize 활성화
+	   *** PreAuthorize : 특정 메소드를 실행하기 전에 role 체킹
+	   PostAuthorize : 특정 메소드를 실행한 후에 role 체킹
+	 - secured-annotations="enabled" -> 골뱅이Secured를 활성화
+	   Secured : 스프링 시큐리티 모듈을 지원하기 위한 애너테이션
+	 -->
+	<security:global-method-security pre-post-annotations="enabled"
+	 secured-annotations="enabled" />
+	
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource" 
+		p:basenames="kr.or.ddit.msgs.message,kr.or.ddit.msgs.errorMessage"
+	/>
+
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com"/>
+		<property name="port" value="587"/>
+		<property name="defaultEncoding" value="utf-8"/>
+		<property name="username" value="hhhi007561@gmail.com"/>
+		<property name="password" value="uprhpatrdcgmreij"/>
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop> <!-- 2단계본인인증을 했으니 보안적으로 true라고 준다 -->
+				<prop key="mail.smtp.starttls.enable">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!--파일업로드 설정(multiparts)  -->
+	<bean id="filterMultipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"
+		p:maxUploadSize="#{appInfo.uploadSize}"
+	/>
+	<bean id="downloadView" class="kr.or.ddit.common.filedownload.AttatchDownloadView"/>
+
+	<bean id="IRVR" class="org.springframework.web.servlet.view.InternalResourceViewResolver" 
+		p:prefix="/WEB-INF/jsp/"
+		p:suffix=".jsp"
+	/>
+	<bean id="BNVR" class="org.springframework.web.servlet.view.BeanNameViewResolver" 
+		p:order="1"
+	/>
+	<bean class="org.springframework.web.servlet.view.tiles3.TilesConfigurer" 
+		p:definitions="/WEB-INF/tiles/*-definitions.xml"
+	/>
+	<bean class="org.springframework.web.servlet.view.tiles3.TilesViewResolver" 
+		p:order="2"
+	/>
+	
+	<bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" />
+<!-- 	<bean id="downLoadView" class="kr.or.ddit.board.view.AttatchDownloadView"/> -->
+
+	<mvc:resources location="/resources/" mapping="/resources/**" cache-period="0" />
+	
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver" 
+		p:cookieName="localeCookie"
+		p:cookieMaxAge="#{60*60*24*7}"
+		p:cookiePath="/"
+	/>
+	<mvc:interceptors>
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor" 
+			p:paramName="lang"
+		/>
+	</mvc:interceptors>
+
+
+</beans>

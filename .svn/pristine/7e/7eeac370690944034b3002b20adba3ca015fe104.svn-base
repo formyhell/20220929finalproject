@@ -1,0 +1,239 @@
+package kr.or.ddit.common.mypage.memInfo.controller;
+
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.dao.CommonCodeDAO;
+import kr.or.ddit.common.member.vo.GenMemberVO;
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.memInfo.service.MemInfoService;
+import kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO;
+import kr.or.ddit.common.vo.CommonCodeVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 신창규
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      306-06       최초작성
+ * 2022. 8. 3.      홍승조		 List 를 view로 수정
+ * 2022. 8. 4.      홍승조               update, delete url 연결
+ * 2022. 8. 6.      윤지영      		  url 재연결
+ * 2022. 8. 9.      윤지영,신창규        url 수정
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+
+@Controller
+@Slf4j
+@RequestMapping("/gen/myinfo")
+public class GenMemInfo {
+
+	
+	@Inject
+	MemInfoService service;
+	
+	@Inject
+	CommonCodeDAO commonCodeDao;
+	
+	@ModelAttribute("outObjList")
+	public List<CommonCodeVO> outObjList(){
+		return commonCodeDao.jobFeild();
+	}
+	
+	@ModelAttribute("outSkillList")
+	public List<CommonCodeVO> outSkillList(){
+		return commonCodeDao.skill();
+	}
+	
+	@GetMapping
+	public String memInfoView(Authentication authentication ,Model model) {
+		String genId = authentication.getName();
+		//회원정보
+		GenMemberVO genMember = service.retrieveGenMemInfo(genId);
+		model.addAttribute("genMember", genMember);
+		return "common/mypage/gen/infoView";
+	}
+	
+	//일반회원
+	@GetMapping("{memId}/form")
+	public String memberEdit(
+			@PathVariable String memId
+			, GenMemberVO principal
+			, Model model
+			) {
+		GenMemberVO genMember = service.retrieveGenMemInfo(memId);
+		model.addAttribute("genMember", genMember);
+		return "common/mypage/gen/memberEdit";
+	}
+	
+	@PostMapping("{memId}")
+	public String memberUpdate(
+			 @PathVariable String memId
+			, RedirectAttributes redirectAttributes
+			, SessionStatus sessionStatus
+			, Model model
+			, @ModelAttribute("genMember") GenMemberVO genMember //얘("")가 ObjectName
+			, Errors errors
+		) {
+			String viewName = null;
+			if(!errors.hasErrors()) {
+//				genMember.setGenId(memId);
+				ServiceResult result = service.modifyGenMember(genMember);
+				switch (result) {
+//				case INVALIDPASSWORD:
+//					model.addAttribute("message", "비밀번호 오류");
+//					viewName = "common/mypage/gen/memberEdit";
+//					break;
+				case FAIL:
+					model.addAttribute("message", "서버 오류");
+					viewName = "common/mypage/gen/memberEdit";
+					break;
+				default:
+					viewName = "redirect:/gen/myinfo";
+					break;
+				}
+			}else {
+				viewName = "common/mypage/gen/memberEdit";
+			}
+			return viewName;		
+	}	
+	
+	
+	//skill,직무분야 insert Form
+	@GetMapping("genSkillForm")
+	public String genSkillForm(
+			@ModelAttribute("genMem") GenMemberVO genMem
+			, Model model
+			, Authentication authentication
+			) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal(); 
+		MemberVO member = userPrincipal.getRealMember();
+		genMem.setGenId(member.getMemId());
+		
+		GenMemberVO genMember = new GenMemberVO();
+		model.addAttribute("genSkill",genMember);
+//		/PHOS/webapp/WEB-INF/jsp/common/mypage/com
+		return "common/mypage/gen/genSkillForm";
+	}
+	
+	
+	
+	//skill,직무분야 등록
+	@PostMapping
+	public String skillInsert(
+			@ModelAttribute("genSkill") GenMemberVO genMem
+			, Errors errors
+			, Model model
+			, RedirectAttributes redirectAttributes
+			, Authentication authentication
+			) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal(); 
+		MemberVO member = userPrincipal.getRealMember();
+		genMem.setGenId(member.getMemId());
+		
+		String viewName=null;
+		
+		if(!errors.hasErrors()) {
+			service.insertSkill(genMem);
+			viewName = "redirect:/gen/myinfo";
+		}
+		else {
+			viewName = "gen/genSkillForm";
+		}
+		
+		return viewName;
+	}
+	
+	
+	
+	
+	
+	
+	@PostMapping("gendel/{memId}")
+	public String genMemDelete(
+			@RequestParam(value="password", required=false) String password
+			, Authentication authentication
+			, RedirectAttributes redirectAttributes
+			, HttpSession session
+			) {
+		
+		log.info(password+"비빌번호~~~~~~~~~~~~~~~~~~~~~~~~");
+//		MemberVO principal = ((MemberPrincipal)authentication.getPrincipal()).getRealMember();
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		
+		
+		
+		log.info("컨트롤러까지 와라~");
+//		member.setMemPass(password);
+//		String ipass = passEncoder.encode(password);
+		String ipass = password;
+		ServiceResult result = service.deleteGenMember(member,ipass);
+		
+		
+		String viewName = null;
+		switch (result) {
+		case INVALIDPASSWORD:
+			redirectAttributes.addFlashAttribute("message", "비번 오류");
+			viewName = "common/mypage/gen/infoView";
+			break;
+		case FAIL:
+			redirectAttributes.addFlashAttribute("message", "서버 오류");
+			viewName = "common/mypage/gen/infoView";
+			break;
+
+		default:
+			session.invalidate();
+			viewName = "redirect:/";
+			break;
+		}
+		return viewName;
+	}
+	
+	@ResponseBody
+	@GetMapping("{genId}/delskill")
+	public String deleteSkill(
+			@PathVariable GenSkillVO genId
+			, @RequestParam(name="code", required=false) String code
+			, Authentication authentication
+			) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal(); 
+		MemberVO member = userPrincipal.getRealMember();
+		genId.setGenId(member.getMemId());
+		genId.setSkillCode(code);
+		String aa = null;
+	int remove = service.remove(genId);
+	if(remove >0) {
+		aa = "성공";
+	}
+	return aa;
+	}
+	
+}

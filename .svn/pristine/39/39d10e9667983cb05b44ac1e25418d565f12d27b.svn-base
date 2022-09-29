@@ -1,0 +1,91 @@
+package kr.or.ddit.common.mypage.portfolio.service;
+
+import java.util.List;
+import java.util.Map;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+
+/**
+ * 
+ * @author 고혜인
+ * @since 2022. 8. 18.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 18.      작성자명       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+/**
+ * 
+ * @author 고혜인
+ * @since 2022. 8. 19.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 19.      작성자명       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+public interface PortfolioService {
+	
+	/**
+	 * 포트폴리오 등록
+	 * @param pf
+	 * @return OK, FAIL
+	 */
+	public ServiceResult createPf(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 수정
+	 * @param pf
+	 * @return {@link PKNotFoundException}, OK, FAIL
+	 */
+	public ServiceResult modifyPf(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 삭제
+	 * @param pf
+	 * @return {@link PKNotFoundException}, OK, FAIL
+	 */
+//	public ServiceResult removePf(String pfId);
+	public ServiceResult removePf(PortfolioVO pf);
+	
+	/**
+	 * 포트폴리오 전체 조회 
+	 * @param pagingVO
+	 * @return list, null
+	 */
+	public List<PortfolioVO> findAllPf(Map<String, Object> map);
+	
+	/**
+	 * 포트폴리오 상세 조회
+	 * @param pfId
+	 * @return 존재하지 않으면 {@link PKNotFoundException} 발생
+	 */
+	public PortfolioVO retrievePf(String pfId);
+	
+	/**
+	 * 파일 다운로드를 위한 메타 데이터 조회
+	 * @param attId
+	 * @return
+	 */
+	public AttatchVO downloadPf(String attId);
+	
+//	/**
+//	 * 아웃소싱 프로젝트 지원자 포트폴리오 조회
+//	 * @param map
+//	 * @return
+//	 */
+//	public List<PortfolioVO> applicantPfList(Map<String, Object> map);
+
+}

@@ -1,0 +1,82 @@
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                수정자          수정내용
+* ----------  ---------  -----------------
+* 2022. 9. 1.      작성자           최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+
+<div class="row" style="padding: 50px;">
+	<div class="col-xl col-50 box-col-6 des-xl-50">
+		<h4>승인된 공고 리스트</h4>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th><spring:message code="outProj.projId" /></th>
+					<th><spring:message code="outProj.projTitle" /></th>
+					<th><spring:message code="outProj.projRegist" /></th>
+					<th><spring:message code="outProj.projRecruitsdate" /></th>
+				</tr>
+			</thead>
+			<tbody>
+				<c:choose>
+					<c:when test="${not empty approveList }">
+						<c:forEach items="${approveList }" var="outProj">
+							<tr onClick="location.href='${cPath }/admin/outProjList/${outProj.projId }'">
+								<td>${outProj.projId }</td>
+								<td>${outProj.projTitle }</td>
+								<td>${outProj.projRegist }</td>
+								<td>${outProj.projRecruitsdate }</td>
+							</tr>
+						</c:forEach>	
+					</c:when>
+					<c:otherwise>
+						<tr>
+							<td colspan="4">승인된 프로젝트가 없습니다.</td>
+						</tr>
+					</c:otherwise>
+				</c:choose>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="col-xl col-50 box-col-6 des-xl-50">
+		<h4>반려된 공고 리스트</h4>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th><spring:message code="outProj.projId" /></th>
+					<th><spring:message code="outProj.projTitle" /></th>
+					<th><spring:message code="outProj.projRegist" /></th>
+					<th><spring:message code="outProj.projRecruitsdate" /></th>
+					<th><spring:message code="outProj.projReject" /></th>
+				</tr>
+			</thead>
+			<tbody>
+				<c:choose>
+					<c:when test="${not empty notApproveList }">
+						<c:forEach items="${notApproveList }" var="outProj">
+							<tr onClick="location.href='${cPath }/admin/outProjList/${outProj.projId }'">
+								<td>${outProj.projId }</td>
+								<td>${outProj.projTitle }</td>
+								<td>${outProj.projRegist }</td>
+								<td>${outProj.projRecruitsdate }</td>
+								<td>${outProj.projReject }</td>
+							</tr>
+						</c:forEach>	
+					</c:when>
+					<c:otherwise>
+						<tr>
+							<td colspan="4">승인된 프로젝트가 없습니다.</td>
+						</tr>
+					</c:otherwise>
+				</c:choose>
+			</tbody>
+		</table>
+	</div>
+</div>

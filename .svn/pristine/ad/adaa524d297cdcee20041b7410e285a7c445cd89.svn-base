@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.alert.dao.AlertDAO">
+	
+	<select id="selectAlert" resultType="kr.or.ddit.common.alert.vo.AlertVO">
+		SELECT ALERT_NO, ALERT_CONTENT, ALERT_CHECK,
+		    	ALERT_TIME, ALERT_RECEIVER, ALERT_URL
+		FROM ALERT
+		WHERE ALERT_NO = #{alertNo}
+		AND ALERT_DELETE = 0
+	</select>
+	
+	<select id="selectAlertList" resultType="kr.or.ddit.common.alert.vo.AlertVO">
+		SELECT ALERT_NO, ALERT_CONTENT, ALERT_CHECK,
+		    	ALERT_TIME, ALERT_RECEIVER, ALERT_URL
+		FROM ALERT
+		WHERE ALERT_RECEIVER = #{alertReceiver}
+		AND ALERT_DELETE = 0
+		ORDER BY ALERT_NO DESC
+	</select>
+	
+	<insert id="insertAlert" parameterType="kr.or.ddit.common.alert.vo.AlertVO">
+		INSERT INTO ALERT (
+		    ALERT_NO,
+		    ALERT_CONTENT,
+		    ALERT_RECEIVER,
+		    ALERT_URL
+		) VALUES (
+			ALERT_NO_SEQ.NEXTVAL
+			,#{alertContent} 
+		    ,#{alertReceiver}
+		    ,#{alertUrl}
+		)
+	</insert>
+	
+	<update id="updateAlert" parameterType="kr.or.ddit.common.alert.vo.AlertVO">
+		UPDATE ALERT
+		    SET ALERT_CHECK = 1
+		WHERE ALERT_NO = #{alertNo}
+		AND ALERT_DELETE = 0
+	</update>
+	
+	<update id="deleteAlert" parameterType="int">
+		UPDATE ALERT
+		    SET ALERT_DELETE = 1
+		WHERE ALERT_NO = #{alertNo}
+		AND ALERT_DELETE = 0
+	</update>
+
+</mapper>

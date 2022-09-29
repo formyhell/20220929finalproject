@@ -1,0 +1,75 @@
+package kr.or.ddit.pms.rule.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * @author 김유진
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                 수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.       김유진              최초작성
+ * 2022. 8. 4.       김유진              insert url 연결
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@RequestMapping("/rule")
+public class RuleController {
+	
+	// 입력 폼으로 이동
+	@GetMapping("form")
+	public String ruleForm() {
+		return "pms/rule/ruleForm";
+	}
+	
+	// 입력값 저장
+	@PostMapping
+	public String ruleInsert() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/rule";
+		} else {
+			viewName = "pms/rule/ruleForm";
+		}
+		return viewName;
+	}
+	
+
+	@GetMapping("1/form")
+	public String ruleEdit() {
+		return "pms/rule/ruleEdit";
+	}
+	
+	@PutMapping("1/form")
+	public String ruleUpdate() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/rule";
+		} else {
+			viewName = "pms/rule/ruleEdit";
+		}
+		return viewName;
+	}
+	
+	@DeleteMapping("1")
+	public String ruleDelete() {
+		return "/rule";
+	}
+	
+
+	@GetMapping
+	public String ruleView() {
+		return "pms/rule/ruleView";
+	}
+
+	
+}

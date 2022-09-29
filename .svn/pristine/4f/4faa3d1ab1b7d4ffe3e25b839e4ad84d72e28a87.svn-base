@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.common.mypage.memInfo.dao.MemberInfoDAO">
+
+	<select id="selectGenMem" parameterType="string"
+		resultType="kr.or.ddit.common.member.vo.GenMemberVO">
+		SELECT *
+		FROM GEN_MEMBER
+		WHERE GEN_ID = #{memId}
+	</select>
+	<select id="selectComMem" parameterType="string"
+		resultType="kr.or.ddit.common.member.vo.ComMemberVO">
+		SELECT *
+		FROM COM_MEMBER
+		WHERE COM_ID = #{memId}
+	</select>
+
+	<update id="updateGenMember"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		UPDATE GEN_MEMBER SET
+		GEN_NAME=#{genName,jdbcType=VARCHAR},
+		GEN_NICK=#{genNick,jdbcType=VARCHAR},
+		GEN_MAIL=#{genMail,jdbcType=VARCHAR},
+		GEN_HP=#{genHp,jdbcType=VARCHAR},
+		GEN_INTRO=#{genIntro,jdbcType=VARCHAR}
+		WHERE
+		GEN_ID = #{memId}
+	</update>
+
+
+	<update id="updateComMember"
+		parameterType="kr.or.ddit.common.member.vo.ComMemberVO">
+		UPDATE COM_MEMBER SET
+		COM_COMNAME=#{comComname,jdbcType=VARCHAR},
+		COM_NICK=#{comNick,jdbcType=VARCHAR},
+		COM_COMCEO=#{comComceo,jdbcType=VARCHAR},
+		COM_MAIL=#{comMail,jdbcType=VARCHAR},
+		COM_COMTEL=#{comComtel,jdbcType=VARCHAR}
+		WHERE
+		COM_ID = #{memId}
+
+	</update>
+
+	<select id="selectMemberForAuth"
+		parameterType="kr.or.ddit.common.member.vo.MemberVO"
+		resultType="kr.or.ddit.common.member.vo.MemberVO">
+		SELECT MEM_ID,MEM_PASS,MEM_TYPE,ENABLED
+		FROM V_MEMBER
+		WHERE
+		MEM_ID = #{memId}
+	</select>
+
+	<update id="deleteGenMember" parameterType="string">
+		UPDATE GEN_MEMBER SET
+		GEN_DELETE = 1
+		WHERE
+		GEN_ID = #{memId}
+	</update>
+
+	<update id="deleteComMember" parameterType="string">
+		UPDATE COM_MEMBER SET
+		COM_DELETE = 1
+		WHERE
+		COM_ID = #{memId}
+
+	</update>
+
+
+	<!-- <resultMap type="kr.or.ddit.common.member.vo.GenMemberVO" id="genMap" 
+		autoMapping="true"> -->
+	<!-- <id property="genId" column="GEN_ID"/> -->
+	<!-- <collection property="objList" javaType="List" ofType="kr.or.ddit.common.mypage.memInfo.vo.GenObjVO" 
+		autoMapping="true"> -->
+	<!-- <id property="objCode" column="GEN_OBJ.OBJ_CODE"/> -->
+	<!-- </collection> -->
+	<!-- <collection property="skillList" javaType="List" ofType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO" 
+		autoMapping="true"> -->
+	<!-- <id property="skillCode" column="GEN_SKILL.SKILL_CODE"/> -->
+	<!-- </collection> -->
+	<!-- </resultMap> -->
+
+	<!-- 직무분야, 기술 관련 -->
+	<select id="genObjList" parameterType="String" resultType="String">
+		WITH GENOBJ AS (
+		SELECT A.CODE_NAME AS GENOBJ_NAME, A.CODE_ID AS GENOBJ_ID, B.GEN_ID
+		FROM COMMON_CODE A INNER JOIN GEN_OBJ B ON (A.CODE_ID = B.OBJ_CODE)
+		)
+		SELECT
+		DISTINCT B.GENOBJ_NAME,
+		A.GEN_ID
+		FROM GEN_OBJ A INNER JOIN GENOBJ B ON(A.GEN_ID = B.GEN_ID)
+		WHERE A.GEN_ID = #{genId}
+	</select>
+	<select id="genSkillList" parameterType="String"
+		resultType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO">
+		WITH GENSKILL AS (
+		SELECT A.CODE_NAME AS GENSKILL_NAME, A.CODE_ID AS GENSKILL_ID, B.GEN_ID
+		FROM COMMON_CODE A INNER JOIN GEN_SKILL B ON (A.CODE_ID = B.SKILL_CODE)
+		)
+		SELECT
+	    DISTINCT B.GENSKILL_NAME AS SKILL_NAME, B.GENSKILL_ID AS SKILL_CODE,
+	    A.GEN_ID
+		FROM GEN_SKILL A INNER JOIN GENSKILL B ON(A.GEN_ID = B.GEN_ID)
+		WHERE A.GEN_ID = #{genId}
+	</select>
+
+
+	<insert id="insertObj"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		INSERT ALL
+		<foreach collection="skillList" item="skill">
+			INTO GEN_SKILL(
+			SKILL_CODE,
+			GEN_ID
+			) VALUES(
+			#{skill.skillCode}
+			,#{genId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+	<insert id="insertSkill"
+		parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+		INSERT ALL
+		<foreach collection="objList" item="obj">
+			INTO GEN_OBJ(
+			OBJ_CODE,
+			GEN_ID
+			) VALUES(
+			#{obj.objCode}
+			,#{genId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+
+<!-- 	<collection property="objList" javaType="List" ofType="kr.or.ddit.common.mypage.memInfo.vo.GenObjVO"  -->
+<!--  		autoMapping="true">  -->
+<!-- 	<id property="objCode" column="OBJ_CODE"/> -->
+<!-- 	</collection> -->
+<!-- 	<resultMap type="kr.or.ddit.common.member.vo.GenMemberVO" id="genMap" autoMapping="true">  -->
+<!-- 	 <id property="genId" column="GEN_ID"/>  -->
+<!-- 	<collection property="skillList" javaType="java.util.List" ofType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO"  -->
+<!-- 		autoMapping="true"> -->
+<!-- 	<id property="skillCode" column="SKILL_CODE"/> -->
+<!-- 	</collection> -->
+<!-- 	</resultMap> -->
+
+	<delete id="delSkill" parameterType="kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO">
+		DELETE FROM GEN_SKILL
+		WHERE
+		SKILL_CODE=#{skillCode}
+		AND
+		GEN_ID = #{genId}
+	</delete>
+	
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,125 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>  
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %> 
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+  <!-- CONTENT --> 
+  <!-- Intro Section -->
+  <section class="inner-intro bg-img light-color overlay-before parallax-background">
+    <div class="container">
+      <div class="row title">
+        <h1 data-title="Project Details"><span>Project Details</span></h1>
+      </div>
+    </div>
+  </section>
+  <!-- Intro Section -->
+  <div id="project-detail-section" class="pt-80 pb-60 pt-xs-60">
+    <div class="container">
+      <div class="row ">
+        <div class="col-sm-12">
+          <div class="block-title v-line mb-45">
+            <h2><span>Our</span> Project</h2>
+            <p class="italic"> Aenean suscipit eget mi act </p>
+          </div>
+        </div>
+      </div>
+      <div class="row"> 
+        <div class="col-sm-12">
+          <div class="project-details">
+            <figure> <img src="${cPath}/resources/assets/images/banner/3.jpg" alt=""> </figure>
+            <div class="project-info col-sm-12 col-md-4 ">
+              <h3>${proj.projRegist}</h3>
+              <ul>
+                <li> 프로젝트 설명  </li>
+                <li> ${proj.projContent} <br> ${proj.projQualifi}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-12 col-md-7 mt-30">
+        	<security:authentication property="principal" var="authMember" /> 
+        <c:choose>
+				<c:when test="${proj.projRegist eq authMember.realMember.memId}">
+        			<button class="btn-blueOcen" style="width: 48%" onclick="location.href='${cPath}/outsourcing/apply/${proj.projId}'">프로젝트 지원자 확인</button>
+        			<button class="btn-blueOcen" style="width: 48%">추천 지원자 확인</button>
+        		</c:when>
+        		<c:when test="${authMember.realMember.memType.get(0) eq 'ROLE_GENMEM'}">
+        			<button class="btn-blueOcen" style="width: 50%" onclick="location.href='${cPath}/outsourcing/apply/support/form/${proj.projId }'">프로젝트 지원하기</button>
+	        		<form:form id="love" action="${cPath}/gen/myinfo/interestProject/${proj.projId}" method="get" style ="display:inline">
+	        			<img id="heart" src="${cPath}/resources/images/heart/heartbackground.png">
+	        		</form:form>
+        			</c:when>
+        		<c:otherwise>
+        		
+        		</c:otherwise>
+        		
+			</c:choose>
+          <div class="box-title mb-20">
+            <h3 style="font-weight: bold;">${proj.projTitle }</h3> <br>
+          </div>
+          <div class="text-content">
+            <p> ${proj.projContent}
+            <ul>
+                <li> <strong>프로젝트 규모</strong> ${proj.projEstimate}원 </li>
+                <li> <strong>고용형태</strong> ${proj.projEmptype} </li>
+                <li> <strong>모집인원</strong> ${proj.projMemnum}명 </li>
+                <li> <strong>예상시작일</strong> ${proj.projSdate} </li>
+                <li> <strong>예상종료일</strong> ${proj.projFdate} </li>
+                <li> <strong>장소</strong> ${proj.projLoc} </li>
+              </ul>
+              <br><br>
+          </div>
+          <div>
+          </div>
+        </div>
+              <c:if test="${proj.projRegist eq authMember.realMember.memId}">
+               <button class="btn-grayDay" style="width: 60px; float: right; margin-top: 350px;" data-bs-toggle="modal" data-bs-target="#exampleModal" >삭제</button>
+               <button onclick="location.href='${cPath }/outsourcing/${proj.projId }/form'" class="btn-blueOcen" style="width: 60px; float: right; margin-top: 350px; ">수정</button>
+               </c:if>
+    </div>
+  </div>
+  
+  	<!-- Modal -->
+<!-- <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"> -->
+<!--   <div class="modal-dialog"> -->
+<!--     <div class="modal-content"> -->
+<!--       <div class="modal-header"> -->
+<!--         <h4 class="modal-title" id="exampleModalLabel">비밀번호를 입력하시오</h4> -->
+<!--         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+<!--       </div> -->
+<%--       <form method="post" action="${cPath }/outsourcing/projdel/${proj.projId }"> --%>
+<%--       <sec:csrfInput/> --%>
+<!-- 	      <div class="modal-body"> -->
+<!-- 	        <input type="password" name="password" class="form-control"/> -->
+<!-- 	      </div> -->
+<!-- 	      <div class="modal-footer"> -->
+<!-- 	        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button> -->
+<!-- 	        <button type="submit" class="btn btn-danger"  >삭제</button> -->
+<!-- 	      </div> -->
+<%--       </form>  --%>
+<!--     </div> -->
+<!--   </div> -->
+</div>
+
+<div id="exampleModal">
+	<div class="modal-content">
+		<form:form action="${cPath }/outsourcing/projdel/${proj.projId }" method="post" modelAttribute="outProj">
+				<input type="password" name="password" placeholder="비밀번호">
+				<input type="submit" value="삭제" />
+				<input type="button" value="취소"  onclick="f_check()()">
+		</form:form>
+	</div>
+</div>
+
+<script src="${cPath}/resources/js/intrestProject/jquery.form.min.js" ></script>
+<script>
+	var header = '${_csrf.headerName}';
+	var token =  '${_csrf.token}';
+	var projId = '${proj.projId}'
+	
+	var jScript = document.createElement("script");
+	jScript.src = "${cPath}/resources/js/intrestProject/insertIntrestProj.js";
+	document.body.appendChild(jScript);
+</script>

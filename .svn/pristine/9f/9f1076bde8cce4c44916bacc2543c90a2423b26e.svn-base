@@ -1,0 +1,141 @@
+package kr.or.ddit.pms.report.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.pms.report.vo.ReportVO;
+
+/**
+ * @author 작성자명
+ * @since 2022. 8. 23.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 23.      홍승조       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Mapper
+public interface ReportDAO {
+	
+	
+	/**
+	 * PMS 보고서 등록
+	 * @param report
+	 * @return 등록한 레코드 수 if > 0 : 성공, else : 실패
+	 */
+	public int insertReport(ReportVO report);
+	
+	
+	
+	
+	/**
+	 * 보고서 페이징처리를 위한 레코드 수 조회
+	 * @param pagingVO : 검색조건을 가진 VO
+	 * @return
+	 */
+	public int selectTotalReport(PagingVO<ReportVO> pagingVO);
+	
+	
+	
+	/**
+	 * 보고서 목록 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<ReportVO> selectReportList(PagingVO<ReportVO> pagingVO);
+	
+	
+	
+	/**
+	 * 보고서 상세 조회
+	 * @param reportId
+	 * @return
+	 */
+	public ReportVO selectReport(String reportId);
+	
+	
+	
+	/**
+	 * 보고서 정보 수정
+	 * @param report
+	 * @return 수정한 레크드 수 if >0 : 성공, else : 실패
+	 */
+	public int updateReport(ReportVO report);
+	
+	
+	/**
+	 * 보고서 삭제
+	 * @param report
+	 * @return 삭제한 레코드 수 if > 0: 성공, else : 실패
+	 */
+	public int deleteReport(ReportVO report);
+	
+	
+	
+	// 파일업로드 관련
+	
+	/**
+	 * 일감의 첨부파일 등록
+	 * @param work
+	 * @return
+	 */
+	public int insertAttatches(AttatchVO attatch);
+	
+	/**
+	 * 일감첨부파일 등록
+	 * @param work
+	 * @return
+	 */
+	public int insertReportAttatch(ReportVO report);
+	
+	/**
+	 * 첨부파일 한건의 메타데이터 조회
+	 * @param attId
+	 * @return
+	 */
+	public AttatchVO selectAttatch(String attId);
+
+	
+	/**
+	 * 여러개의 첨부파일 메타데이터 삭제
+	 * @param work
+	 * @return
+	 */
+//	public int deleteAttatche(WorkVO work);
+
+
+	public int deleteReportAttatches(ReportVO report);
+	public int deleteAttatches(ReportVO report);
+	
+	public int deleteReportAttatchAll(ReportVO report);
+	
+	
+	// 파일 가져오는거 만들어야함
+	/**
+	 * 일감 파일 리스트 가져오기
+	 * @param work
+	 * @return
+	 */
+	public List<AttatchVO> selectReportFileList(ReportVO report);
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+

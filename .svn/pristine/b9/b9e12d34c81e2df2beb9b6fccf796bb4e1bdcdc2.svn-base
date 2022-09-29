@@ -1,0 +1,37 @@
+package kr.or.ddit.pms.main.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * @author 김유진
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                 수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.       김유진              최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@RequestMapping("/pms")
+public class mainRetrieveController {
+	
+	@GetMapping("{projId}")
+	public String pmsMain(
+		@PathVariable String projId	
+		, Model model
+		) {
+		
+		model.addAttribute(projId, "projId");
+		
+		return "pms/pms";
+	}
+
+}

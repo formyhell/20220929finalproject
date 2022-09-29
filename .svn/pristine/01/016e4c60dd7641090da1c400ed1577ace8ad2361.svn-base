@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.notice.dao.NoticeDAO">
+	<select id="selectNoticeCount" resultType="int">
+		SELECT COUNT(*)
+		FROM NOTICE
+		WHERE NOT_STATE = 'Y'
+	</select>
+	
+	<select id="selectNoticeList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.common.notice.vo.NoticeVO">
+		SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						SELECT
+						    NOT_NO,
+						    NOT_TITLE,
+						    NOT_DATE,
+						    NOT_HIT,
+						    NOT_ADMIN,
+						    TO_CHAR(NOT_SDATE,'YY-MM-DD') NOT_SDATE,
+						    TO_CHAR(NOT_FDATE,'YY-MM-DD') NOT_FDATE,
+						    NOT_PARENTNO,
+						    NOT_STATE
+						FROM NOTICE
+						WHERE NOT_STATE = 'Y'
+						ORDER BY NOT_NO DESC
+				) A
+			) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<insert id="insertNotice" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+	<selectKey resultType="int" keyProperty="notNo" order="BEFORE">
+		SELECT NOT_NO_SEQ.NEXTVAL
+		FROM DUAL
+	</selectKey>
+		INSERT INTO notice (
+		    NOT_NO,
+		    NOT_TITLE,
+		    NOT_CONTENT,
+		    NOT_DATE,
+		    NOT_HIT,
+		    NOT_ADMIN,
+		    NOT_SDATE,
+		    NOT_FDATE,
+		    NOT_PARENTNO
+		) VALUES (
+		    #{notNo},
+		    #{notTitle},
+		    #{notContent},
+		    sysdate,
+		    0,
+		    #{notAdmin},
+		    #{notSdate},
+		    #{notFdate},
+		    #{notParentno, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<select id="selectNotice" parameterType="int" resultType="kr.or.ddit.common.notice.vo.NoticeVO">
+		SELECT
+		    NOT_NO,
+		    NOT_TITLE,
+		    NOT_CONTENT,
+		    NOT_DATE,
+		    NOT_HIT,
+		    NOT_ADMIN,
+		    NOT_SDATE,
+		    NOT_FDATE,
+		    NOT_PARENTNO,
+		    NOT_STATE
+		FROM
+		    NOTICE
+		WHERE NOT_NO = #{notNo}
+		AND NOT_STATE = 'Y'
+	</select>
+	
+	<update id="updateNotice" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+	UPDATE notice
+	SET NOT_TITLE = #{notTitle, jdbcType=VARCHAR},
+		NOT_CONTENT = #{notContent, jdbcType=VARCHAR},
+		NOT_SDATE = #{notSdate, jdbcType=DATE},
+		NOT_FDATE = #{notFdate, jdbcType=DATE},
+		NOT_PARENTNO = #{notParentno, jdbcType=NUMERIC}
+	WHERE NOT_NO = #{notNo}
+	</update>
+	
+	<update id="hitNotice" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+		UPDATE notice
+		SET NOT_HIT = NOT_HIT + 1
+		WHERE NOT_NO = #{notNo}
+		AND NOT_STATE = 'Y'
+	</update>
+	
+	<update id="deleteNotice" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+		UPDATE notice
+		SET NOT_STATE = 'N'
+		WHERE NOT_NO = #{notNo}
+	</update>
+	
+	<resultMap type="kr.or.ddit.common.notice.vo.NoticeVO" id="noticeList" autoMapping="true">
+		<id property="notNo" column="NOT_NO"/>
+		<collection property="attatchList" javaType="List" ofType="String" autoMapping="true">
+			<result column="ATT_ID"/>
+		</collection>
+	</resultMap>
+	
+	<insert id="insertAttatches" parameterType="kr.or.ddit.common.vo.AttatchVO">
+		<selectKey resultType="String" keyProperty="attId" order="BEFORE">
+			SELECT 'AT' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(NVL(MAX(SUBSTR(ATT_ID, 9)),0)+1, 4, '0') ATT_ID
+			FROM ATTATCH
+			WHERE SUBSTR(ATT_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT ALL
+			INTO ATTATCH (
+			    ATT_ID
+			    , ATT_FILENAME
+			    , ATT_SAVENAME
+			    , ATT_MIME
+			    , ATT_FILESIZE
+			) VALUES (
+			    #{attId, jdbcType=VARCHAR}
+			    , #{attFilename, jdbcType=VARCHAR}
+			    , #{attSavename, jdbcType=VARCHAR}
+			    , #{attMime, jdbcType=VARCHAR}
+			    , #{attFilesize, jdbcType=NUMERIC}
+			)
+		SELECT * FROM DUAL
+	</insert>
+	
+	<insert id="insertNotAttatches" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+		INSERT ALL
+		<foreach collection="attatchList" item="attatch" >
+			INTO NOTICE_ATTATCH (
+			    NOT_NO,
+			    ATT_ID
+			) VALUES (
+				#{notNo, jdbcType=NUMERIC},
+				#{attatch.attId, jdbcType=VARCHAR}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	<select id="selectAttatch" parameterType="String" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT
+		    ATT_ID,
+		    ATT_FILENAME,
+		    ATT_SAVENAME,
+		    ATT_MIME,
+		    ATT_FILESIZE
+		FROM
+		    ATTATCH
+		WHERE ATT_ID = #{attId}	
+	</select>
+	<select id="selecNotFileList" parameterType="kr.or.ddit.common.notice.vo.NoticeVO" resultType="kr.or.ddit.common.vo.AttatchVO">
+	SELECT
+	    A.ATT_ID,
+	    A.ATT_FILENAME,
+	    A.ATT_SAVENAME,
+	    A.ATT_MIME,
+	    A.ATT_FILESIZE
+	FROM
+	    ATTATCH A
+	WHERE
+	    A.ATT_ID IN(
+	        SELECT ATT_ID
+	        FROM NOTICE_ATTATCH
+	        WHERE NOT_NO = #{notNo}
+	    )
+	</select>
+	<delete id="deleteAttatches" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+		DELETE FROM ATTATCH
+		WHERE ATT_ID IN
+		<foreach collection="delAttIds" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>	
+	
+	<delete id="deleteNotAttatches" parameterType="kr.or.ddit.common.notice.vo.NoticeVO">
+		DELETE FROM NOTICE_ATTATCH
+		WHERE NOT_NO = #{notNo}
+		AND ATT_ID IN
+		<foreach collection="delAttIds" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>	
+	</delete>
+	
+	<select id="selectNotNoTitleList" resultType="kr.or.ddit.common.notice.vo.NoticeVO">
+		SELECT not_no, not_title
+		FROM notice
+		WHERE NOT_STATE = 'Y'
+		AND NOT_FDATE > SYSDATE
+	</select>
+</mapper>

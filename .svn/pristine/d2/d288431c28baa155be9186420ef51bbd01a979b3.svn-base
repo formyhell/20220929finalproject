@@ -1,0 +1,124 @@
+package kr.or.ddit.admin.outsourcing.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.admin.outsourcing.dao.CheckListDAO;
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import lombok.RequiredArgsConstructor;
+
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 8.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자               		수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 8.    조채원      			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Service
+@RequiredArgsConstructor
+public class CheckListServiceImpl implements CheckListService {
+	private final CheckListDAO checkDao;
+	
+	@Override
+	public List<OutProjVO> findAll() {
+		return checkDao.selectAll();
+	}
+	
+	@Override
+	public List<OutProjVO> findRequireAll() {
+		return checkDao.selectRequireAll();
+	}
+
+	@Override
+	public ServiceResult remove(OutProjVO outProj) {
+		OutProjVO saveProj = checkDao.selectProj(outProj.getProjId());
+		if(saveProj==null) {
+			throw new RuntimeException(String.format("%s에 해당하는 프로젝트가 없습니다.", outProj.getProjId()));
+		} 
+		if(outProj.getProjReject().isEmpty() || outProj.getProjReject() == null) {
+			return ServiceResult.FAIL; 
+		} else {
+			checkDao.updateDeny(outProj);
+			return ServiceResult.OK;
+		}
+	}
+
+	@Override
+	public OutProjVO findById(String projId) {
+		OutProjVO saveProj = checkDao.selectProj(projId);
+		if(saveProj==null) {
+			throw new RuntimeException(String.format("%s에 해당하는 프로젝트가 없습니다.", projId));
+		}
+		return saveProj;
+	}
+
+	@Override
+	public ServiceResult update(OutProjVO outProj) {
+		OutProjVO saveProj = checkDao.selectProj(outProj.getProjId());
+		ServiceResult result = null;
+		if(saveProj==null) {
+			throw new RuntimeException(String.format("%s에 해당하는 프로젝트가 없습니다.", outProj.getProjId()));
+		} 
+		int rowcnt = checkDao.updateApprove(saveProj);
+		
+		if(rowcnt > 0) {
+			result = ServiceResult.OK;
+		} else {
+			result = ServiceResult.FAIL;
+		}
+			return result;
+		
+	}
+
+	@Override
+	public ServiceResult removeRuquire(OutProjVO outProj) {
+		OutProjVO saveProj = checkDao.selectProj(outProj.getProjId());
+		if(saveProj==null) {
+			throw new RuntimeException(String.format("%s에 해당하는 프로젝트가 없습니다.", outProj.getProjId()));
+		} 
+		if(outProj.getProjReject().isEmpty() || outProj.getProjReject() == null) {
+			return ServiceResult.FAIL; 
+		} else {
+			checkDao.updateDeny(outProj);
+			checkDao.deleteRequireCheck(outProj.getProjId());
+			return ServiceResult.OK;
+		}
+	}
+
+	@Override
+	public ServiceResult updateRequire(OutProjVO outProj) {
+		OutProjVO saveProj = checkDao.selectProj(outProj.getProjId());
+		if(saveProj==null) {
+			throw new RuntimeException(String.format("%s에 해당하는 프로젝트가 없습니다.", outProj.getProjId()));
+		} 
+		if(saveProj.getProjApprove() == 2 || saveProj.getProjApprove() == 1) {
+			return ServiceResult.FAIL; 
+		} else {
+			checkDao.updateApprove(saveProj);
+			checkDao.deleteRequireCheck(outProj.getProjId());
+			return ServiceResult.OK;
+		}
+	}
+
+	//  아웃소싱 리스트
+	@Override
+	public List<OutProjVO> findApproveAll() {
+		return checkDao.selectApproveAll();
+	}
+
+	@Override
+	public List<OutProjVO> findNotApproveAll() {
+		return checkDao.selectNotApproveAll();
+	}
+
+	
+}

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.pms.project.dao.PMSProjectDAO">
+	<sql id="pmsProject">
+		<where>
+			PROJ_STATE != 'DELETE'
+			AND PROJ_STATE != 'FINISH'
+        	<if test="simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+	        	<choose>
+					<when test="simpleCondition.searchType eq 'projName'">
+						AND INSTR(PROJ_NAME, #{simpleCondition.searchWord}) > 0
+					</when>			        		
+					<when test="simpleCondition.searchType eq 'projArchi'">
+						AND INSTR(PROJ_ARCHI, #{simpleCondition.searchWord}) > 0
+					</when>			        		
+					<otherwise>
+						AND INSTR(PROJ_NAME, #{simpleCondition.searchWord}) > 0
+						OR INSTR(PROJ_ARCHI, #{simpleCondition.searchWord}) > 0
+					</otherwise>
+	        	</choose>
+        	</if>
+        </where>
+	</sql>
+
+
+	<select id="selectTotalPMSProject"  resultType="int">
+		SELECT COUNT(*)
+		FROM PMSPROJ
+		<include refid="pmsProject"></include>
+	</select>
+	
+	
+	<select id="selectCreatedTotal" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM PMSPROJ
+		WHERE PROJ_ARCHI = #{projArchi}
+		AND PROJ_STATE != 'DELETE'
+	</select>
+	
+	
+	<select id="selectJoinTotal" resultType="int">
+		SELECT COUNT(*)
+		FROM PMSPROJ A
+		WHERE EXISTS (SELECT INVOLVE_MEM
+		       FROM PROJ_INVOLVE B
+		       WHERE B.INVOLVE_MEM = #{id}
+		       AND A.PROJ_ID = B.PROJ_ID)
+		AND PROJ_STATE != 'DELETE'
+	</select>
+	
+	
+	<select id="selectPMSProjectList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		        SELECT PROJ_ID, PROJ_NAME, PROJ_ARCHI, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD')PROJ_SDATE, PROJ_PASS
+		            ,NVL(PROJ_OUTPROJ, '')
+		        FROM PMSPROJ
+		        <include refid="pmsProject" />
+		        ORDER BY PROJ_SDATE DESC
+		    ) A
+		) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<select id="selectPMSProject" parameterType="kr.or.ddit.pms.project.vo.PMSProjectVO" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+		SELECT
+		    PROJ_ID,
+		    PROJ_NAME,
+		    PROJ_ARCHI,
+		    TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD')PROJ_SDATE,
+		    TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD')PROJ_FDATE,
+		    PROJ_PASS,
+		    PROJ_KEY,
+		    PROJ_OUTPROJ,
+		    PROJ_STATE
+		FROM
+		    PMSPROJ
+		WHERE PROJ_ID = #{projId, jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="insertPMSProject" parameterType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+		INSERT INTO PMSPROJ (
+		    PROJ_ID,
+		    PROJ_NAME,
+		    PROJ_ARCHI,
+		    PROJ_SDATE,
+		    PROJ_PASS,
+		    PROJ_KEY,
+		    PROJ_OUTPROJ,
+		    PROJ_STATE
+		) VALUES (
+		    FN_CREATE_PMS_PROJ_ID
+		    , #{projName, jdbcType=VARCHAR}
+		    , #{projArchi, jdbcType=VARCHAR}
+		    , #{projSdate, jdbcType=DATE}
+		    , #{projPass, jdbcType=VARCHAR}
+		    , #{projKey, jdbcType=VARCHAR}
+		    , #{projOutproj, jdbcType=VARCHAR}
+		    , 'PROGRESS'
+		)
+	</insert>
+	
+	<delete id="deletePMSProject" parameterType="String">
+		UPDATE PMSPROJ
+		    SET
+		    PROJ_STATE = 'DELETE'
+		WHERE
+		    PROJ_ID = #{projId, jdbcType=VARCHAR}
+	</delete>
+	
+	<update id="updatePMSProject" parameterType="kr.or.ddit.pms.project.vo.PMSProjectVO" >
+		UPDATE PMSPROJ
+		    SET
+		    PROJ_NAME = #{projName, jdbcType=VARCHAR}
+		    ,PROJ_FDATE = #{projFdate, jdbcType=DATE}
+		    ,PROJ_PASS = #{projPass, jdbcType=VARCHAR}
+		    ,PROJ_STATE = #{projState, jdbcType=VARCHAR}
+		WHERE
+		    proj_id = #{projId, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="createdProjectList" parameterType="kr.or.ddit.pms.project.vo.PMSProjectVO" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+		SELECT PROJ_ID
+			, PROJ_NAME
+			, PROJ_ARCHI
+			, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD')PROJ_SDATE
+			, PROJ_PASS
+			,NVL(PROJ_OUTPROJ, '')
+		FROM PMSPROJ
+		WHERE PROJ_ARCHI = #{projArchi, jdbcType=VARCHAR}
+		AND PROJ_STATE != 'DELETE'
+		ORDER BY PROJ_SDATE DESC
+	</select>
+	
+	
+	<insert id="joinPMSProject" parameterType="String">
+		INSERT INTO PROJ_INVOLVE (
+		    PROJ_ID, INVOLVE_MEM, INVOLVE_SDATE
+		) VALUES (
+		    #{param1}, #{param2}, SYSDATE
+		)
+	</insert>
+<!-- 	자동 프로젝트 참가 -->
+	<insert id="autoJoinPMSProject" parameterType="kr.or.ddit.pms.project.vo.projInvolveVO">
+			INSERT INTO PROJ_INVOLVE (
+			    PROJ_ID, INVOLVE_MEM, INVOLVE_SDATE
+			) VALUES 
+		<foreach collection="list" item="inv" separator=" , ">
+			(
+			    #{inv.projId}, #{inv.involveMem}, SYSDATE
+			)
+		</foreach>
+	</insert>
+	
+	
+<!-- 	pms프로젝트 자동생서을 위한 아웃소싱 데이터 검색 -->
+	<select id="selectOutProjData" parameterType="String" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+		SELECT PROJ_REGIST AS PROJ_ARCHI, PROJ_TITLE AS PROJ_NAME, PROJ_SDATE, PROJ_FDATE
+		FROM OUTSOURCING_PROJ
+		WHERE PROJ_ID = #{outProjId}
+	</select>
+	
+<!-- 	pms에 자동으로 참가할 계약 완료된 회원 조회 -->
+	<select id="selectOutProjInvolve" parameterType="String" resultType="kr.or.ddit.pms.project.vo.projInvolveVO">
+		WITH CONTRACT AS (
+		    SELECT A.APPLY_ID, A.APPLY_PROJ, A.APPLY_APPLICANT, B.CONTRACT_APPLYID
+		    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)
+		)
+		SELECT B.APPLY_PROJ AS PROJ_ID, B.APPLY_APPLICANT AS INVOLVE_MEM
+		FROM CONTRACT_PROJ A INNER JOIN CONTRACT B ON (A.CONTRACT_APPLYID = B.APPLY_ID)
+		WHERE CONTRACT_STATE = 'CONCLUDE'
+		AND B.APPLY_PROJ = '#{outProjId}
+	</select>
+	
+	
+	
+	<select id="joinCheck" parameterType="String" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM
+		    PROJ_INVOLVE
+		WHERE PROJ_ID = #{param1}
+		AND INVOLVE_MEM = #{param2}
+	</select>
+	
+	<select id="joinProjectList" parameterType="String" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+		SELECT PROJ_ID
+			   ,PROJ_NAME
+		       ,PROJ_ARCHI
+		       ,TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD')PROJ_SDATE
+		       ,TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD')PROJ_FDATE
+		       ,PROJ_KEY
+		       ,PROJ_OUTPROJ
+		       ,PROJ_STATE
+		FROM PMSPROJ A
+		WHERE EXISTS (SELECT INVOLVE_MEM
+		       FROM PROJ_INVOLVE B
+		       WHERE B.INVOLVE_MEM = #{id}
+		       AND A.PROJ_ID = B.PROJ_ID)
+		AND PROJ_STATE != 'DELETE'
+		ORDER BY PROJ_SDATE DESC
+	</select>
+	
+</mapper>

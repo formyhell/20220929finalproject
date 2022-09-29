@@ -1,0 +1,112 @@
+package kr.or.ddit.admin.outsourcing.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.admin.outsourcing.service.CheckListService;
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자               		수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.    조채원       			jsp 연결
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Controller
+@RequestMapping("admin/checkList")
+public class CheckListController {
+	@Inject
+	CheckListService service;
+	
+	@RequestMapping
+	public String processHTML() {
+		return "admin/checkList";
+	}
+	
+	@GetMapping("{projId}/form")
+	public String projForm(@PathVariable String projId, Model model) {
+		OutProjVO outProj = service.findById(projId);
+		model.addAttribute("outProj", outProj);
+		return "admin/projDetail";
+	}
+	  
+	@GetMapping(produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<OutProjVO> get(Model model) {
+		List<OutProjVO> projList = new ArrayList<>();
+		projList = service.findAll();
+		return projList;
+	}
+	 	
+	// 공고 반려
+	@PostMapping("form/{projId}")
+	public String deny(
+			@PathVariable String projId
+			,@ModelAttribute("projReject") String projReject
+			,RedirectAttributes redirectAttributes
+			,Model model) {
+		String viewName = null;
+		ServiceResult result = null;
+		OutProjVO saveProj = service.findById(projId);
+		log.info(projReject);
+		saveProj.setProjReject(projReject);
+		model.addAttribute("saveProj", saveProj);
+		result = service.remove(saveProj);
+		if(result.equals(ServiceResult.FAIL)) {
+			model.addAttribute("message", "반려 사유를 입력하세요.");
+			viewName = "admin/projDetail";
+		} else {
+			redirectAttributes.addFlashAttribute("message", "반려 처리에 성공했습니다.");
+			viewName = "redirect:/admin/checkList";
+		}
+		return viewName;
+	}
+	
+	// 공고 승인
+	@GetMapping("form/{projId}")
+	public String accept(
+			@PathVariable String projId
+			, RedirectAttributes redirectAttributes
+			, Model model) { 
+		ServiceResult result = null;
+		String viewName = null;
+		OutProjVO outProj = service.findById(projId);
+		model.addAttribute("outProj", outProj);
+		result = service.update(outProj);
+		if(result.equals(ServiceResult.FAIL)) {
+			model.addAttribute("message", "승인에 실패했습니다.");
+			viewName = "admin/projDetail";
+		} else {
+			redirectAttributes.addFlashAttribute("message", "승인 처리에 성공했습니다.");
+			viewName = "redirect:/admin/checkList";
+		}
+		return viewName; 
+	}
+}

@@ -1,0 +1,142 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>  
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 1.      홍승조      컨트롤러 연결
+* 2022. 8. 6.		홍승조	테이블 생성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+ 
+ 
+ 
+<div class="container">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="card">
+				<div class="card-header">
+					<h5>업무보고</h5>
+					<div>
+						<button style="float: right;" class="btn btn-primary" onclick="location='${cPath}/pms/${projId}/report/form'">보고서 등록</button>
+					</div>
+					<br>
+					<!-- 검색 -->
+					<div id="searchUI" class="form-field">
+						<div class="row">
+							<div class="col-sm-2" style="padding: 0px;">
+								<div class="mb-3">
+									<form:select path="simpleCondition.searchType" class="form-select form-control">
+										<form:option value="">전체</form:option>
+										<form:option value="reporyTitle" label="제목" />
+										<form:option value="reportWriter" label="작성자" />
+									</form:select>
+					            </div>
+                  			</div>
+							<div class="col-sm-3" style="padding: 0px;">
+								<div class="mb-3">
+									<form:input class="form-control" style="border: 1px solid #DEDEDE;" placeholder="Search Here" path="simpleCondition.searchWord" />
+					            </div>
+                  			</div>
+							<div class="col-sm-3">
+								<div class="mb-3">
+					                <input type="button" id="searchBtn" class="btn btn-outline-primary" value="검색" >
+					            </div>
+                  			</div>
+						</div>
+					</div>
+				</div>
+				<!-- 리스트 -->
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col">no</th>
+								<th scope="col">제목</th>
+								<th scope="col">작성자</th>
+								<th scope="col">작성일</th>
+							</tr>
+						</thead>
+						<tbody>
+							<c:set var="reportList" value="${pagingVO.dataList }" />
+							<c:choose>
+								<c:when test="${not empty reportList }">
+									<c:forEach items="${reportList }" var="report">
+										<tr>
+											<td>${report.rnum }</td>
+											<td><a href="${cPath}/pms/${projId}/report/${report.reportId}">${report.reportTitle }</a></td>
+											<td>${report.writerName }</td>
+											<td>${report.reportDate }</td>
+										</tr>
+									</c:forEach>
+								</c:when>
+								<c:otherwise>
+									<tr>
+										<td colspan="6" style="text-align: center;"><b>보고서 없음</b></td>
+									</tr>
+
+								</c:otherwise>
+							</c:choose>
+						</tbody>
+						<!-- 페이징 -->
+						<tfoot>
+							<tr>
+								<td colspan="6">
+									<div
+										class="pagingArea pagination justify-content-center pagination-primary">
+										${pagingVO.pagingHTMLBS }
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/pms/${projId}/report" method="get">
+	<input type="hidden" name="page" />
+	<form:input type="hidden" path="searchType" />
+	<form:input type="hidden" path="searchWord" />
+</form:form>
+
+<script>
+	
+
+
+	function f_modalOpen() {
+		mymodal.style.display = "block";
+	}
+
+	let searchForm = $("#searchForm");
+	let pagingArea = $(".pagingArea").on("click", "a", function(event) {
+		let page = $(this).data("page");
+		searchForm.find("[name=page]").val(page);
+		searchForm.submit();
+	});
+
+	let searchUI = $("#searchUI").on("click", "#searchBtn", function(event) {
+		searchForm.get(0).reset();
+		let inputs = searchUI.find(":input[name]");
+		$(inputs).each(function(idx, input) {
+			let name = $(this).attr("name");
+			let value = $(this).val();
+			searchForm.find("[name=" + name + "]").val(value);
+		});
+		searchForm.submit();
+	});
+</script>
+
+
+
+
+
+
+

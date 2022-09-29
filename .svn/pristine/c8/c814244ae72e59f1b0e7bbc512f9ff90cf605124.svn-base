@@ -1,0 +1,111 @@
+package kr.or.ddit.pms.work.vo;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import kr.or.ddit.common.validate.UpdateGroup;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.CommomCodeVO;
+import kr.or.ddit.pms.project.vo.projInvolveVO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * @author 작성자명
+ * @since 2022. 8. 16.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 16.      홍승조       최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Data
+@EqualsAndHashCode(of= {"workId"})
+public class WorkVO implements Serializable{
+	
+	private int rnum;
+	
+	@NotBlank
+	private String workState;
+	@NotBlank(groups= {UpdateGroup.class})
+	private String workId;
+	@NotBlank
+	private String workTitle;
+	private String workContent;
+	@NotBlank
+	private String workSdate;
+	private String workFdate;
+	@NotBlank
+	private String workManager;
+	@NotBlank
+	private String workType;
+	@NotBlank
+	private String workPrority;
+	@NotNull
+	private Integer workProgress;
+	@NotBlank
+	private String workCharger;
+	private String workParent;
+	private String workParentNm;
+	@NotBlank
+	private String workProj;
+	@NotBlank
+	private String workRegist;
+	@NotBlank
+	private String workDate;
+	
+	private String typeName;
+	private String prorityName;
+	private String stateName;
+	
+	private String memName;
+	
+	private String managerName;
+	private String chargerName;
+	private String registName;
+	
+	private String sdate;
+	
+	private List<projInvolveVO> projInvolveList;
+	
+	// 공통 코드 관련
+	// 일감 유형
+	private List<CommomCodeVO> workTypeList;
+	
+	// 일감 우선순위
+	private List<CommomCodeVO> workPriorityList;
+	
+	//일감 상태
+	private List<CommomCodeVO> workStateList;
+	
+	
+	// 파일 업로드 관련
+	private transient List<AttatchVO> attatchList;
+	
+	private MultipartFile[] workFiles;
+	
+	public void setWorkFiles(MultipartFile[] boFiles) {
+		if(boFiles==null || boFiles.length == 0) return;
+		this.workFiles = boFiles;
+	 	this.attatchList  = new ArrayList<>();
+	 	for(MultipartFile single  : boFiles) {
+	 		if(single.isEmpty()) continue;
+ 	 		attatchList.add( new AttatchVO(single) );
+	 	}
+	}
+	
+	private String attId;
+	
+	private String[] delAttNos;
+	
+}

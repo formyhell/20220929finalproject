@@ -1,0 +1,94 @@
+package kr.or.ddit.outsourcing.contract.controller;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.validate.InsertGroup;
+import kr.or.ddit.outsourcing.contract.service.ContractService;
+import kr.or.ddit.outsourcing.vo.ApplicantVO;
+import kr.or.ddit.outsourcing.vo.ContractVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("outsourcing/contract/form")
+public class ContractModifyController {
+	@Inject
+	ContractService service;
+	
+	@GetMapping()
+	public String get(
+			@RequestParam String applyId
+			, Model model
+			, RedirectAttributes redirectAttributes
+			, Authentication authentication) {
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		String memId = member.getMemId();
+		model.addAttribute("applicant", service.getApplicant(applyId));
+		model.addAttribute("applyId", applyId);
+		model.addAttribute("comId", memId);
+		return "outsourcing/contractForm";
+	}
+	
+	@PostMapping()
+	public String insert(
+			@Validated(InsertGroup.class) @ModelAttribute ContractVO contract
+			, Errors erros
+			, Model model
+			, RedirectAttributes redirectAttributes
+			) {
+		String viewName = null;
+		boolean valid = !erros.hasErrors();
+		model.addAttribute("contract", contract);
+
+		if(valid) {
+			ServiceResult result = service.createContract(contract);
+			if(ServiceResult.FAIL.equals(result)) {
+				viewName = "outsourcing/contract/form";
+			} else if(ServiceResult.OK.equals(result)) {
+				ContractVO newContract = service.getContract(contract.getContractApplyid());
+				viewName = "redirect:form/" + newContract.getContractId();
+			}
+		}
+		return viewName;
+	}
+	
+	@GetMapping("{contractId}")
+	public String contractSign(
+			@PathVariable String contractId
+			, Authentication authentication
+			, Model model
+			) {
+		String viewName = null;
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		String comId = member.getMemId();
+		ContractVO contract = service.getContractwithId(contractId, comId);
+		String genId = service.getApplicant(contract.getContractApplyid());
+		
+		model.addAttribute("contract", contract);
+		model.addAttribute("genId", genId);
+		model.addAttribute("comId", comId);
+		return "outsourcing/contract";
+	}
+}
+ 

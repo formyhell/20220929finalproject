@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.admin.code.dao.AdminCodeDAO">
+	
+	<!-- 전체 코드타입 리스트 -->
+	<select id="selectCodeTypeList" resultType="kr.or.ddit.common.vo.CommonCodeTypeVO">
+		SELECT TYPE_ID, TYPE_NAME
+		FROM COMMON_CODETYPE
+	</select>
+	
+	<!-- 전체 코드 수 -->
+	<select id="selectTotalCode" resultType="int">
+		SELECT COUNT(*)
+		FROM ( SELECT ROWNUM RNUM, A.CODE_ID, A.CODE_NAME, A.REGISTDAY, A.UPDATEDAY, A.TYPE_ID, B.TYPE_NAME
+				FROM COMMON_CODE A, COMMON_CODETYPE B
+				WHERE A.TYPE_ID = B.TYPE_ID
+				<if test="searchTypeId != null">
+					AND A.TYPE_ID = #{searchTypeId}
+				</if>
+				<if test="searchCodeName != null">
+					AND A.CODE_NAME = #{searchCodeName}
+				</if> ) C
+	</select>
+	
+	<!-- 코드 리스트 -->
+	<select id="selectCodeList" parameterType="Map" resultType="kr.or.ddit.common.vo.CommonCodeVO">
+		SELECT C.*
+		FROM ( SELECT ROWNUM RNUM, A.CODE_ID, A.CODE_NAME, A.REGISTDAY, A.UPDATEDAY, A.TYPE_ID, B.TYPE_NAME
+				FROM COMMON_CODE A, COMMON_CODETYPE B
+				WHERE A.TYPE_ID = B.TYPE_ID
+				<if test="searchTypeId != null">
+					AND A.TYPE_ID = #{searchTypeId}
+				</if>
+				<if test="searchCodeName != null">
+					AND INSTR(A.CODE_NAME, #{searchCodeName}) > 0
+				</if> ) C
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}		
+	</select>
+	<!-- 코드 조회 -->
+	<select id="selectCode" parameterType="String" resultType="kr.or.ddit.common.vo.CommonCodeVO">
+		SELECT CODE_ID, CODE_NAME, REGISTDAY, UPDATEDAY, TYPE_ID
+		FROM COMMON_CODE
+		WHERE CODE_ID = #{codeId}
+	</select>
+	
+	<!-- 코드 등록 -->
+	<insert id="insertCode" parameterType="kr.or.ddit.common.vo.CommonCodeVO">
+		INSERT INTO COMMON_CODE (
+		    CODE_ID,
+		    CODE_NAME,
+		    REGISTDAY,
+		    TYPE_ID
+		) VALUES (
+			#{codeId}
+			, #{codeName}
+			, #{registday}
+			, #{typeId}
+		)
+	</insert>
+	
+	<!-- 코드 수정 -->
+	<update id="updateCode" parameterType="kr.or.ddit.common.vo.CommonCodeVO">
+		UPDATE COMMON_CODE
+		    SET
+		        CODE_NAME =  #{codeName}
+		        , UPDATEDAY = #{updateday}
+		WHERE
+		    CODE_ID = #{codeId}
+	</update>
+	
+	<!-- 코드 삭제 -->
+	<delete id="deleteCode" parameterType="String">
+		DELETE FROM COMMON_CODE
+		WHERE CODE_ID = #{codeId}
+	</delete>
+	
+</mapper>

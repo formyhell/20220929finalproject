@@ -1,0 +1,88 @@
+#mypage, #managerpage{
+	cursor: pointer;
+}
+
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-content {
+	display: none;
+	position: absolute;
+	z-index: 1; /*다른 요소들보다 앞에 배치*/
+	font-weight: 400;
+	background-color: white;
+	min-width: 200px;
+	margin-top: 5px;
+	width: 350px;
+	border: 2px solid rgba(36, 105, 92, 0.1);
+	max-height: 500px;
+	overflow: auto;
+	box-shadow: 0 0 12px 3px rgb(25 124 207 / 5%);
+}
+
+/* 스크롤바 */
+.dropdown-content::-webkit-scrollbar {
+    width: 8px;  /* 스크롤바의 너비 */
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+    height: 10%; /* 스크롤바의 길이 */
+    background: rgba(36, 105, 92, 0.3); /* 스크롤바의 색상 */
+    
+    border-radius: 10px;
+}
+
+.dropdown-content::-webkit-scrollbar-track {
+/*     background: rgba(33, 122, 244, .1);  /*스크롤바 뒷 배경 색상*/ */
+}
+
+.dropdown-content div {
+	display: block;
+	text-decoration: none;
+	color: rgb(37, 37, 37);
+	font-size: 12px;
+	padding: 12px 20px;
+	border-bottom: 2px solid rgba(36, 105, 92, 0.1);
+}
+
+.alertChk_0 {
+	background-color: white;
+}
+
+.alertChk_1 {
+	background-color: rgba(36, 105, 92, 0.1);
+}
+
+.dropdown-content div:hover {
+	background-color: rgba(36, 105, 92, 0.3)
+}
+
+.dropdown:hover .dropdown-content {
+	display: block;
+	
+}
+
+.fa{
+	color: gray;
+}
+
+.fa:hover {
+	color: black;
+	cursor: pointer;
+}
+
+.dot-animated {
+	position: absolute;
+	right: -5px;
+	top: -6px;
+	width: 6px;
+	height: 6px;
+	border-radius: 100%;
+	content: '';
+	background-color: #d22d3d;
+	-webkit-animation: fadeIn 2s ease infinite;
+	animation: fadeIn 2s ease infinite;
+	/*     display: none; */
+}

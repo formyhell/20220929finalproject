@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.admin.pms.dao.AdminPmsDAO">
+	
+	<sql id="pms">
+		<trim prefix="AND">
+			<if
+				test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">
+				<choose>
+					<when test="pagingVO.simpleCondition.searchType eq 'projId'">
+						INSTR(B.PROJ_ID, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'projName'">
+						INSTR(B.PROJ_NAME, UPPER(#{pagingVO.simpleCondition.searchWord})) >0
+					</when>
+					<when test="pagingVO.simpleCondition.searchType eq 'projArchi'">
+						INSTR(B.PROJ_ARCHI, #{pagingVO.simpleCondition.searchWord}) >0
+					</when>
+					<otherwise>
+						(
+						INSTR(B.PROJ_ID, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(B.PROJ_NAME, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(B.PROJ_ARCHI, #{pagingVO.simpleCondition.searchWord}) > 0
+						)
+					</otherwise>
+				</choose>
+			</if>
+		</trim>
+	</sql>
+
+<select id="selectTotalPms" resultType="int">
+SELECT COUNT(*)
+FROM ( SELECT ROWNUM RNUM, C.*
+	   FROM ( SELECT COUNT(A.PROJ_ID) PROJ_INVOLVE, B.PROJ_ID, B.PROJ_NAME, B.PROJ_ARCHI, 
+	   				   TO_CHAR(B.PROJ_SDATE, 'yyyy.mm.dd') AS PROJ_SDATE, 
+	   				   TO_CHAR(B.PROJ_FDATE, 'yyyy.mm.dd') AS PROJ_FDATE, 
+			           B.PROJ_PASS, B.PROJ_KEY, B.PROJ_OUTPROJ, B.PROJ_STATE
+			    FROM (SELECT PROJ_ID FROM PROJ_INVOLVE WHERE INVOLVE_FDATE IS NULL) A 
+			    		RIGHT JOIN PMSPROJ B ON(A.PROJ_ID = B.PROJ_ID)
+			    WHERE 1=1
+			    <if test="projState != null">
+			    	AND PROJ_STATE = #{projState}
+			    </if>	
+			    <include refid="pms"/>
+			    GROUP BY B.PROJ_ID, B.PROJ_NAME, B.PROJ_ARCHI, B.PROJ_SDATE, B.PROJ_FDATE, 
+			             B.PROJ_PASS, B.PROJ_KEY, B.PROJ_OUTPROJ, B.PROJ_STATE
+             
+ 			) C
+		) D
+
+</select>
+
+<select id="selectPmsList" parameterType="Map" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+SELECT D.*
+FROM ( SELECT ROWNUM RNUM, C.*
+	   FROM ( SELECT COUNT(A.PROJ_ID) PROJ_INVOLVE, B.PROJ_ID, B.PROJ_NAME, B.PROJ_ARCHI,
+	   				   TO_CHAR(B.PROJ_SDATE, 'yyyy.mm.dd') AS PROJ_SDATE, 
+	   				   TO_CHAR(B.PROJ_FDATE, 'yyyy.mm.dd') AS PROJ_FDATE,  
+			           B.PROJ_PASS, B.PROJ_KEY, B.PROJ_OUTPROJ, B.PROJ_STATE
+			    FROM (SELECT PROJ_ID FROM PROJ_INVOLVE WHERE INVOLVE_FDATE IS NULL) A 
+			    		RIGHT JOIN PMSPROJ B ON(A.PROJ_ID = B.PROJ_ID)
+			    WHERE 1=1
+			    <if test="projState != null">
+			    	AND PROJ_STATE = #{projState}
+			    </if>	
+			    <include refid="pms"/>
+			    GROUP BY B.PROJ_ID, B.PROJ_NAME, B.PROJ_ARCHI, B.PROJ_SDATE, B.PROJ_FDATE, 
+			             B.PROJ_PASS, B.PROJ_KEY, B.PROJ_OUTPROJ, B.PROJ_STATE
+             
+ 			) C
+		) D
+WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}         
+</select>
+
+<select id="selectPms" parameterType="String" resultType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+SELECT PROJ_ID
+FROM PMSPROJ
+WHERE PROJ_ID = #{projId}
+</select>
+
+<update id="updatePms" parameterType="kr.or.ddit.pms.project.vo.PMSProjectVO">
+UPDATE PMSPROJ
+    SET PROJ_STATE = #{projState}
+WHERE PROJ_ID = #{projId}
+</update>
+
+</mapper>

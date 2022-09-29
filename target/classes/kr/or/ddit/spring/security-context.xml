@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:security="http://www.springframework.org/schema/security"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:c="http://www.springframework.org/schema/c"
+   xmlns:p="http://www.springframework.org/schema/p"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+      http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+
+   <!-- kr.or.ddit.security.PasswordEncoderTest 테스트 케이스 참고.       -->
+   <bean id="passwordEncoder" class="org.springframework.security.crypto.factory.PasswordEncoderFactories" 
+      factory-method="createDelegatingPasswordEncoder"
+   />
+
+   <bean id="authenticationProvider" class="org.springframework.security.authentication.dao.DaoAuthenticationProvider" 
+      p:userDetailsService-ref="memberServiceImpl"
+      p:passwordEncoder-ref="passwordEncoder"
+      p:hideUserNotFoundExceptions="false"
+   />
+   <!-- Forbidden에러 발생시 -->
+   <bean id="customAccessDenied" class="kr.or.ddit.common.member.controller.CustomAccessDeniedHandler"></bean>
+      
+   <!-- 인증 관리자 -->   
+   <security:authentication-manager id="authenticationManager">
+      <security:authentication-provider ref="authenticationProvider" /> <!-- 인증 정보 제고애 -->
+   </security:authentication-manager>
+   
+   <bean id="preAuthorityCheckFilter" class="kr.or.ddit.common.filter.PreAuthorityCheckFilter" />
+   
+   <security:http auto-config="true" use-expressions="true"
+      authentication-manager-ref="authenticationManager"
+   >
+      <security:form-login 
+         login-page="/login"
+         default-target-url="/"
+         username-parameter="username"
+         password-parameter="password"
+         login-processing-url="/login"
+         authentication-success-handler-ref="authenticationSuccessHandler"
+      />
+
+      <security:logout 
+         logout-url="/logout"
+         logout-success-url="/" 
+         invalidate-session="true"
+         delete-cookies="true"
+      />
+      
+	  <!-- 비회원 -->
+	  <security:intercept-url pattern="/outsourcing" access="permitAll()"/>
+	  
+	  <!-- 회원 -->
+	  <!-- 1. common -->
+	  <security:intercept-url pattern="/commonCode/**" access="isAuthenticated()"/>
+	  <security:intercept-url pattern="/community/**" access="isAuthenticated()"/>
+	  <security:intercept-url pattern="/notice/**" access="isAuthenticated()"/>
+	  <security:intercept-url pattern="/qna/**" access="isAuthenticated()"/>
+	  
+	  <security:intercept-url pattern="/findPass/**" access="hasAnyRole('ROLE_GENMEM','ROLE_COMMEM')"/>
+	  <security:intercept-url pattern="/findId/**" access="hasAnyRole('ROLE_GENMEM','ROLE_COMMEM')"/>
+	  
+	  <security:intercept-url pattern="/gen/**" access="hasRole('ROLE_GENMEM')"/>
+	  <security:intercept-url pattern="/com/**" access="hasRole('ROLE_COMMEM')"/>
+	  
+	  <!-- 2. outsourcing -->
+	  <security:intercept-url pattern="/outsourcing/**" access="hasAnyRole('ROLE_GENMEM','ROLE_COMMEM','ROLE_ADMIN')"/>
+	  
+	  <!-- 3. pms -->
+	  <security:intercept-url pattern="/pmsProject/**" access="isAuthenticated()"/>
+	  <security:intercept-url pattern="/pms/*" access="hasAnyRole('ROLE_GENMEM','ROLE_COMMEM','ROLE_ADMIN')"/>
+	  <security:intercept-url pattern="/pms/*/*" access="hasAnyRole('ROLE_GENMEM','ROLE_COMMEM','ROLE_ADMIN')"/>
+	  <security:intercept-url pattern="/pms/**" access="hasAnyRole('ROLE_GENMEM','ROLE_COMMEM')"/>
+      
+      <!-- 관리자 -->
+      <security:intercept-url pattern="/admin/**" access="hasRole('ROLE_ADMIN')"/>
+
+      <security:intercept-url pattern="/**" access="permitAll()" />
+      
+<!--       <security:csrf disabled = "true" />  -->
+      <security:custom-filter ref="preAuthorityCheckFilter" after="SESSION_MANAGEMENT_FILTER" />
+      <security:access-denied-handler ref="customAccessDenied"/>
+      
+   </security:http>
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+

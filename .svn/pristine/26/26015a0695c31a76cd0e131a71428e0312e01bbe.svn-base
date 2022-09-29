@@ -1,0 +1,62 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %> 
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+<style>
+	div.project-box:hover {
+		background-color: #F2F2F2;
+	}
+</style>
+<div class="container-fluid">
+	<div class="page-header">
+		<div class="row">
+			<div class="col-sm-10">
+				<h3>RecommendProject</h3>
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item"><a href="${cPath}">Home</a></li>
+					<li class="breadcrumb-item"><a href="${cPath}/gen/myinfo">MyPage</a></li>
+					<li class="breadcrumb-item"><a
+							href="${cPath}/gen/myinfo/InterestProject">InterestProject</a></li>
+					<li class="breadcrumb-item active">RecommendProject</li>
+				</ol>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Container-fluid starts-->
+<div class="container-fluid">
+	<div class="row project-cards">
+		<div class="col-sm-12">
+			<div class="card">
+				<div class="card-body">
+					<div class="tab-content" id="top-tabContent">
+						<div class="tab-pane fade show active" id="top-home" role="tabpanel"
+							aria-labelledby="top-home-tab">
+							<div class="row" id="listBody">
+								<!-- 자동생성 div 들어가는 위치 -->							
+							</div>
+							<!--반복끝-->
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div  id ="pagingList" class="card-body pagingArea" style="display:none">
+		</div>
+	</div>
+</div>
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/gen/myinfo/recommendProject" method="get">
+	<input type="hidden" name="page" />
+</form:form>
+<script src="${cPath}/resources/js/intrestProject/jquery.form.min.js" ></script>
+<script>
+	var header = '${_csrf.headerName}';
+	var token =  '${_csrf.token}';
+	var CPATH = "${cPath}";
+	
+	var jScript = document.createElement("script");
+	jScript.src = "${cPath}/resources/js/recommendProject/recommendProject.js";
+	document.body.appendChild(jScript);
+</script>

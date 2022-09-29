@@ -1,0 +1,214 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<style>
+ .txt_line {
+      width:400px;
+      padding:0px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+  }
+</style>
+
+<div class="container-fluid">
+            <div class="row project-cards">
+              <div class="col-md-12 project-list">
+                <div class="card">
+                  <div class="row">
+                    <div class="col-md-10 p-0">
+                      <ul class="nav nav-tabs border-tab" id="top-tab" role="tablist">
+                        <li class="nav-item"><a data-id="all" class="nav-link active" id="top-home-tab" data-bs-toggle="tab" href="#top-home" role="tab" aria-controls="top-home" aria-selected="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-target"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>All</a></li>
+                        <li class="nav-item"><a data-id="doing" class="nav-link" id="profile-top-tab" data-bs-toggle="tab" href="#top-profile" role="tab" aria-controls="top-profile" aria-selected="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>Doing</a></li>
+                        <li class="nav-item"><a data-id="done" class="nav-link" id="contact-top-tab" data-bs-toggle="tab" href="#top-contact" role="tab" aria-controls="top-contact" aria-selected="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Done</a></li>
+                      </ul>
+                    </div>
+                    <div class="job-filter col-md-2">
+                                  <div class="faq-form" id="searchUI">
+                                    <form:input class="form-control" type="text" name="searchWord" data-id="all" placeholder="Search.." path="simpleCondition.searchWord"/>
+                                    <svg id="searchBtn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                  </div>
+                                </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="tab-content" id="top-tabContent">
+                    
+                    	<!-- 전체 tab -->
+                      <div class="tab-pane fade show active" id="top-home" role="tabpanel" aria-labelledby="top-home-tab">
+                        <div class="row home-row">
+                        </div>
+                        <div class="pagingArea pagination justify-content-center pagination-primary" style="padding-bottom: 20px">
+						</div>		
+                      </div>
+                      
+                      	<!-- 진행중 tab -->
+                      <div class="tab-pane fade" id="top-profile" role="tabpanel" aria-labelledby="profile-top-tab">
+                        <div class="row profile-row">
+                        </div>
+                        <div class="pagingArea pagination justify-content-center pagination-primary" style="padding-bottom: 20px">
+						</div>
+                      </div>
+                      
+                      	<!-- 진행완료 tab -->
+                      <div class="tab-pane fade" id="top-contact" role="tabpanel" aria-labelledby="contact-top-tab">
+                        <div class="row contact-row">
+                        </div>
+                        <div class="pagingArea pagination justify-content-center pagination-primary" style="padding-bottom: 20px">
+						</div>
+                      </div>
+                      
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/myinfo/project" method="get">
+<input type="hidden" name="page" />
+<form:input type="hidden" path="searchType" name="searchType" />
+<form:input type="hidden" path="searchWord" name="searchWord"/>
+</form:form>
+
+<script>
+
+let pagingArea = $(".pagingArea").on("click", "a", function(event) {
+	let page = $(this).data("page");
+	$("#searchForm").find("[name=page]").val(page);
+	searchForm.submit();
+});
+
+let searchForm = $("#searchForm").on("submit", function(event) {
+	event.preventDefault();
+	let url = this.action;
+    let method = this.method;
+    let data = $(this).serialize();
+    console.log(data);
+    $.ajax({
+        url : url,
+        method : method,
+        data : data,
+        dataType : "json",
+        success : function(resp) {
+        	console.log(resp);
+        	let pagingVO = resp;
+        	let projList = pagingVO.dataList;
+        	let divTags = [];
+        	console.log(pagingVO.currentPage);
+        	$('.home-row').empty();
+        	$('.profile-row').empty();
+        	$('.contact-row').empty();
+        	if (projList && projList.length > 0) {
+				$(projList).each(function(index, proj) {
+					if("PROGRESS" == proj.projState) {						
+						$('.home-row').append(makeDoingDiv(index, proj));
+						$('.profile-row').append(makeDoingDiv(index, proj));
+					}
+					else if("FINISH" == proj.projState) {
+						$('.home-row').append(makeDoneDiv(index, proj));
+						$('.contact-row').append(makeDoneDiv(index, proj));
+					}
+				});
+				$(".pagination").html(pagingVO.pagingHTMLBS);
+			} 	
+        }
+     })
+     return false;
+  }).submit();
+
+let searchUI = $("#searchUI").on("click", "#searchBtn", function(event) {
+	$("#searchForm").get(0).reset();
+	let inputs = searchUI.find(":input[name]");
+	$(inputs).each(function(idx, input) {
+		let name = $(this).attr("name");
+		let value = $(this).val();
+		$("#searchForm").find("[name=" + name + "]").val(value);
+	}); 
+	console.log($("#searchForm").find("input[name='searchType']").val());
+	console.log($("#searchForm").find("input[name='searchWord']").val());
+	searchForm.submit();
+});
+
+$(".nav-link").on("click", function() {
+	if($(this).hasClass("active") == true) {
+		$("input[name=searchWord]").data("id", $(this).data("id"));
+		// console.log($("input[name='searchWord']").data("id"));
+		$("#searchForm").find("input[name='searchType']").val($("input[name='searchWord']").data("id"));
+		// console.log($("#searchForm").find("input[name=searchWord]").val());
+		$("a").attr("class", "nav-link");
+		$("a[data-id=" + $("input[name='searchWord']").data("id") + "]").attr("class", "nav-link active");
+		searchForm.submit();
+	}
+});
+
+
+let makeDoingDiv = function(index, proj) {	
+		return $("<div>").addClass("col-xxl-4 col-lg-6").append(
+				 $("<a>").attr("href", "${cPath }/myinfo/project/" + proj.projId).append(
+					$("<div>").addClass("project-box").css("cursor", "pointer").append(
+						$("<span>").addClass("badge badge-primary").text("Doing"),
+						$("<h6>").addClass("txt_line").text(proj.projTitle),
+						$("<div>").addClass("media").append(
+							$("<div>").addClass("media-body").append(
+								$("<p>").text(proj.projRegist)		
+							)		
+						),
+						$("<p>").addClass("txt_line").text(proj.projContent),
+						$("<div>").addClass("row details").append(
+							$("<div>").addClass("col-6").append(
+								$("<span>").text("참여인원")		
+							),
+							$("<div>").addClass("col-6 font-primary").text(proj.projRealNum),
+							$("<div>").addClass("col-6").append(
+									$("<span>").text("시작일")		
+								),
+							$("<div>").addClass("col-6 font-primary").text(proj.projRealsdate),
+							$("<div>").addClass("col-6").append(
+									$("<span>").text("종료예상일")		
+								),
+							$("<div>").addClass("col-6 font-primary").text(proj.projFdate)
+						)
+					)
+				  )
+				);
+	} 
+	
+	
+let makeDoneDiv = function(index, proj) {	
+	return $("<div>").addClass("col-xxl-4 col-lg-6").append(
+			 $("<a>").attr("href", "${cPath }/myinfo/project/" + proj.projId).append(
+				$("<div>").addClass("project-box").append(
+					$("<span>").addClass("badge badge-secondary").text("Done"),
+					$("<h6>").addClass("txt_line").text(proj.projTitle),
+					$("<div>").addClass("media").append(
+						$("<div>").addClass("media-body").append(
+							$("<p>").text(proj.projRegist)		
+						)		
+					),
+					$("<p>").addClass("txt_line").text(proj.projContent),
+					$("<div>").addClass("row details").append(
+						$("<div>").addClass("col-6").append(
+							$("<span>").text("참여인원")		
+						),
+						$("<div>").addClass("col-6 font-primary").text(proj.projRealNum),
+						$("<div>").addClass("col-6").append(
+								$("<span>").text("시작일")		
+							),
+						$("<div>").addClass("col-6 font-primary").text(proj.projRealsdate),
+						$("<div>").addClass("col-6").append(
+								$("<span>").text("종료일")		
+							),
+						$("<div>").addClass("col-6 font-primary").text(proj.projRealfdate)
+					)
+				  )
+				)
+			);
+} 
+</script>

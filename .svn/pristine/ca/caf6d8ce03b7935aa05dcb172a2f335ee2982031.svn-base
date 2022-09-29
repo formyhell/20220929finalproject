@@ -1,0 +1,121 @@
+package kr.or.ddit.outsourcing.service;
+
+import java.util.List;
+import java.util.Map;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.memInfo.vo.GenObjVO;
+import kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.vo.ObjectVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.outsourcing.vo.SkillVO;
+
+/**
+ * 아웃소싱 프로젝트 service
+ * @author 고혜인
+ * @since 2022. 8. 16.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 16.      고혜인       최초작성
+ * 2022. 9. 8.	  조채원		  setRequiredList 추가
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+
+public interface OutProjService {
+
+	/**
+	 * 새로운 프로젝트 공고 게시들 등록
+	 * @param OutProj
+	 */
+	public ServiceResult create(OutProjVO outProj);
+	
+	/**
+	 * 프로젝트 전체조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<OutProjVO> findAll(PagingVO<OutProjVO> pagingVO);
+	
+	/**
+	 * 프로젝트 상세조회
+	 * @param projId
+	 * @return
+	 */
+	public OutProjVO findByPK(String projId);
+	
+	/**
+	 * 프로젝트 공고 수정
+	 * @param outProj
+	 */
+	public ServiceResult modify(OutProjVO outProj);
+	
+	/**
+	 * 내가 등록한(모집중인) 프로젝트 목록 불러오기
+	 * @param pagingVO
+	 * @param projRegist
+	 * @return
+	 */
+	public List<OutProjVO> createdProjectList(Map<String, Object> map);
+	
+	/**
+	 * 등록한(모집중인) 프로젝트 삭제
+	 * @param outProjId
+	 */
+	public ServiceResult remove(MemberVO member, String password, String outProjId);
+	
+	/**
+	 * 진행중인 프로젝트 종료시키기
+	 * @param outProj
+	 */
+	public ServiceResult finish(MemberVO member, OutProjVO outProj, String password);
+	
+	
+	/**
+	 * 계약 완료시 진행 상태, 실제 진행일, 모집인원을 수정함
+	 * @param outProj
+	 * @return
+	 */
+	public ServiceResult progress(OutProjVO outProj);
+	
+	
+	
+	/**
+	 * 아웃소싱 프로젝트에 지원했는지 확인
+	 * @param map
+	 * @return
+	 */
+	public String findsupport(Map<String, Object> map);
+	
+	/**
+	 * 스킬,업무분야 등록
+	 * @param outprojVo
+	 */
+	public void insertSkill(OutProjVO outprojVo);
+	
+	/**
+	 * 스킬,업무분야 삭제
+	 */
+	public int removeSkill(SkillVO skillVo);
+	public int removeObj(ObjectVO objVo);
+	
+	/**
+	 * 파일 다운로드를 위한 메타데이터 조회
+	 * @param attId
+	 * @return
+	 */
+	public AttatchVO outProjFileDownload(String attId);
+	
+	/**
+	 * 필터링 단어가 포함된경우 필수검토리스트에 등록
+	 * @param outProj
+	 */
+	public void setRequiredList(OutProjVO outProj);
+}

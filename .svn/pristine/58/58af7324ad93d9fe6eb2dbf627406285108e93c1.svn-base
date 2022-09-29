@@ -1,0 +1,44 @@
+package kr.or.ddit.common.member.controller;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.common.member.vo.GenMemberVO;
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+public class AboutUsController {
+	
+	@RequestMapping(value="/aboutUs")
+	public String aboutUs(Authentication authentication, Model model) {
+		// id값 
+		String id = authentication.getName();
+		
+		log.info("%%%%%%%getPrincipal {} ",authentication.getPrincipal().getClass());
+		// MemberVO - view
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+
+		// log
+		log.info("id : " + id);
+		log.info("memberVO : " + member);
+		log.info("memberVO : " + member.getClass());
+		log.info("memberVO : " + ((GenMemberVO)member).getMemProj());
+		log.info("getMemId : " + member.getMemId());
+		log.info("getMemPass : " + member.getMemPass());
+		log.info("getMemType : " + member.getMemType().get(0));
+		
+		
+		model.addAttribute("id", id);
+		model.addAttribute("member", member);
+		return "common/member/aboutUs";
+		
+	}
+
+}

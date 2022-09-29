@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.community.dao.CommunityDAO">
+	
+
+	<sql id="cmnt">
+		<if test="simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(simpleCondition.searchWord)">
+			AND
+				<choose>
+					<when test="simpleCondition.searchType eq 'cmntTitle'">
+						INSTR(CMNT_TITLE, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'cmntContent'">
+						INSTR(CMNT_CONTENT, #{simpleCondition.searchWord}) > 0
+					</when>
+					<when test="simpleCondition.searchType eq 'cmntWriter'">
+						INSTR(CMNT_WRITER, #{simpleCondition.searchWord}) > 0
+					</when>
+				</choose>
+			</if>
+	</sql>
+	<sql id="selectCmnt">
+		SELECT
+		    CMNT_NO,
+		    CMNT_TITLE,
+		    CMNT_CONTENT,
+		    TO_CHAR(CMNT_DATE, 'YY-MM-DD') CMNT_DATE,
+		    CMNT_HIT,
+		    CMNT_REC,
+		    CMNT_REPORT,
+		    CMNT_WRITER
+		FROM COMMUNITY
+	</sql>
+	
+	
+	
+	<select id="selectCmntCount" resultType="int">
+		SELECT COUNT(*)
+		FROM COMMUNITY
+		WHERE CMNT_STATE = 'Y'
+		<include refid="cmnt" />
+	</select>
+
+	<select id="adminCmntCount" resultType="int">
+		SELECT COUNT(*)
+		FROM COMMUNITY
+		WHERE CMNT_REPORT > 0
+	</select>
+	
+	<select id="selectCmntList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.common.community.vo.CommunityVO">
+		SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						<include refid="selectCmnt"/>
+						WHERE CMNT_STATE = 'Y'
+						<include refid="cmnt" />
+						ORDER BY CMNT_NO DESC
+				) A
+			) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+	<select id="adminCmntList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.common.community.vo.CommunityVO">
+		SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						<include refid="selectCmnt"/>
+						WHERE CMNT_REPORT > 0
+        				ORDER BY CMNT_REPORT DESC
+				) A
+			) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}		
+	</select>	
+	<select id="selectCmnt" parameterType="int" resultType="kr.or.ddit.common.community.vo.CommunityVO">
+		<include refid="selectCmnt" />
+		WHERE CMNT_NO = #{cmntNo}
+		AND CMNT_STATE = 'Y'
+	</select>
+	
+	<insert id="insertCmnt" parameterType="kr.or.ddit.common.community.vo.CommunityVO">
+		INSERT INTO COMMUNITY (
+		    CMNT_NO,
+		    CMNT_TITLE,
+		    CMNT_CONTENT,
+		    CMNT_DATE,
+		    CMNT_HIT,
+		    CMNT_REC,
+		    CMNT_REPORT,
+		    CMNT_WRITER
+		) VALUES (
+		    CMNT_NO_SEQ.NEXTVAL,
+		    #{cmntTitle},
+		    #{cmntContent},
+		    sysdate,
+		    0,
+		    0,
+		    0,
+		    #{cmntWriter}
+		)
+	</insert>
+
+	<update id="updateCmnt" parameterType="kr.or.ddit.common.community.vo.CommunityVO">
+		UPDATE COMMUNITY
+	    SET
+	        CMNT_TITLE = #{cmntTitle},
+	        CMNT_CONTENT = #{cmntContent}
+		WHERE CMNT_NO = #{cmntNo}
+		AND CMNT_STATE = 'Y'
+	</update>
+
+	<update id="hitCmnt" parameterType="kr.or.ddit.common.community.vo.CommunityVO">
+		UPDATE COMMUNITY
+	    SET CMNT_HIT = CMNT_HIT + 1
+		WHERE CMNT_NO = #{cmntNo}
+		AND CMNT_STATE = 'Y'
+	</update>
+
+
+	<update id="deleteCmnt" parameterType="kr.or.ddit.common.community.vo.CommunityVO">
+		UPDATE COMMUNITY
+		SET CMNT_STATE = 'N'
+		WHERE CMNT_NO = #{cmntNo}
+	</update>
+	
+	<update id="adminDelete" parameterType="kr.or.ddit.common.community.vo.CommunityVO">
+		UPDATE COMMUNITY
+		SET CMNT_STATE = 'A'
+		WHERE CMNT_NO = #{cmntNo}
+	</update>
+
+
+	<select id="repMemCount" parameterType="Map" resultType="int">
+		SELECT COUNT(*)
+		FROM COMMUNITY_TREP
+		WHERE TREP_CMNT = #{cmntNo}
+	</select>
+
+	<select id="repMemList" parameterType="Map" resultType="kr.or.ddit.common.community.vo.CommunityTrepVO">
+			SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						SELECT
+						    TREP_NO,
+						    TREP_REASON,
+						    TREP_DATE,
+						    TREP_CMNT,
+						    TREP_REPORTER
+						FROM
+						    COMMUNITY_TREP
+						WHERE TREP_CMNT = #{cmntNo}
+						ORDER BY TREP_NO DESC
+				) A
+			) B
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	
+	</select>
+	
+		
+	
+	
+
+	<insert id="insertCmntReply" parameterType="kr.or.ddit.common.community.vo.CommunityReplyVO">
+	INSERT INTO COMMUNITY_REPLY (
+	    REP_NO,
+	    REP_DATE,
+	    REP_CMNTNO,
+	    REP_WRITER,
+	    REP_CONTENT
+	) VALUES (
+		CMNT_REP_NO_SEQ.NEXTVAL,
+		SYSDATE,
+		#{repCmntno},
+		#{repWriter},
+		#{repContent}
+	)
+	</insert>
+	
+	<select id="selectCmntReply" parameterType="int" resultType="kr.or.ddit.common.community.vo.CommunityReplyVO">
+		SELECT
+		    REP_NO,
+		    REP_DATE,
+		    REP_CMNTNO,
+		    REP_WRITER,
+		    REP_PARENT,
+		    REP_CONTENT
+		FROM
+		    COMMUNITY_REPLY
+		WHERE
+			REP_NO = #{repNo}
+	</select>
+	
+	<select id="selectTotalCmntReply" parameterType="Map" resultType="int">
+		SELECT COUNT(*)
+		FROM COMMUNITY_REPLY
+		WHERE REP_CMNTNO = #{cmntNo}
+	</select>
+	
+	
+	<select id="selectCmntReplyList"  parameterType="Map" resultType="kr.or.ddit.common.community.vo.CommunityReplyVO">
+		SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						SELECT
+						    A.REP_NO,
+						    A.REP_DATE,
+						    A.REP_CMNTNO,
+						    A.REP_WRITER,
+						    A.REP_PARENT,
+						    A.REP_CONTENT,
+                            B.GEN_IMG AS genImg,
+                            C.COM_IMG AS comImg
+                        FROM COMMUNITY_REPLY A
+                        LEFT JOIN GEN_MEMBER B ON(A.REP_WRITER=B.GEN_NICK)
+                        LEFT JOIN COM_MEMBER C ON(A.REP_WRITER=C.COM_NICK)
+						WHERE A.REP_CMNTNO = #{cmntNo}
+						ORDER BY REP_NO DESC
+				) A
+			) B
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	
+	<update id="updateCmntReply" parameterType="kr.or.ddit.common.community.vo.CommunityReplyVO">
+		UPDATE COMMUNITY_REPLY
+		SET REP_CONTENT = #{repContent}
+		WHERE REP_NO = #{repNo}
+	</update>
+	
+	<delete id="deleteCmntReply" parameterType="int">
+		DELETE FROM COMMUNITY_REPLY
+		WHERE REP_NO = #{repNo}
+	</delete>
+	
+	<!-- ===== 신고 ===== -->
+	<resultMap type="kr.or.ddit.common.community.vo.CommunityVO" id="cmntMap">
+		<id property="cmntNo" column="CMNT_NO"/>
+		<association property="cmntTrep" javaType="kr.or.ddit.common.community.vo.CommunityTrepVO" autoMapping="true">
+			<id property="trepNo" column="TREP_NO"/>
+		</association>
+	</resultMap>
+	
+
+	<insert id="insertRecInfo" parameterType="kr.or.ddit.common.community.vo.CommunityRecVO">
+		INSERT INTO community_rec (
+		    rec_mem,
+		    rec_cmnt
+		) VALUES (
+		    #{recMem},
+		    #{recCmnt}
+		)
+	</insert>
+	<select id="inRecInfo" parameterType="int" resultType="kr.or.ddit.common.community.vo.CommunityRecVO">
+		SELECT
+		    REC_MEM,
+		    REC_CMNT
+		FROM
+		    COMMUNITY_REC
+		WHERE REC_CMNT = #{cmntNo}
+	</select>
+	<update id="inRecCmnt" parameterType="int">
+		UPDATE COMMUNITY
+	    SET CMNT_REC = CMNT_REC + 1
+		WHERE CMNT_NO = #{cmntNo}
+		AND CMNT_STATE = 'Y'	
+	</update>
+	<update id="deRecCmnt" parameterType="kr.or.ddit.common.community.vo.CommunityRecVO">
+		UPDATE COMMUNITY
+	    SET CMNT_REC = CMNT_REC - 1
+		WHERE CMNT_NO = #{cmntNo}
+		AND CMNT_STATE = 'Y'	
+	</update>
+	<delete id="delRecInfo" parameterType="kr.or.ddit.common.community.vo.CommunityRecVO">
+		DELETE FROM COMMUNITY_REC
+		WHERE rec_mem =#{recMem}
+   		  AND rec_cmnt =#{recCmnt}
+	</delete>
+
+	<update id="repCmntCount" parameterType="int">
+		UPDATE COMMUNITY
+	    SET CMNT_REPORT = CMNT_REPORT + 1
+		WHERE CMNT_NO = #{cmntNo}
+		AND CMNT_STATE = 'Y'	
+	</update>
+	
+	<select id="selectTrep" resultType="kr.or.ddit.common.community.vo.CommunityTrepVO" parameterType="int">
+		SELECT
+		    TREP_CMNT,
+		    TREP_REPORTER
+		FROM
+		    COMMUNITY_TREP
+		WHERE TREP_CMNT = #{trepCmnt}
+	</select>
+	
+	<insert id="repCmnt" parameterType="kr.or.ddit.common.community.vo.CommunityTrepVO">
+		INSERT INTO COMMUNITY_TREP (
+		    TREP_NO,
+		    TREP_REASON,
+		    TREP_DATE,
+		    TREP_CMNT,
+		    TREP_REPORTER
+		) VALUES (
+		    CMNT_TREP_NO_SEQ.NEXTVAL,
+		    #{trepReason},
+		    sysdate,
+		    #{trepCmnt},
+		    #{trepReporter}
+		)
+	</insert>
+	
+	
+</mapper>

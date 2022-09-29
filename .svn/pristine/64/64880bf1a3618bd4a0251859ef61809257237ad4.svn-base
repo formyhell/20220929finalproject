@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.manageProject.dao.ProjectManageDAO">
+	
+	<select id="genSelectTotalProj" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+			FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT)
+			FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, C.EMPTYPE_NAME AS PROJ_EMPTYPE, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE
+					    , C.PROJ_ESTIMATE, C.PROJ_LOC , C.PROJ_CONTENT, C.PROJ_TITLE, C.OBJ_NAME, C.SKILL_NAME, C.PROJ_REALNUM, D.APPLY_APPLICANT, D.CONTRACT_STATE
+			FROM V_OUTPROJ C, (SELECT A.*, B.CONTRACT_STATE
+			                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+			WHERE C.PROJ_ID = D.APPLY_PROJ
+			  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+			  AND D.CONTRACT_STATE = 'CONCLUDE'
+			  AND D.APPLY_APPLICANT = #{member.memId} ) E
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+			WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+		</if>
+			) F
+	</select>
+	
+	<select id="genSelectAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT H.*
+		FROM (SELECT ROWNUM RNUM, G.*
+		FROM (SELECT F.*
+					FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT), E.PROJ_REALSDATE, E.PROJ_FDATE, E.PROJ_REALNUM
+					FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, C.EMPTYPE_NAME AS PROJ_EMPTYPE, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE
+		                        , TO_CHAR(C.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, C.PROJ_REALNUM, C.PROJ_ESTIMATE, C.PROJ_LOC , C.PROJ_CONTENT, C.PROJ_TITLE
+		                        , C.OBJ_NAME, C.SKILL_NAME, D.APPLY_APPLICANT, D.CONTRACT_STATE
+					FROM V_OUTPROJ C, (SELECT A.*, B.CONTRACT_STATE
+					                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+					WHERE C.PROJ_ID = D.APPLY_PROJ
+					  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+					  AND D.CONTRACT_STATE = 'CONCLUDE'
+					  AND D.APPLY_APPLICANT = #{member.memId} ) E
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+			WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+		</if>
+					) F) G) H
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	
+	<select id="comSelectTotalProj" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT)
+		FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, C.EMPTYPE_NAME AS PROJ_EMPTYPE, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE
+				    , C.PROJ_ESTIMATE, C.PROJ_LOC , C.PROJ_CONTENT, C.PROJ_TITLE, C.OBJ_NAME, C.SKILL_NAME, C.PROJ_REALNUM, D.CONTRACT_STATE
+		FROM V_OUTPROJ C, (SELECT A.*, B.CONTRACT_STATE
+		                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+		WHERE C.PROJ_ID = D.APPLY_PROJ
+		  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+		  AND D.CONTRACT_STATE = 'CONCLUDE'
+		  AND C.PROJ_REGIST = #{member.memId} ) E
+	<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+		WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+		OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+		OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+	</if>
+		) F
+	</select>
+	
+	
+	<select id="comSelectAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT H.*
+		FROM (SELECT ROWNUM RNUM, G.*
+		FROM (SELECT F.*
+					FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT), E.PROJ_REALSDATE, E.PROJ_FDATE, E.PROJ_REALNUM
+					FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, C.EMPTYPE_NAME AS PROJ_EMPTYPE, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE
+		                        , TO_CHAR(C.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, C.PROJ_REALNUM, C.PROJ_ESTIMATE, C.PROJ_LOC , C.PROJ_CONTENT, C.PROJ_TITLE
+		                        , C.OBJ_NAME, C.SKILL_NAME, D.APPLY_APPLICANT, D.CONTRACT_STATE
+					FROM V_OUTPROJ C, (SELECT A.*, B.CONTRACT_STATE
+					                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+					WHERE C.PROJ_ID = D.APPLY_PROJ
+					  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+					  AND D.CONTRACT_STATE = 'CONCLUDE'
+					  AND C.PROJ_REGIST = #{member.memId} ) E
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+			WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+		</if>
+					) F) G) H
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+</mapper>

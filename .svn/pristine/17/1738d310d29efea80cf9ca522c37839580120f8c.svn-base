@@ -1,0 +1,84 @@
+package kr.or.ddit.pms.project.service;
+
+import java.security.Provider.Service;
+import java.util.List;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.pms.project.vo.PMSProjectVO;
+
+/**
+ * @author 홍승조
+ * @since 2022. 8. 8.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 8.      홍승조        최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+public interface PMSProjectService {
+	
+	/**
+	 * PMS 프로젝트 등록
+	 * @param PMSProject
+	 * @return OK, FAIL
+	 */
+	public ServiceResult createPMSProject(PMSProjectVO PMSProject);
+	
+	/**
+	 * PMS 프로젝트 목록 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<PMSProjectVO> retrievePMSProjectList(PagingVO<PMSProjectVO> pagingVO);
+	
+	/**
+	 * PMS 프로젝트 상세 조회
+	 * @param projId
+	 * @return 존재하지 않으면, {@link PKNotFoundException} 발생
+	 */
+	public PMSProjectVO retrievePMSProject(String projId);
+	
+	/**
+	 * PMS 프로젝트 수정
+	 * @param pmsProject
+	 * @return {@link PKNotFoundException}, OK, FAIL
+	 */
+	public ServiceResult modifyPMSProject(PMSProjectVO pmsProject);
+	
+	/**
+	 * PMS 프로젝트 삭제
+	 * @param projId
+	 * @return {@link PKNotFoundException}, OK, FAIL
+	 */
+	public ServiceResult deletePMSProject(PMSProjectVO pmsProject);
+	
+	/**
+	 * 본인이 생성한 프로젝트 리스트
+	 * @param pagingVO
+	 * @return 본인이 생성한 프로젝트 리스트
+	 */
+	public List<PMSProjectVO> createdPMSProject(PagingVO<PMSProjectVO> pagingVO, String projArchi);
+	
+	
+	
+	/**
+	 * 프로젝트 참가하기
+	 * @param PMSProject 
+	 * @param id
+	 */
+	public ServiceResult joinPMSProject(PMSProjectVO PMSProject, String id);
+	
+	
+	/**
+	 * 본인이 참가한 프로젝트 리스트
+	 * @param id 본인 아이디
+	 * @return 본인이 참가한 프로젝트 리스트
+	 */
+	public List<PMSProjectVO> joinPMSProjectList(PagingVO<PMSProjectVO> pagingVO, String id);
+	
+}

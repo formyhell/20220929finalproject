@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.portfolio.dao.PortfolioDAO">
+
+	<resultMap type="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO" id="pfMap" autoMapping="true">
+		<id property="pfId" column="PF_ID"/>  
+<!-- 		 ㄴ  **이부분 있어야함 / column이랑 아래 "PF_ID"랑 똑같이 쓰고 서비스에 log로 pf값 잘들어온것확인가능 -> jsp오류였다! 수정해줘야한느데 모르겠음! - 창규 -->
+		<collection property="skillCodeList" javaType="java.util.List" ofType="kr.or.ddit.common.mypage.portfolio.vo.PfSkillVO" autoMapping="true">
+			<id property="skillCode" column="skillCodeList.skillCode"/>
+		</collection>
+		<collection property="objCodeList"  javaType="java.util.List" ofType="kr.or.ddit.common.mypage.portfolio.vo.PfObjVO" autoMapping="true" >
+			<id property="objCode" column="objCodeList.objCode"/>
+		</collection>
+	</resultMap>
+
+	<select id="selectPfCount" resultType="int">
+		SELECT count(*)
+		FROM PORTFOLIO
+		WHERE PF_STATE = 'Y'
+	</select>
+	
+	<select id="selectPf" parameterType="String" resultMap="pfMap">
+		SELECT PORTFOLIO.PF_ID "PF_ID", PORTFOLIO.PF_TITLE "PF_TITLE", PORTFOLIO.PF_SDATE "PF_SDATE"
+			 , PORTFOLIO.PF_FDATE "PF_FDATE", NVL(PORTFOLIO.PF_CLIENT,'') "PF_CLIENT"
+			 , PORTFOLIO.PF_OPEN "PF_OPEN", PORTFOLIO.PF_MEM "PF_MEM"
+			 , PORTFOLIO.PF_CONTENT "PF_CONTENT", NVL(PORTFOLIO.PF_RESULTURL,'') "PF_RESULTURL"
+			 , PF_OBJ.OBJ_CODE "objCodeList.objCode"
+ 			 , PF_SKILL.SKILL_CODE "skillCodeList.skillCode"
+		FROM PORTFOLIO 
+		LEFT OUTER JOIN PF_OBJ ON (PORTFOLIO.PF_ID=PF_OBJ.PF_ID)
+		LEFT OUTER JOIN PF_SKILL ON (PORTFOLIO.PF_ID=PF_SKILL.PF_ID)
+		WHERE PORTFOLIO.PF_ID = #{pfId}
+		  AND PF_STATE = 'Y'
+		   
+	</select>
+	
+	<select id="selectPfList" parameterType="kr.or.ddit.common.vo.PagingVO" resultType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		SELECT B.*
+			FROM(
+				SELECT ROWNUM RNUM, A.*
+					FROM (
+						SELECT PF_ID "pfId", PF_TITLE "pfTitle", PF_SDATE "pfSdate"
+							 , PF_FDATE "pfEdate", NVL(PF_CLIENT,'') "pfClient"
+							 , PF_OPEN "pfOpen", PF_MEM "pfMem"
+							 , PF_CONTENT "pfContent", NVL(PF_RESULTURL,'') "pfResulturl"
+						FROM PORTFOLIO 
+						WHERE PF_STATE = 'Y'
+						ORDER BY PF_ID DESC
+				) A
+			) B
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	
+	<insert id="insertPf" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+	<selectKey resultType="String" keyProperty="pfId" order="BEFORE">
+	    SELECT 'PF' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(COUNT(*) + 1, 4, '0') PF_ID
+	    FROM PORTFOLIO
+	    WHERE SUBSTR(PF_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+	</selectKey>
+	INSERT INTO PORTFOLIO (
+	    PF_ID,
+	    PF_TITLE,
+	    PF_SDATE,
+	    PF_FDATE,
+	    PF_CLIENT,
+	    PF_OPEN,
+	    PF_MEM,
+	    PF_CONTENT,
+	    PF_RESULTURL
+	) VALUES (
+	    #{pfId},
+	    #{pfTitle},
+	    #{pfSdate}, 
+	    #{pfFdate},
+	    #{pfClient, jdbcType=VARCHAR},
+	    #{pfOpen},
+	    #{pfMem},
+	    #{pfContent},
+	    #{pfResulturl, jdbcType=VARCHAR}
+	)
+	</insert>
+	
+	<insert id="insertPfObj" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		INSERT ALL
+		<foreach collection="objCodeList" item="obj">
+			INTO PF_OBJ(PF_ID,OBJ_CODE, GEN_ID)
+			VALUES (#{pfId, jdbcType=VARCHAR}, #{obj.objCode, jdbcType=VARCHAR}, #{pfMem, jdbcType=VARCHAR})
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<insert id="insertPfSkill" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		INSERT ALL
+		<foreach collection="skillCodeList" item="skill">
+			INTO PF_SKILL(PF_ID,SKILL_CODE, GEN_ID)
+			VALUES (#{pfId, jdbcType=VARCHAR}, #{skill.skillCode, jdbcType=VARCHAR}, #{pfMem, jdbcType=VARCHAR})
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<update id="updatePfObj" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		UPDATE PF_OBJ
+		SET OBJ_CODE = #{obj.objCode, jdbcType=VARCHAR}
+		WHERE PF_ID = #{pfId, jdbcType=VARCHAR}
+		AND OBJ_CODE = #{obj.objCode, jdbcType=VARCHAR}
+	</update>
+	<update id="updateSkill" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		UPDATE PF_SKILL
+		SET SKILL_CODE = #{skill.skillCode, jdbcType=VARCHAR}
+		WHERE PF_ID = #{pfId, jdbcType=VARCHAR}
+		AND SKILL_CODE = #{skill.skillCode, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updatePf" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		UPDATE PORTFOLIO
+		SET 
+			PF_TITLE = #{pfTitle, jdbcType=VARCHAR},
+		    PF_SDATE = #{pfSdate,jdbcType=VARCHAR},
+		    PF_FDATE = #{pfFdate,jdbcType=VARCHAR},
+		    PF_CLIENT = #{pfClient, jdbcType=VARCHAR},
+		    PF_OPEN = #{pfOpen, jdbcType=NUMERIC},
+		    PF_CONTENT = #{pfContent, jdbcType=VARCHAR},
+		    PF_RESULTURL = #{pfResulturl, jdbcType=VARCHAR}'
+		WHERE PF_ID = #{pfId}
+		   
+	</update>
+	
+	<delete id="deleteObj" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		DELETE FROM PF_OBJ
+		WHERE PF_ID = #{pfId}
+	</delete>
+	<delete id="deleteSkill" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		DELETE FROM PF_SKILL
+		WHERE PF_ID = #{pfId}
+	</delete>
+	
+	<update id="deletePf" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		UPDATE PORTFOLIO
+		SET PF_STATE = 'N'
+		WHERE PF_ID = #{pfId}
+	</update>
+	
+<!-- 	<delete id="deletePf" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO"> -->
+<!-- 		DELETE FROM PORTFOLIO -->
+<!-- 		WHERE PF_ID = #{pfId} -->
+<!-- 	</delete> -->
+	
+	<insert id="insertAttatches" parameterType="kr.or.ddit.common.vo.AttatchVO">
+		<selectKey resultType="String" keyProperty="attId" order="BEFORE">
+			SELECT 'AT' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(NVL(MAX(SUBSTR(ATT_ID, 9)),0)+1, 4, '0') ATT_ID
+			FROM ATTATCH
+			WHERE SUBSTR(ATT_ID, 3, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+		INSERT ALL
+			INTO ATTATCH (
+			    ATT_ID
+			    , ATT_FILENAME
+			    , ATT_SAVENAME
+			    , ATT_MIME
+			    , ATT_FILESIZE
+			) VALUES (
+			    #{attId, jdbcType=VARCHAR}
+			    , #{attFilename, jdbcType=VARCHAR}
+			    , #{attSavename, jdbcType=VARCHAR}
+			    , #{attMime, jdbcType=VARCHAR}
+			    , #{attFilesize, jdbcType=NUMERIC}
+			)
+		SELECT * FROM DUAL
+		
+	</insert>
+	<insert id="insertPfAttatches" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		INSERT ALL
+		<foreach collection="attatchList" item="attatch">
+			INTO PF_ATTATCH (
+			    ATT_ID,
+			    PF_ID
+			) VALUES (
+				#{attatch.attId, jdbcType=VARCHAR}
+				, #{pfId, jdbcType=VARCHAR}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<select id="selectAttatch" parameterType="String" resultType="kr.or.ddit.common.vo.AttatchVO">
+		SELECT
+		    ATT_ID,
+		    ATT_FILENAME,
+		    ATT_SAVENAME,
+		    ATT_MIME,
+		    ATT_FILESIZE
+		FROM
+		    ATTATCH
+		WHERE ATT_ID = #{attId}
+	</select>
+	<select id="selectPfFileList" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO" resultType="kr.or.ddit.common.vo.AttatchVO">
+	SELECT
+	    A.ATT_ID,
+	    A.ATT_FILENAME,
+	    A.ATT_SAVENAME,
+	    A.ATT_MIME,
+	    A.ATT_FILESIZE
+	FROM
+	    ATTATCH A
+	WHERE
+	    A.ATT_ID IN(
+	        SELECT ATT_ID
+	        FROM PF_ATTATCH
+	        WHERE PF_ID = #{pfId}
+	          
+	    )
+	</select>
+	
+	<delete id="deleteAttatches" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		DELETE FROM ATTATCH
+		WHERE ATT_ID IN
+		<foreach collection="delAttIds" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>
+	</delete>
+	<delete id="deletePfAttatches" parameterType="kr.or.ddit.common.mypage.portfolio.vo.PortfolioVO">
+		DELETE FROM PF_ATTATCH
+		WHERE PF_ID = #{pfId}
+		AND ATT_ID IN
+		<foreach collection="delAttIds" item="attId" open="(" close=")" separator=",">
+			#{attId}
+		</foreach>	
+	</delete>
+	
+</mapper>

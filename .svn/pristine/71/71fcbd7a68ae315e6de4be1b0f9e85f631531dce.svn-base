@@ -1,0 +1,101 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 9. 7.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<!-- function textLengthOverCut(txt, len, lastTxt) {
+        if (len == "" || len == null) { // 기본값
+            len = 20;
+        }
+        if (lastTxt == "" || lastTxt == null) { // 기본값
+            lastTxt = "...";
+        }
+        if (txt.length > len) {
+            txt = txt.substr(0, len) + lastTxt;
+        }
+        return txt;
+    } -->
+
+	<div class="container invoice">
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="card">
+                    <div class="card-body">  
+                      <div>
+                    <div id="searchUI" class="form-field">
+						<div class="row" style="margin-left:5px;margin-top:10px;">
+							<div class="col-sm-3" style="padding: 0px;">
+								<div class="mb-3">
+									<form:input class="form-control" style="border: 1px solid #DEDEDE;" placeholder="Search Here" path="simpleCondition.searchWord" />
+					            </div>
+                  			</div>
+							<div class="col-sm-3">
+								<div class="mb-3">
+					                <input type="button" id="searchBtn" class="btn btn-outline-primary" value="검색" >
+					            </div>
+                  			</div>
+						</div>
+					</div>                          
+                        <div>
+                          <div class="table-responsive invoice-table" id="table">
+                            <table class="table table-bordered table-striped">
+                              <tbody>
+                                <tr>
+                                  <td class="item">
+                                    <h6 class="p-2 mb-0">프로젝트</h6>
+                                  </td>
+                                   <td class="Rate">
+                                    <h6 class="p-2 mb-0">기획상태</h6>
+                                  </td>
+                                  <td class="Hours">
+                                    <h6 class="p-2 mb-0">등록일</h6>
+                                  </td>
+                                  <td class="Rate">
+                                    <h6 class="p-2 mb-0">모집마감일</h6>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+               <div class="pagingArea pagination justify-content-center pagination-primary" style="padding-bottom: 20px"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/myinfo/contract/project" method="get">
+	<input type="hidden" name="page" />
+	<form:input type="hidden" path="searchWord" />
+</form:form>     
+            
+<script>
+/* <tr>
+<td>
+	<p style="display:none"></p>
+  <label>Lorem Ipsum</label>
+  <p class="m-0">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+</td>
+<td>
+  <p class="itemtext digits">5</p>
+</td>
+<td>
+  <p class="itemtext digits">$75</p>
+</td>
+</tr> */
+</script>
+</body>
+</html>

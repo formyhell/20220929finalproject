@@ -1,0 +1,81 @@
+package kr.or.ddit.common.member.service;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.dao.MemDAO;
+import kr.or.ddit.common.member.dao.MemberDAO;
+import kr.or.ddit.common.member.vo.ComMemberVO;
+import kr.or.ddit.common.member.vo.GenMemberVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 김유진
+ * @since 2022. 8. 6.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                 수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 6.       김유진              최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Service
+public class MemServiceImpl implements MemService {
+	@Inject
+	MemDAO memDao;
+	@Inject
+	MemberDAO memberDao;
+	
+	@Inject
+	public void setMemberDao(MemDAO memberDao) {
+		this.memDao = memberDao;
+	}
+
+	ServiceResult result = null;
+	
+	// 일반회원가입
+	@Override
+	public ServiceResult createGenMember(GenMemberVO genMember) {
+		if(memberDao.selectMember(genMember.getGenId())==null) { //이미 있는 회원인지 확인	
+			int rowcnt = memDao.insertGenMember(genMember);
+			if(rowcnt>0) {
+				result = ServiceResult.OK;
+			}else {
+				result = ServiceResult.FAIL;
+			}
+		}else {
+			result = ServiceResult.PKDUPLICATED;
+		}
+		return result;	
+	}
+
+	// 기업회원가입
+	@Override
+	public ServiceResult createComMember(ComMemberVO comMember) {
+		if(memberDao.selectMember(comMember.getComId())==null) { //이미 있는 회원인지 확인	
+			int rowcnt = memDao.insertComMember(comMember);
+			if(rowcnt>0) {
+				result = ServiceResult.OK;
+			}else {
+				result = ServiceResult.FAIL;
+			}
+		}else {
+			result = ServiceResult.PKDUPLICATED;
+		}
+		return result;	
+	}
+
+
+}

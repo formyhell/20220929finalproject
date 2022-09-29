@@ -1,0 +1,288 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>  
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %> 
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+<style>
+	#mymodal {
+        position: fixed;
+        width:100%;
+        height:100%;
+        left:0;top:0;
+        z-index:1000;
+        background-color:rgba(107, 107, 107, 0.8); /* 반투명 */
+        display:none;  /* 첨엔 안 보이깅*/
+    }
+    .modal-content {
+        position: relative;
+        left:750px;
+        top:100px;
+    }
+    table {
+	margin-left: auto;
+	margin-right: auto;
+}
+	#profile{
+	height: 450px;
+	width: 880px;
+	}
+	.project-info{
+	background-color: #e6ce51;
+	top: 50%;
+	}
+/* 	.btn-info { */
+/*     color: #fff; */
+/*     background-color: #d5b89d; */
+/*     border-color: #d5b89d; */
+/* } */
+	.col-sm-13 {
+	border: 1px solid black;
+}
+	
+</style>
+
+  <!-- CONTENT --> 
+  <div id="project-detail-section" class="pt-80 pb-60 pt-xs-60">
+    <div class="container">
+      <div class="row ">
+        <div class="col-sm-12">
+          <div class="block-title v-line mb-45">
+            <h2><span>Our</span> Project</h2>
+            <p class="italic"> Aenean suscipit eget mi act </p>
+          </div>
+        </div>
+      </div>
+      <div class="row"> 
+        <div class="col-sm-12">
+          <div class="project-details">
+            <figure> <img id="profile" src="${cPath }/resources/images/${comMember.comImg }" alt="" onerror="this.src='${cPath}/resources/assets/images/project/1-1.png'"> </figure>
+            <div class="project-info col-sm-12 col-md-4 ">
+            <security:authentication property="principal" var="authMember" /> 
+              <h3>${proj.projRegist}</h3>
+              <ul>
+	             	<li> <strong>프로젝트 규모</strong> ${proj.projEstimate}원 </li>
+	                <li> <strong>고용형태</strong> ${proj.projEmptype} </li>
+	                <li> <strong>모집인원</strong> ${proj.projMemnum}명 </li>
+	                <li> <strong>예상시작일</strong> ${proj.projSdate} </li>
+	                <li> <strong>예상종료일</strong> ${proj.projFdate} </li>
+	                <li> <strong>장소</strong> ${proj.projLoc} </li>
+	                
+	                <li>
+	                <c:choose>
+	                <c:when test="${proj.projRegist eq authMember.realMember.memId}"> 
+	                <strong>직무 분야 <a class="btn btn-info btn-sm btn-del" style="width: 60px; background-color: #D8D8D8" href="${cPath }/outsourcing/projSkillForm/${proj.projId}" >등록</a> </strong><br>
+					</c:when>
+					</c:choose>									
+	                	<c:forEach items="${proj.objList }" var="obj">
+								<div style="display:inline-block">
+	                		<c:choose>
+									<c:when test="${proj.projRegist eq authMember.realMember.memId}">
+									<p style="font-size: 10px;"> <button onclick="$(this).closest('div').remove();obj_remove('${obj.objCode}');" class="btn btn-info btn-sm btn-del" style="float:right; background-color: #088A68" >${obj.projObj} x</button></p>
+									</c:when>
+							<c:otherwise>
+        							<p style="font-size: 12px;">${obj.projObj}|</p>	
+        					</c:otherwise>	
+							</c:choose>	
+								</div>	
+						</c:forEach>
+	              	</li>
+	                <li> <strong>필요 스킬 </strong><br>
+	                	<c:forEach items="${proj.skillList }" var="skill">
+								<div style="display:inline-block">
+	                		<c:choose>
+									<c:when test="${proj.projRegist eq authMember.realMember.memId}">
+									<p style="font-size: 10px;"> <button onclick="$(this).closest('div').remove();skill_remove('${skill.skillCode}');" class="btn btn-info btn-sm btn-del" style="float:right; background-color: #088A68" >${skill.projSkill} x</button></p>
+									</c:when>
+							<c:otherwise>
+        							<p style="font-size: 12px;">${skill.projSkill}|</p>	
+        					</c:otherwise>	
+							</c:choose>	
+								</div>	
+						</c:forEach>
+	              	</li>
+	              	<li> <strong>첨부 파일 </strong><br>
+	              		<div>
+							 <c:if test="${not empty proj.attatchList }">
+								<c:forEach items="${proj.attatchList }" var="attatch" varStatus="vs">
+<%-- 									<a>${attatch.attFilename }</a> --%>
+									<a href="${cPath}/outsourcing/${proj.projId}/project/${attatch.attId}/attatch">${attatch.attFilename }</a>
+										<br>
+										<c:if test="${not vs.last }">  </c:if>
+									</c:forEach>
+								</c:if>
+							</div>
+	              	</li>
+	              	
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-12 col-md-7 mt-30">
+        	<security:authentication property="principal" var="authMember" /> 
+        <c:choose>
+				<c:when test="${proj.projRegist eq authMember.realMember.memId}">
+        			<button class="btn-text" style="width: 48%" onclick="location.href='${cPath}/outsourcing/apply/${proj.projId}'">프로젝트 지원자 확인</button>
+        			
+<!--         			<button class="btn-blueOcen" style="width: 48%">추천 지원자 확인</button> -->
+        		</c:when>
+        		<c:when test="${authMember.realMember.memType.get(0) eq 'ROLE_GENMEM'}">
+        			<c:choose>
+        				<c:when test="${proj.projState eq 'RECRUIT'}">
+		        			<button class="btn-blueOcen" style="width: 50%" onclick="location.href='${cPath}/outsourcing/apply/support/form/${proj.projId }'">프로젝트 지원하기</button>
+				        		<div id="love" style ="display:inline">
+				        			<img id="heart" src="${cPath}/resources/images/heart/heartbackground.png">
+				        		</div>
+        				</c:when>
+        			</c:choose>	        		
+        		</c:when>
+        		<c:otherwise>
+        		
+        		</c:otherwise>
+        		
+			</c:choose>
+			<div class="main-body">			
+				<div class="body-inner">
+					<div class="card bg-white">
+						<div class="card-content">
+							<section class="logo text-center">
+								  <h3>프로젝트 내용</h3>
+						          <div class="text-content">
+						            <p>${proj.projContent} </p>
+						          </div>
+							</section>
+					</div> 
+				</div>
+				<div class="body-inner">
+					<div class="card bg-white">
+						<div class="card-content">
+							<section class="logo text-center">
+								 <h3>모집요건</h3>
+						         <div class="text-content">
+						         <p>${proj.projQualifi} </p>
+						         </div>
+							</section>
+						</div>
+					</div> 
+				</div>
+			</div>
+		</div>
+			
+			
+			
+			
+<!--           <div class="box-title mb-20"> -->
+<%--             <h3 style="font-weight: bold;">${proj.projTitle }</h3> <br> --%>
+<!--           </div> -->
+<!--           <div class="col-sm-13 mt-30"> -->
+<!-- 	          <div class="box-title mb-20"> -->
+<!-- 	            <h3>프로젝트 내용</h3> -->
+<!-- 	          </div> -->
+<!-- 	          <div class="text-content"> -->
+<%-- 	            <p>${proj.projContent} </p> --%>
+<!-- 	          </div> -->
+<!--        	  </div> -->
+<!--        	  <div class="col-sm-13 mt-30"> -->
+<!-- 	          <div class="box-title mb-20"> -->
+<!-- 	            <h3>모집요건</h3> -->
+<!-- 	          </div> -->
+<!-- 	          <div class="text-content"> -->
+<%-- 	            <p>${proj.projQualifi} </p> --%>
+<!-- 	          </div> -->
+<!--        	  </div>		 -->
+              <br><br>
+          <div>
+          </div>
+        </div>
+              <c:if test="${proj.projRegist eq authMember.realMember.memId}">
+               <button class="btn-grayDay" style="width: 60px; float: right; margin-top: 350px;" data-bs-toggle="modal" data-bs-target="#mymodal" onclick="f_modalOpen()">삭제</button>
+               <button onclick="location.href='${cPath }/outsourcing/${proj.projId }/form'" class="btn-blueOcen" style="width: 60px; float: right; margin-top: 350px; ">수정</button>
+               </c:if>
+    </div>
+  </div>
+  
+</div>
+
+<div id="mymodal">
+	<div class="modal-content" style="width: 450px; height: 180px;">
+		<h3>아웃소싱 프로젝트 비밀번호 입력</h3>
+		<form:form action="${cPath }/outsourcing/projdel/${proj.projId }" method="post" modelAttribute="outProj">
+				<input type="password" class="form-control" name="password" placeholder="비밀번호">
+				<br>
+				<input type="button" class="btn-grayDay" value="취소"  onclick="f_check()" style="float: right; border: none;">
+				<input type="submit" class="btn-blueOcen" value="삭제" style="float: right; border: none;" />
+		</form:form>
+	</div>
+</div>
+
+<script src="${cPath}/resources/js/intrestProject/jquery.form.min.js" ></script>
+<script>
+	var header = '${_csrf.headerName}';
+	var token =  '${_csrf.token}';
+	var projId = '${proj.projId}'
+	
+	var jScript = document.createElement("script");
+	jScript.src = "${cPath}/resources/js/intrestProject/insertIntrestProj.js";
+	document.body.appendChild(jScript);
+</script>
+
+
+<script>
+function f_modalOpen(){
+    mymodal.style.display="block";
+}
+function f_check(){
+    mymodal.style.display="none";
+}
+
+function skill_remove(code) {
+	$.ajax({
+		url :  '${cPath}/outsourcing/${proj.projId}/delskill',
+		method : "get",
+		data:{
+			"code":code
+		}, 
+		dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+		,
+		
+		success : function(resp, status, jqXHR) {
+			alert(resp);
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	});
+}
+
+function obj_remove(code1) {
+	$.ajax({
+		url :  '${cPath}/outsourcing/${proj.projId}/delobj',
+		method : "get",
+		data:{
+			"code1":code1
+		}, 
+		dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+		,
+		contentType:"application/json;charset=utf-8"
+			,
+		success : function(resp, status, jqXHR) {
+			alert(resp);
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	});
+}
+
+
+
+</script>
+
+
+
+

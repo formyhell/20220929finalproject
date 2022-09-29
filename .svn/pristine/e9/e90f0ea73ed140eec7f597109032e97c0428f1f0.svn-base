@@ -1,0 +1,207 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.    조채원        	최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<style>
+p {
+	margin-top : 5px;
+}
+</style>
+
+<div id="login" class="ptb ptb-xs-60 page-signin">
+    <div class="container">
+      <div class="row">
+        <div class="main-body" style="max-width: 1000px">
+          <div class="body-inner">
+            <div class="card bg-white">
+              <div class="card-content">
+                <section class="logo text-center">
+                  <h2>계약서 작성</h2>
+                </section>
+                <form class="form-horizontal ng-pristine ng-valid" method="post" action="${cPath }/outsourcing/contract/form" id="contractForm">
+                  <fieldset>
+                  <input type="text" name="contractApplyid" style="display:none" value="${applyId }">
+                  <div class="text-content mt-20">
+                   <div class="row">
+                   <div class="form-group" style="margin-right: 10px; margin-left: 10px;">
+                      <div class="ui-input-group">
+                        <input type="text" required="" class="form-control" name="contractName">
+                        <span class="input-bar"></span>
+                        <label>계약명</label>
+                      </div>
+                    </div>
+                    </div> 
+                    </div>
+                    
+                   <div class="text-content mt-20" style="margin-right: 10px; margin-left: 10px;">
+                   	<div class="row">
+                   	<p class="comMember"></p>
+                     <p><strong>${comId }</strong> (이하“갑”이라 한다.)와  <strong>${applicant }</strong>(이하“을”이라 한다.)은 계약건명에 명시된 업무작업을 수행하기 위해 다음과 같이 계약을 체결한다.</p>
+                    </div>
+                    </div>
+          			<br>
+                   
+                	<div class="text-content mt-20">
+                   	<strong>제1조【 목 적 】</strong><br>
+            		<p>본 계약은 “갑”이 “을”에게 의뢰한 000의 업무를 “갑”에게 공급함에 있어 “갑”과 “을”사이에 필요한 사항을 정하는 것을 목적으로 한다.</p>
+          			</div>
+          			<br>
+          			
+                   <div class="text-content mt-20">
+                   	<strong>제2조【 계 약 기 간 】</strong><br>
+                   	<div class="row" style="padding-left:15px">
+                   	<div style="width:10%;float:left;">
+            		<p>계약 기간은</p>
+            		</div>
+            		<div style="width:15%;float:left;">
+            		<div class="form-group">
+                      <div class="ui-input-group" style="margin-top:0px">
+                        <input type="date" required="" class="form-control" name="sdate">
+                        <span class="input-bar"></span>
+                        <label>계약시작일</label>
+                      </div>
+                    </div> 
+                    </div>
+                    <div style="width:6%;float:left;">
+                    <p>로부터</p>
+                    </div>
+                    <div style="width:15%;float:left;">
+                    <div class="form-group">
+                      <div class="ui-input-group" style="margin-top:0px">
+                        <input type="date" required="" class="form-control" name="fdate">
+                        <span class="input-bar"></span>
+                        <label>계약종료일</label>
+                      </div>
+                      </div>
+                    </div> 
+                    <div style="width:50%;float:left;">
+                    <p>까지로 하며, 갑과 을의 합의 하에 본 계약기간은 연장 될 수 있다.</p><br>
+                    </div>
+                    </div>
+          			</div>
+          			
+                   
+                   <div class="text-content mt-20">
+                   	<strong>제3조【 계 약 금 액 】</strong><br>
+                   	<div class="row" style="padding-left:15px;padding-top:10px">
+                   	<div style="width:12%;float:left;">
+            		<p>총 계약금액은</p>
+            		</div>
+            		<div style="width:12%;float:left;">
+            		<div class="form-group">
+                      <div class="ui-input-group" style="margin-top:0px">
+                        <input type="number" required="" class="form-control" name="contractPay">
+                        <span class="input-bar"></span>
+                        <label>금액</label>
+                      </div>
+                    </div> 
+                    </div>
+                    <div style="width:60%;float:left;padding-left:10px">
+                    <p>만원으로 하며 “갑”은 “을”에게 지급하기로 한다.</p><br>
+                    </div>
+                    </div>
+					<div class="row" style="padding-left:15px"><p>단, 회사업무 수행을 위한 출장 등이 발생할 경우에는 “갑”이 그 비용을 지급하고, 식대 등은 “을”의 비용으로 한다.</p></div>
+          			</div>
+          			<br>
+          			
+                 
+          			<div class="text-content mt-20">
+                   	<strong>제4조【 납 품 】</strong><br>
+            		<p>“을”은 작업 진행중 중간 완료된 성과물을 매월 일 등 회에 걸쳐 중간 납품을 하며, 최종 자료는 검토 및 수정 후 완성품으로 납품하기로 한다.</p>
+          			</div>
+          			<br>
+          			
+          			<div class="text-content mt-20">
+                   	<strong>제5조【 비 밀 유 지 】</strong><br>
+            		<p>“을”은 본 작업과 관련된 어떠한 일체의 정보를 외부에 누설하거나 유출해서는 안되며 이로 인해 발생하는 모든 책임은 “을”이 진다.</p>
+          			</div>
+          			<br>
+          			
+          			<div class="text-content mt-20">
+                   	<strong>제6조【 자 료 제 공 】</strong><br>
+            		<p>“갑”은 “을”이 작업을 수행하는데 필요한 일체의 자료를 제공하기로 한다.</p>
+          			</div>
+          			<br>
+                   
+          			
+          			 <div class="text-content mt-20">
+                   	<strong>제8조【 해 지 】</strong><br>
+            		<p>(1) 본 계약상의 업무를 수행하기 위해 출근 등과 관련된 사항은 자유로 한다.</p>
+					<p>(2) 본 계약 내용 외에도 다른 필요한 업무가 필요한 경우 “갑”은 “을”이 추가로 작업을 수행하는
+						부분에 대한 인건비와 계약 기간은 상호 협의 하에 결정한다.</p>
+          			</div>
+          			<br>
+                  
+                   <div class="text-content mt-20">
+                   	<strong>제7조【 근 무 조 건 】</strong><br>
+            		<p>“을”의 귀책사유로 인하여 본 계약이 불이행이 되었을 경우 “을”은 “갑”이 제시한 손해배상의 책임을 진다.</p>
+          			</div>
+          			<br>
+          			
+          			 <div class="text-content mt-20">
+                   	<strong>제9조【 손 해 배 상 】</strong><br>
+            		<p>(1) 본 계약상의 업무를 수행하기 위해 출근 등과 관련된 사항은 자유로 한다.</p>
+					<p>(2) 본 계약 내용 외에도 다른 필요한 업무가 필요한 경우 “갑”은 “을”이 추가로 작업을 수행하는
+						부분에 대한 인건비와 계약 기간은 상호 협의 하에 결정한다.</p>
+          			</div>
+          			<br>
+              </div>
+              <sec:csrfInput/>
+              <input type="hidden" name="contractSdate" >
+              <input type="hidden" name="contractFdate">
+              <div class="card-action no-border text-right"><a href="" class="color-primary" id="btn-submit">저장</a></div>
+               </fieldset>
+                </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+  <script>
+  var header = '${_csrf.headerName}';
+  var token =  '${_csrf.token}'; 
+
+  	$("#btn-submit").on("click", function(event) {
+  		 event.preventDefault();
+  		let contractApplyid = $('input[name=contractApplyid]').val();
+  		let contractName = $('input[name=contractName]').val();
+  		let contractSdate = new Date($('input[name=sdate]').val());
+  		let contractFdate = new Date($('input[name=fdate]').val());
+  		let contractPay = $('input[name=contractPay]').val();
+  		
+  		var sdateYear = contractSdate.getFullYear();
+  	    var sdateMonth = contractSdate.getMonth() + 1;
+  	    var sdateDate = contractSdate.getDate();
+  	  	sdateMonth = sdateMonth > 9 ? sdateMonth : "0" + sdateMonth;
+  		sdateDate  = sdateDate > 9 ? sdateDate : "0" + sdateDate;
+      
+  	  	contractSdate = sdateYear + sdateMonth + sdateDate;
+  	  	
+  	  	var fdateYear = contractFdate.getFullYear();
+	    var fdateMonth = contractFdate.getMonth() + 1;
+	    var fdateDate = contractFdate.getDate();
+	  	fdateMonth = fdateMonth > 9 ? fdateMonth : "0" + fdateMonth;
+		fdateDate  = fdateDate > 9 ? fdateDate : "0" + fdateDate;
+    
+		contractFdate = fdateYear + fdateMonth + fdateDate;
+  		
+		$('input[name=contractSdate]').val(contractSdate);
+		$('input[name=contractFdate]').val(contractFdate);
+		
+  		console.log("계약명: " + contractName);
+  		console.log("계약시작일: " + contractSdate);
+  		console.log("계약종료일: " + contractFdate);
+  		console.log("대금: " + contractPay);
+  		$("#contractForm").submit();
+	});   
+  </script>

@@ -1,0 +1,167 @@
+package kr.or.ddit.common.community.service;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.common.community.dao.CommunityDAO;
+import kr.or.ddit.common.community.vo.CommunityRecVO;
+import kr.or.ddit.common.community.vo.CommunityTrepVO;
+import kr.or.ddit.common.community.vo.CommunityVO;
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.vo.PagingVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class CommunityServiceImpl implements CommunityService{
+
+	@Inject
+	CommunityDAO dao;
+	
+	@Override
+	public ServiceResult createCmnt(CommunityVO cmnt) {
+
+		int rowcnt = dao.insertCmnt(cmnt);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public ServiceResult modifyCmnt(CommunityVO cmnt) {
+		dao.selectCmnt(cmnt.getCmntNo());
+		
+		int rowcnt = dao.updateCmnt(cmnt);
+		
+		return rowcnt>0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public ServiceResult removeCmnt(CommunityVO cmnt) {
+		dao.selectCmnt(cmnt.getCmntNo());
+		
+		int rowcnt = dao.deleteCmnt(cmnt);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public List<CommunityVO> findAllCmnt(PagingVO<CommunityVO> pagingVO) {
+		pagingVO.setTotalRecord(dao.selectCmntCount(pagingVO));
+		List<CommunityVO> cmntList = dao.selectCmntList(pagingVO);
+		pagingVO.setDataList(cmntList);
+		
+		return cmntList;
+	}
+
+	@Override
+	public CommunityVO retrieveCmnt(int cmntNo) {
+		CommunityVO cmnt = dao.selectCmnt(cmntNo);
+		
+		if(cmnt == null) {
+			throw new RuntimeException(String.format("%d번 글이 없음", cmntNo));
+		}
+		dao.hitCmnt(cmnt);
+		
+		return cmnt;
+	}
+	
+	@Override
+	public CommunityVO adminRetrieveCmnt(int cmntNo) {
+		CommunityVO cmnt = dao.adminSelectCmnt(cmntNo);
+		
+		if(cmnt == null) {
+			throw new RuntimeException(String.format("%d번 글이 없음", cmntNo));
+		}
+		dao.hitCmnt(cmnt);
+		
+		return cmnt;
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult reportCmnt(CommunityTrepVO trep) {
+		
+		int rowcnt = dao.repCmnt(trep);
+		log.info("trep insert 성공 ===== {}", trep);
+		rowcnt *= dao.repCmntCount(trep.getTrepCmnt());
+		log.info("cmnt update 성공 ===== {}", trep.getTrepCmnt());
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public List<CommunityTrepVO> selectReportCmnt(int cmntNo) {
+		List<CommunityTrepVO> saved = dao.selectTrep(cmntNo);
+		
+		return saved;
+	}
+
+	@Override
+	public List<CommunityRecVO> selectRecCmnt(int recCmnt) {
+		List<CommunityRecVO> inRecInfo = dao.inRecInfo(recCmnt);
+		
+		return inRecInfo;
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult inRecCmnt(CommunityRecVO rec) {
+		int rowcnt = dao.insertRecInfo(rec);
+		
+		rowcnt *= dao.inRecCmnt(rec.getRecCmnt());
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult deRecCmnt(CommunityRecVO rec) {
+		int rowcnt = dao.deRecCmnt(rec.getRecCmnt());
+		
+		rowcnt *= dao.delRecInfo(rec);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public List<CommunityVO> adminCmntList(PagingVO<CommunityVO> pagingVO) {
+		pagingVO.setTotalRecord(dao.adminCmntCount(pagingVO));
+		List<CommunityVO> reportList = dao.adminCmntList(pagingVO);
+		pagingVO.setDataList(reportList);
+		
+		return reportList;
+	}
+
+	@Override
+	public List<CommunityTrepVO> selectRepMemList(Map<String, Object> trepMap) {
+		PagingVO<CommunityTrepVO> pagingVO = (PagingVO<CommunityTrepVO>) trepMap.get("pagingVO");
+		pagingVO.setTotalRecord(dao.repMemCount(trepMap));
+		
+		List<CommunityTrepVO> trepList = dao.repMemList(trepMap);
+		pagingVO.setDataList(trepList);
+		trepMap.put("pagingVO", pagingVO);
+		
+		return trepList;
+	}
+
+	@Override
+	public ServiceResult adminDeleteCmnt(CommunityVO cmnt) {
+		int rowcnt = dao.adminDelete(cmnt);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+
+	@Override
+	public ServiceResult adminUpdateCmnt(CommunityVO cmnt) {
+		int rowcnt = dao.adminUpdate(cmnt);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+
+
+}

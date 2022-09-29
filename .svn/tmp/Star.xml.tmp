@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.star.dao.StarDAO">
+	<resultMap type="kr.or.ddit.common.star.vo.StarToGenVO" id="StarToGenVO" autoMapping="true">
+		<id property="genId" column="gen_id"/>
+	</resultMap>
+	<update id="updateRating" parameterType="map">
+		UPDATE gen_member SET GEN_RATING = #{newRating}
+		WHERE gen_id =#{genId}
+	</update>
+	<select id="selectRating" parameterType="string" resultType="int">
+		SELECT gen_rating
+		  FROM gen_member
+		 WHERE GEN_ID = #{genId}
+	</select>
+	<select id="countDoneProj" parameterType="string" resultType="int">
+		SELECT COUNT(DISTINCT C.APPLY_PROJ)
+		  FROM CONTRACT_PROJ A, OUTSOURCING_PROJ B, apply_proj C
+		 WHERE  C.APPLY_APPLICANT = #{genId}
+		   AND B.PROJ_STATE = 'FINISH'
+<<<<<<< .mine
+		   AND C.APPLY_PROJ = B.PROJ_ID
+           AND A.contract_applyid = C.apply_id
+	</select>
+	<select id="progressProj" parameterType="string" resultType="int">
+		SELECT COUNT(DISTINCT C.APPLY_PROJ)
+		  FROM CONTRACT_PROJ A, OUTSOURCING_PROJ B, apply_proj C
+		 WHERE  C.APPLY_APPLICANT = #{genId}
+		   AND (B.PROJ_STATE = 'RECRUIT') OR (B.PROJ_STATE = 'PROGRESS')
+		   AND C.APPLY_PROJ = B.PROJ_ID
+           AND A.contract_applyid = C.apply_id
+||||||| .r270493
+=======
+		   AND C.APPLY_PROJ = B.PROJ_ID
+           AND A.contract_applyid = C.apply_id
+	</select>
+	<select id="progressProj" parameterType="string" resultType="int">
+		SELECT COUNT(DISTINCT C.APPLY_PROJ)
+		  FROM CONTRACT_PROJ A, OUTSOURCING_PROJ B, apply_proj C
+		 WHERE  C.APPLY_APPLICANT = #{genId}
+		   AND (B.PROJ_STATE = 'PROGRESS')OR (B.PROJ_STATE = 'RECRUIT')
+		   AND C.APPLY_PROJ = B.PROJ_ID
+           AND A.contract_applyid = C.apply_id
+>>>>>>> .r271622
+	</select>
+	<select id="workerList" parameterType="map" resultMap="StarToGenVO">		   
+		SELECT C.gen_img
+		       ,C.gen_Id
+		       ,C.gen_name
+		       ,A.apply_obj
+		       ,TO_CHAR(NVL(B.contract_sdate,SYSDATE), 'yyyy.mm.dd')AS contract_sdate
+		       ,TO_CHAR(NVL(B.contract_fdate,SYSDATE), 'yyyy.mm.dd')AS contract_fdate
+		       ,C.gen_delete
+		 FROM apply_proj A, contract_proj B, gen_member C
+		WHERE B.contract_applyid = apply_id
+		  AND A.apply_applicant = C.gen_id
+<<<<<<< .mine
+		  AND A.APPLY_PROJ = #{projId}
+		  AND C.gen_Id != #{genId}
+||||||| .r270493
+=======
+		  AND A.APPLY_PROJ = 'OUT2208220001'
+		  AND C.gen_Id != #{genId}
+>>>>>>> .r271622
+	</select>
+</mapper>

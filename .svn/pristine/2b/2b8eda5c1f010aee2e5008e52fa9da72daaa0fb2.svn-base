@@ -1,0 +1,132 @@
+package kr.or.ddit.common.notice.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.common.notice.vo.NoticeVO;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+
+@Mapper
+public interface NoticeDAO {
+	
+	/**
+	 * 공지사항 작성
+	 * @param notice
+	 * @return
+	 */
+	public int insertNotice(NoticeVO notice);
+	
+	/**
+	 * 공지사항 글 수 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public int selectNoticeCount(PagingVO<NoticeVO> pagingVO);
+	
+	/**
+	 * 공지사할 글 목록 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<NoticeVO> selectNoticeList(PagingVO<NoticeVO> pagingVO);
+	/**
+	 * 관리자 공지사항 글 수 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public int adminSelectNoticeCount(PagingVO<NoticeVO> pagingVO);
+	
+	/**
+	 * 관리자 공지사항 목록 조회
+	 * @param pagingVO
+	 * @return
+	 */
+	public List<NoticeVO> adminSelectNoticeList(PagingVO<NoticeVO> pagingVO);
+
+	/**
+	 * 공지사항 상세조회
+	 * @param notNo
+	 * @return
+	 */
+	public NoticeVO selectNotice(int notNo);
+	
+	/**
+	 * 공지사항 수정
+	 * @param notice
+	 * @return
+	 */
+	public int updateNotice(NoticeVO notice);
+	
+	/**
+	 * 공지사항 삭제
+	 * @param notice
+	 * @return
+	 */
+	public int deleteNotice(NoticeVO notice);
+	
+	/**
+	 * 공지사항 조회수
+	 * @param notice
+	 * @return
+	 */
+	public int hitNotice(NoticeVO notice);
+	
+	/**
+	 * 공지사항 첨부파일 등록
+	 * @param attatch
+	 * @return
+	 */
+	public int insertAttatches(AttatchVO attatch);
+	public int insertNotAttatches(NoticeVO notice);
+	
+	/**
+	 * 첨부파일 한건의 데이터 조회
+	 * @param attId
+	 * @return
+	 */
+	public AttatchVO selectAttatch(String attId);
+	
+	/**
+	 * 첨부파일 리스트 조회
+	 * @param notice
+	 * @return
+	 */
+	public List<AttatchVO> selecNotFileList(NoticeVO notice);
+	
+	/**
+	 * 첨부파일 ID찾기
+	 * @param notNo
+	 * @return
+	 */
+	public String selectAttIds(int notNo);
+	
+	/**
+	 * 삭제시 사용할 첨부파일 ID
+	 * @param notice
+	 * @return
+	 */
+	public String[] selectDelAttIds(NoticeVO notice);
+	
+	/**
+	 * 첨부파일 삭제
+	 * @param notice
+	 * @return
+	 */
+	public int deleteAttatches(NoticeVO notice);
+	public int deleteNotAttatches(NoticeVO notice);
+	
+	/**
+	 * 공지 제목, 글번호 검색
+	 * @param notNo
+	 * @return
+	 */
+	public List<NoticeVO> selectNotNoTitleList();
+	
+	/**
+	 * 공지 작성 시 상위 공지 목록
+	 * @return
+	 */
+	public List<NoticeVO> parentList();
+}

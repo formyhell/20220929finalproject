@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.outsourcing.dao.ApplyProjDAO">
+	<select id="selectAll" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.ApplicantVO">
+		SELECT A.APPLY_ID, A.APPLY_APPLICANT, A.APPLY_CONTENT, A.APPLY_OBJ, A.APPLY_PROJ, B.GEN_IMG
+		  FROM APPLY_PROJ A INNER JOIN GEN_MEMBER B ON(A.APPLY_APPLICANT=B.GEN_ID)
+		  WHERE A.APPLY_PROJ = #{projId}
+            AND NOT EXISTS (SELECT 1
+                              FROM CONTRACT_PROJ B
+                             WHERE A.APPLY_ID = B.CONTRACT_APPLYID)
+	</select>
+	
+	<select id="supportCheckProj" parameterType="kr.or.ddit.outsourcing.vo.ApplicantVO" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM
+		    apply_proj
+		WHERE APPLY_APPLICANT = #{applyApplicant, jdbcType=VARCHAR}
+		AND APPLY_PROJ = #{applyProj, jdbcType=VARCHAR}
+	</select>
+
+	<select id="selectProjOne" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		  FROM APPLY_PROJ A
+		  WHERE A.APPLY_PROJ = #{projId}
+            AND NOT EXISTS (SELECT 1
+                              FROM CONTRACT_PROJ B
+                             WHERE A.APPLY_ID = B.CONTRACT_APPLYID)
+	</select>
+	
+	<select id="getSupportProjectObj" parameterType="String" resultType="kr.or.ddit.common.vo.CommomCodeVO">
+		WITH OUTPROJOBJ AS (
+		    SELECT A.CODE_NAME AS OBJ_NAME, A.CODE_ID AS OBJ_ID, B.PROJ_ID
+		    FROM COMMON_CODE A INNER JOIN PROJECT_OBJ B ON (A.CODE_ID = B.PROJ_OBJ)
+		)
+		SELECT
+		    DISTINCT(B.OBJ_NAME)CODE_NAME, (B.OBJ_ID) CODE_ID
+		FROM PROJECT_OBJ A INNER JOIN OUTPROJOBJ B ON(A.PROJ_ID = B.PROJ_ID)
+		WHERE A.PROJ_ID = #{projId}
+	</select>
+	
+	<insert id="supportProject" parameterType="kr.or.ddit.outsourcing.vo.ApplicantVO" >
+		INSERT INTO APPLY_PROJ (
+		    APPLY_ID, APPLY_APPLICANT, APPLY_CONTENT
+		    , APPLY_OBJ, APPLY_PROJ
+		) VALUES (
+		    FN_CREATE_APPLY_ID, #{applyApplicant}, #{applyContent, jdbcType=VARCHAR}
+		    , #{applyObj}, #{applyProj, jdbcType=VARCHAR}
+		)
+	</insert>
+</mapper>

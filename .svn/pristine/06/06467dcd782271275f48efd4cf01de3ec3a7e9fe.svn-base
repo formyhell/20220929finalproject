@@ -1,0 +1,97 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.      홍승조      컨트롤러 연결
+* 2022. 9. 2.      고혜인      내용 추가
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>
+
+
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-sm-12">
+			<div class="card" id="cardBody">
+				<div class="card-header">
+					<h5>공지 등록</h5>
+				</div>
+				<form:form modelAttribute="notice" method="post" action="${cPath }/admin/noticeList" enctype="multipart/form-data">
+				<security:authentication property="principal" var="authMember" />
+				<form:input path="notAdmin" type="hidden" value="${authMember.realMember.memId }"/>
+				<div class="card-body">
+					<div class="form theme-form">
+						<div class="mb-3 row">
+							<label class="col-sm-3 col-form-label">제목</label>
+							<div class="col-sm-9">
+								<form:input path="notTitle" class="form-control" required="required" value="${notice.notNo }"/>
+							</div>
+						</div>
+						<div class="mb-3 row">
+							<label class="col-sm-3 col-form-label">게시일</label>
+							<div class="col-sm-9">
+								<form:input path="notSdate" class="form-control digits" type="date" required="required" value="${notice.notSdate }"/>
+							</div>
+						</div>
+						<div class="mb-3 row">
+							<label class="col-sm-3 col-form-label">종료일</label>
+							<div class="col-sm-9 i-block">
+								<form:input path="notFdate" class="form-control digits" type="date" required="required" value="${notice.notFdate }"/>
+							</div>
+						</div>
+						<div class="mb-3 row">
+							<label class="col-sm-3 col-form-label">상위 공지</label>
+							<div class="col-sm-9">
+								<input list="notParentnoList" class="form-control" name="notParentno" value="${notParentno}"/>
+								<c:if test="${not empty noticeList }">
+									<datalist id="notParentnoList">
+									<c:forEach items="${noticeList}" var="parentList">
+										<option value="${parentList.notNo }" label="${parentList.notTitle }">
+									</c:forEach>
+									</datalist>
+								</c:if>
+							</div>
+						</div>
+						<div class="col-sm">
+							<div class="mb-3 row">
+								<label class="col-sm-3 col-form-label">첨부파일</label>
+								<div class="col-sm-9">
+									<c:if test="${not empty notice.attatchList }">
+											<c:forEach items="${notice.attatchList }" var="attatch" varStatus="vs">
+												<span>
+													${attatch.attFilename }
+													<span class="btn btn-danger delBtn btn-sm p-1" data-att-no="${attatch.attId }">DEL</span>
+													<c:if test="${not vs.last }"></c:if>
+												</span>
+											</c:forEach>
+										</c:if>
+										<br>
+									<form:input path="notFiles" multiple="true" type="file"/>
+								</div>
+							</div>
+						</div>
+						<div class="mb-3 row">
+							<label class="col-sm-3 col-form-label">Textarea</label>
+							<div class="col-sm-9">
+								<form:textarea path="notContent" class="form-control" rows="5" cols="5" required="required"/>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col">
+								<div class="text-end">
+									<input type="submit" class="btn btn-primary" value="저장">
+									<input type="reset" class="btn btn-light" value="취소">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				</form:form>
+			</div>
+		</div>
+	</div>
+</div>

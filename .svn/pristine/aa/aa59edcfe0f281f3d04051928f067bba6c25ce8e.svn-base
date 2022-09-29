@@ -1,0 +1,66 @@
+package kr.or.ddit.admin.board.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+
+/**
+ * @author 작성자명
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.      홍승조       컨트롤러 생성
+ * 2022. 8. 6.      홍승조       컨트롤러 통합
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@RequestMapping("/admin/board")
+public class AdminBoardController {
+	// 등록은 공지사항만 하니까 공지사항 폼에 연결
+	@GetMapping("form")
+	public String adminBoardForm() {
+		return "common/notice/noticeForm";
+	}
+	
+	// 수정은 공지사항만? 일단 공지사항 수정 폼 연결
+	@GetMapping("23/form")
+	public String adminBoardEdit() {
+		return "common/notice/noticeEdit";
+	}
+
+	@PutMapping("23/form")
+	public String adminBoardUpdate() {
+		String viewName = null;
+		if (true) {
+			viewName = "redirect:/admin/board";
+		} else {
+			viewName = "common/notice/noticeEdit";
+		}
+
+		return viewName;
+	}
+
+	@DeleteMapping("23")
+	public String adminBoardDelete() {
+		return "/admin/board";
+	}
+	
+	@GetMapping
+	public String adminBoardList() {
+		return "common/notice/noticeList";
+	}
+	
+	@GetMapping("23")
+	public String adminBoardView() {
+		return "common/notice/noticeView";
+	}
+	
+}

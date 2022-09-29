@@ -1,0 +1,306 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<div class="container-fluid">
+            <div class="row project-cards">
+              <div class="col-md-12 project-list">
+                <div class="card">
+                  <div class="row">
+                    <div class="col-md-6 p-0">
+                      <ul class="nav nav-tabs border-tab" id="top-tab" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" id="top-home-tab" data-bs-toggle="tab" href="#top-home" role="tab" aria-controls="top-home" aria-selected="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-target"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>All</a></li>
+                        <li class="nav-item"><a class="nav-link" id="profile-top-tab" data-bs-toggle="tab" href="#top-profile" role="tab" aria-controls="top-profile" aria-selected="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>Doing</a></li>
+                        <li class="nav-item"><a class="nav-link" id="contact-top-tab" data-bs-toggle="tab" href="#top-contact" role="tab" aria-controls="top-contact" aria-selected="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Done</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-12">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="tab-content" id="top-tabContent">
+                      <div class="tab-pane fade show active" id="top-home" role="tabpanel" aria-labelledby="top-home-tab">
+                        <div class="row">
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Endless admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Themeforest, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>참여인원 </span></div>
+                                <div class="col-6 font-primary">12 </div>
+                                <div class="col-6"> <span>시작일</span></div>
+                                <div class="col-6 font-primary">5</div>
+                                <div class="col-6"> <span>예상종료일</span></div>
+                                <div class="col-6 font-primary">7</div>
+                              </div>
+                            </div>
+                          </div>
+                         </div> 
+                          
+                    <div class="tab-pane fade" id="top-profile" role="tabpanel" aria-labelledby="profile-top-tab">
+                      
+                        <div class="row">
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Endless admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Themeforest, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-primary">12 </div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-primary">5</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-primary">7</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Universal admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-primary">24</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-primary">24</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-primary">40</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Poco admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-primary">40</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-primary">40</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-primary">20</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Universal admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-primary">24</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-primary">24</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-primary">40</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Endless admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Themeforest, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-primary">12 </div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-primary">5</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-primary">7</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Doing</span>
+                              <h6>Poco admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-primary">40</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-primary">40</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-primary">20</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="tab-pane fade" id="top-contact" role="tabpanel" aria-labelledby="contact-top-tab">
+                        <div class="row">
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-secondary">Done</span>
+                              <h6>Endless admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Themeforest, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-secondary">12 </div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-secondary">5</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-secondary">7</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-secondary">Done</span>
+                              <h6>Universal admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-secondary">24</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-secondary">24</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-secondary">40</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-secondary">Done</span>
+                              <h6>Poco admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-secondary">40</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-secondary">40</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-secondary">20</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-secondary">Done</span>
+                              <h6>Universal admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-secondary">24</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-secondary">24</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-secondary">40</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-primary">Done</span>
+                              <h6>Endless admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Themeforest, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-secondary">12 </div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-secondary">5</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-secondary">7</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xxl-4 col-lg-6">
+                            <div class="project-box"><span class="badge badge-secondary">Done</span>
+                              <h6>Poco admin Design</h6>
+                              <div class="media">
+                                <div class="media-body">
+                                  <p>Envato, australia</p>
+                                </div>
+                              </div>
+                              <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                              <div class="row details">
+                                <div class="col-6"><span>Issues </span></div>
+                                <div class="col-6 font-secondary">40</div>
+                                <div class="col-6"> <span>Resolved</span></div>
+                                <div class="col-6 font-secondary">40</div>
+                                <div class="col-6"> <span>Comment</span></div>
+                                <div class="col-6 font-secondary">20</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div> 
+                      <nav aria-label="Page navigation example">
+                      <ul class="pagination pagination-primary justify-content-center" style="padding-bottom:20px">
+                        <li class="page-item"><a class="page-link" href="javascript:void(0)" aria-label="Previous"><span aria-hidden="true">«</span><span class="sr-only">Previous</span></a></li>
+                        <li class="page-item"><a class="page-link" href="javascript:void(0)">1</a></li>
+                        <li class="page-item"><a class="page-link" href="javascript:void(0)">2</a></li>
+                        <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>
+                        <li class="page-item"><a class="page-link" href="javascript:void(0)" aria-label="Next"><span aria-hidden="true">»</span><span class="sr-only">Next</span></a></li>
+                      </ul>
+                    </nav>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+</body>
+</html>

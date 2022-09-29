@@ -1,0 +1,345 @@
+package kr.or.ddit.outsourcing.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.memInfo.vo.GenObjVO;
+import kr.or.ddit.common.payment.dao.PayDAO;
+import kr.or.ddit.common.payment.vo.PayVO;
+import kr.or.ddit.common.vo.AttatchVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.dao.OutProjDAO;
+import kr.or.ddit.outsourcing.vo.ObjectVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.outsourcing.vo.SkillVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 아웃소싱 프로젝트 serviceImpl
+ * @author 고혜인
+ * @since 2022. 8. 16.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 16.      고혜인       최초작성
+ * 2022. 9. 8.	  조채원		  setRequiredList 추가
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OutProjServiceImpl implements OutProjService{
+
+	@Inject
+	PasswordEncoder passEncoder;
+	
+	
+	@Value("#{appInfo['attatchPath']}")
+	private File saveFolder;
+	
+	private final OutProjDAO outProjDao;
+	private final PayDAO payDao;
+	
+	//파일저장 메서드
+	private int processAttatches(OutProjVO outProj) throws IOException {
+		List<AttatchVO> attatchList = outProj.getAttatchList();
+		if(attatchList==null || attatchList.isEmpty() || attatchList.size()<=0) return 0;
+		int rowcnt = 0;
+		
+		log.info("for 시작 *******");
+		for(AttatchVO attatch : attatchList) {
+			log.info("$$$$$$$$$$$$$$$$$$$$$$$rowcnt : {}",rowcnt);
+				rowcnt += outProjDao.insertAttatches(attatch); // ATTATCH
+				
+		}
+		outProjDao.insertOutProjAttatch(outProj);
+		
+		// 2진 데이터(파일 자체) 저장 : d:/saveFiles
+		for(AttatchVO attatch : attatchList) {
+			attatch.saveTo(saveFolder);
+		}
+		return rowcnt;
+	}
+	// 파일 삭제
+	private void removeAttatches(OutProjVO outProj) {
+		String[] delAttNos = outProj.getDelAttNos();
+		if(delAttNos==null || delAttNos.length == 0) return;
+		
+		List<String> saveNames = Arrays.stream(delAttNos).map((attId)->{
+											AttatchVO attatch = outProjDao.selectAttatch(attId);
+											return attatch.getAttSavename();
+										}).collect(Collectors.toList());
+		outProjDao.deleteOutProjAttatches(outProj);
+		outProjDao.deleteAttatches(outProj);
+		
+		for(String saveName : saveNames) {
+			File saveFile = new File(saveFolder, saveName);
+			FileUtils.deleteQuietly(saveFile);
+		}
+	}
+	
+	
+	@Override
+	public List<OutProjVO> findAll(PagingVO<OutProjVO> pagingVO) {
+		pagingVO.setTotalRecord(outProjDao.selctOutProjCount(pagingVO));
+		List<OutProjVO> outProjList = outProjDao.selectOutProjList(pagingVO);
+		pagingVO.setDataList(outProjList);
+		
+		return outProjList;
+	}
+
+	@Override
+	public OutProjVO findByPK(String projId) {
+		OutProjVO outProj = outProjDao.selectOutProj(projId);
+		List<AttatchVO> fileList = outProjDao.selectOutProjFileList(outProj);
+		outProj.setAttatchList(fileList);
+		
+		List<ObjectVO> objList = outProjDao.projObjList(projId);
+		List<SkillVO> skillList = outProjDao.projSkillList(projId);
+		log.info("service 프로젝트 아이디!!!!@@@@@!" + projId);
+		outProj.setObjList(objList);
+		outProj.setSkillList(skillList);
+		log.info("직무분야리스트@@@@@@@@" + objList);
+		log.info("여기 왜옴?ㅗㅗㅗㅗㅗㅗㅗㅗㅗㅗㅗ" + outProj);
+		
+		return outProj;
+	}
+	
+	
+//	//스킬,직무분야 가져오는곳?
+//	private void projCommonCode(OutProjVO outProj) {
+//		outProj.setOutObjList(outProjDao.selectObjList());
+//		outProj.setOutSkillList(outProjDao.selectSkillList());
+//	}
+	
+
+	@Transactional
+	@Override
+	public ServiceResult create(OutProjVO outProj) {
+		
+		log.info("아웃소싱 프로젝트 입력할 때 무슨 값이 들어갈까여? {}", outProj);
+		List<AttatchVO> attatchList = outProj.getAttatchList();
+		log.info("***********************attatchList : {}",attatchList);
+		List<ObjectVO> objList = outProj.getObjList();
+		List<SkillVO> skillList = outProj.getSkillList();
+		int rowcnt = outProjDao.insertOutProj(outProj);
+		if(rowcnt > 0) {
+			setRequiredList(outProj);
+		}
+		outProjDao.objList(outProj);
+		outProjDao.skillList(outProj);
+		createPay(outProj);
+		try {
+			processAttatches(outProj);
+			log.info("파일 업로드는 완료!");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+//		createPay(outProj);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	// 결제 저장
+	private void createPay(OutProjVO outProj) {
+		PayVO pay = new PayVO();
+		pay.setPayCommem(outProj.getProjRegist());
+		pay.setPayMethod("card");
+		pay.setPayPrice(Integer.toString(outProj.getProjEstimate()));
+		pay.setPayProj(outProj.getProjId());
+		payDao.insertOutPay(pay);
+	}
+	
+	
+	
+	//파일 다운로드
+	@Override
+	public AttatchVO outProjFileDownload(String attId) {
+		AttatchVO attatch = outProjDao.selectAttatch(attId);
+		if (attatch == null) {
+			throw new RuntimeException(String.format("%s 첨부파일이 없음", attId));
+		}
+		return attatch;
+	}
+		
+		
+	//프로젝트 수정
+	@Transactional
+	@Override
+	public ServiceResult modify(OutProjVO outProj) {
+		OutProjVO saved = outProjDao.selectOutProj(outProj.getProjId());
+		
+		if(saved==null)
+			throw new RuntimeException(String.format("%d 이슈 없음.",outProj.getProjId()));
+		
+		int rowcnt = outProjDao.updateOutProj(outProj);
+		
+		try {
+			removeAttatches(outProj);
+			processAttatches(outProj);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+		
+		
+		
+
+	@Override
+	public List<OutProjVO> createdProjectList(Map<String, Object> map) {
+		log.info("여기로 와야지");
+		// 내일 이어서 
+//		PagingVO<OutProjVO> pagingVO = new PagingVO<>(6,5);
+		PagingVO<OutProjVO> pagingVO = (PagingVO<OutProjVO>) map.get("pagingVO");
+		pagingVO.setTotalRecord(outProjDao.selectcreatedProjCount(map));
+		List<OutProjVO> outProjList = outProjDao.createdProjectList(map);
+		pagingVO.setDataList(outProjList);
+//		map.put("PagingVO", pagingVO);
+		return outProjList;
+	}
+
+	@Override
+	public ServiceResult remove(MemberVO member, String password, String outProjId) {
+		ServiceResult result = null;
+		
+		if (passEncoder.matches(password, member.getMemPass())) {
+			// 복호화한값과 입력받은 값이 일치할때
+
+			int rowcnt = outProjDao.deleteOutProj(outProjId);
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+		} else {
+			result = ServiceResult.INVALIDPASSWORD;
+		}
+		return result;
+
+	}
+	
+
+	
+	//프로젝트 종료
+	@Override
+	public ServiceResult finish(MemberVO member, OutProjVO outProj, String password) {
+//		OutProjVO proj = findByPK(outProj.getProjId());
+		
+//		outProjDao.finishProj(proj);
+		log.info("프로젝트 종료 service" + outProj);
+		ServiceResult result = null;
+		
+		if (passEncoder.matches(password, member.getMemPass())) {
+			// 복호화한값과 입력받은 값이 일치할때
+
+			int rowcnt = outProjDao.finishProj(outProj);
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+		} else {
+			result = ServiceResult.INVALIDPASSWORD;
+		}
+		return result;
+	}
+	
+	
+	@Override
+	public ServiceResult progress(OutProjVO outProj) {
+		
+		log.info("진행중으로 바꿀 프로젝트 아이디 확인 : {}", outProj);
+		ServiceResult result = null;
+		
+		int rowcnt = outProjDao.progressProj(outProj);
+		
+		return rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+	}
+	
+	
+	@Override
+	public void insertSkill(OutProjVO outprojVo) {
+		outprojVo.getProjSkill();
+		outprojVo.getProjObj();
+		
+		log.info("@@@@@@@@@@@@@@ㅜㅜㅜ"+outprojVo);
+		
+		if(outprojVo.getProjSkill()!=null) {
+			outProjDao.insertSkill(outprojVo);
+		}
+		if(outprojVo.getProjObj()!=null) {
+			outProjDao.insertObj(outprojVo);
+		}
+	}
+
+	//스킬,업무분야 삭제
+	@Override
+	public int removeSkill(SkillVO skillVo) {
+		int delSkill = outProjDao.delSkill(skillVo);
+		return delSkill;
+	}
+
+	@Override
+	public int removeObj(ObjectVO projId) {
+		int delObj = outProjDao.delObj(projId);
+		return delObj;
+	}
+	
+	@Override
+	public void setRequiredList(OutProjVO outProj) {
+		List<Map<String, Object>> filterList = outProjDao.selectFilterList();
+		String filterKey = null;
+		Map<String, Object> filterMap = new HashMap<String, Object>();
+		for(Map<String, Object> map : filterList) {
+				if(outProj.getProjTitle().contains(String.valueOf(map.get("FILTER_WORD")))) {
+					filterKey = String.valueOf(map.get("FILTER_NO"));
+				} else if(outProj.getProjContent().contains(String.valueOf(map.get("FILTER_WORD")))) {
+					filterKey = String.valueOf(map.get("FILTER_NO"));
+				} else if(outProj.getProjQualifi().contains(String.valueOf(map.get("FILTER_WORD")))) {
+					filterKey = String.valueOf(map.get("FILTER_NO"));
+				} else if(outProj.getProjPlanstate().contains(String.valueOf(map.get("FILTER_WORD")))) {
+					filterKey = String.valueOf(map.get("FILTER_NO"));
+				} else if(outProj.getProjType().contains(String.valueOf(map.get("FILTER_WORD")))) {
+					filterKey = String.valueOf(map.get("FILTER_NO"));
+				}
+		}
+		if(filterKey != null) {
+			filterMap.put("projId", outProj.getProjId());
+			filterMap.put("filterNo", filterKey);
+			outProjDao.insertRequireList(filterMap);
+		}
+		
+	}
+	
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

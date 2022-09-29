@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.outsourcing.contract.dao.ContractDAO">
+	<select id="selectApplicant" parameterType="String" resultType="String">
+		SELECT APPLY_APPLICANT
+		FROM APPLY_PROJ
+		WHERE APPLY_ID = #{applyId}
+	</select>
+	
+	<insert id="insertContract" parameterType="kr.or.ddit.outsourcing.vo.ContractVO">
+		INSERT INTO CONTRACT_PROJ (
+		    CONTRACT_ID
+		    , CONTRACT_APPLYID
+		    , CONTRACT_NAME
+		    , CONTRACT_PAY
+		    , CONTRACT_SDATE
+		    , CONTRACT_FDATE
+		) VALUES (
+		    FN_CREATE_CONTRACT_ID
+		    , #{contractApplyid,jdbcType=VARCHAR}
+		    , #{contractName,jdbcType=VARCHAR}
+		    , #{contractPay,jdbcType=NUMERIC}
+		    , TO_DATE(#{contractSdate,jdbcType=DATE}, 'YYYY/MM/DD')
+		    , TO_DATE(#{contractFdate,jdbcType=DATE}, 'YYYY/MM/DD')
+		)
+	</insert>
+	
+	<select id="selectOne" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.ContractVO">
+        WITH OUTPROJVIEW AS (SELECT PROJ_REGIST, APPLY_ID
+         FROM OUTSOURCING_PROJ INNER JOIN APPLY_PROJ ON (OUTSOURCING_PROJ.PROJ_ID=APPLY_PROJ.APPLY_PROJ))
+        , COMVIEW AS ( SELECT TO_CHAR(COM_SIGN) COM_SIGN, APPLY_ID AS COM_APPLY
+         FROM COM_MEMBER INNER JOIN OUTPROJVIEW ON (COM_MEMBER.COM_ID=OUTPROJVIEW.PROJ_REGIST))
+         , GENVIEW AS ( SELECT GEN_ID, TO_CHAR(GEN_SIGN) GEN_SIGN, APPLY_ID AS GEN_APPLY
+        FROM GEN_MEMBER INNER JOIN APPLY_PROJ ON (APPLY_PROJ.APPLY_APPLICANT=GEN_MEMBER.GEN_ID))
+        SELECT DISTINCT CONTRACT_ID
+		       , CONTRACT_APPLYID
+		       , CONTRACT_NAME
+		       , CONTRACT_PAY
+		       , CONTRACT_STATE
+		       , TO_CHAR(CONTRACT_SDATE, 'YYYY-MM-DD') CONTRACT_SDATE
+		       , TO_CHAR(CONTRACT_FDATE, 'YYYY-MM-DD') CONTRACT_FDATE
+               , TO_CHAR(COM_SIGN) COM_SIGN
+               , TO_CHAR(GEN_SIGN) GEN_SIGN
+          FROM CONTRACT_PROJ A INNER JOIN COMVIEW B ON (A.CONTRACT_APPLYID=B.COM_APPLY)
+                               INNER JOIN GENVIEW C ON (A.CONTRACT_APPLYID=C.GEN_APPLY)           
+		WHERE CONTRACT_APPLYID = #{applyId}
+	</select>
+	
+	<select id="selectOnewithId" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.ContractVO">
+        WITH OUTPROJVIEW AS (SELECT PROJ_REGIST, APPLY_ID
+         FROM OUTSOURCING_PROJ INNER JOIN APPLY_PROJ ON (OUTSOURCING_PROJ.PROJ_ID=APPLY_PROJ.APPLY_PROJ))
+        , COMVIEW AS ( SELECT TO_CHAR(COM_SIGN) COM_SIGN, APPLY_ID AS COM_APPLY
+         FROM COM_MEMBER INNER JOIN OUTPROJVIEW ON (COM_MEMBER.COM_ID=OUTPROJVIEW.PROJ_REGIST))
+         , GENVIEW AS ( SELECT GEN_ID, TO_CHAR(GEN_SIGN) GEN_SIGN, APPLY_ID AS GEN_APPLY
+        FROM GEN_MEMBER INNER JOIN APPLY_PROJ ON (APPLY_PROJ.APPLY_APPLICANT=GEN_MEMBER.GEN_ID))
+        SELECT DISTINCT CONTRACT_ID
+		       , CONTRACT_APPLYID
+		       , CONTRACT_NAME
+		       , CONTRACT_PAY
+		       , CONTRACT_STATE
+		       , TO_CHAR(CONTRACT_SDATE, 'YYYY-MM-DD') CONTRACT_SDATE
+		       , TO_CHAR(CONTRACT_FDATE, 'YYYY-MM-DD') CONTRACT_FDATE
+               , TO_CHAR(COM_SIGN) COM_SIGN
+               , TO_CHAR(GEN_SIGN) GEN_SIGN
+          FROM CONTRACT_PROJ A INNER JOIN COMVIEW B ON (A.CONTRACT_APPLYID=B.COM_APPLY)
+                               INNER JOIN GENVIEW C ON (A.CONTRACT_APPLYID=C.GEN_APPLY) 
+		WHERE CONTRACT_ID = #{contractId}
+	</select>
+	
+	<select id="selectComSign" parameterType="String" resultType="String">
+		SELECT TO_CHAR(COM_SIGN) COM_SIGN
+		FROM COM_MEMBER
+		WHERE COM_ID = #{comId}
+	</select>
+	
+	<select id="selectGenSign" parameterType="String" resultType="String">
+		SELECT TO_CHAR(GEN_SIGN) GEN_SIGN
+		FROM GEN_MEMBER
+		WHERE GEN_ID = #{genId}
+	</select>
+	
+	<insert id="insertComSign" parameterType="kr.or.ddit.outsourcing.vo.ContractVO">
+		UPDATE COM_MEMBER
+		SET COM_SIGN = #{comSign,jdbcType=VARCHAR}
+		WHERE COM_ID = #{memId}
+	</insert>
+	
+	<insert id="insertGenSign" parameterType="kr.or.ddit.outsourcing.vo.ContractVO">
+		UPDATE GEN_MEMBER
+		SET GEN_SIGN = #{genSign,jdbcType=VARCHAR}
+		WHERE GEN_ID = #{memId}
+	</insert>
+	
+	<update id="updateStateSign" parameterType="String">
+		UPDATE CONTRACT_PROJ
+			SET CONTRACT_STATE = 'SIGN'
+			WHERE CONTRACT_ID = #{contractId}
+	</update>
+</mapper>

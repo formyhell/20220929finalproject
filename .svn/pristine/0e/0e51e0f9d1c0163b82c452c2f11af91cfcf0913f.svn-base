@@ -1,0 +1,32 @@
+package kr.or.ddit.admin.outsourcing.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.admin.outsourcing.service.CheckListService;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("admin/outProjList")
+public class OutProjListController {
+	@Inject
+	CheckListService service;
+	
+	@GetMapping
+	public String get(Model model) {
+		List<OutProjVO> approveList = service.findApproveAll();
+		List<OutProjVO> notApproveList = service.findNotApproveAll();
+		model.addAttribute("approveList",approveList);
+		model.addAttribute("notApproveList",notApproveList);
+		return "admin/outProjList";
+	}
+
+}

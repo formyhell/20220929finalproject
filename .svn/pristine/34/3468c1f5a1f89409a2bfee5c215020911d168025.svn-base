@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.outsourcing.dao.OutProjDAO">
+
+<sql id="outProj"><!-- 아직 등록자, 제목, 고용형태 만 등록했음-->
+	<where>
+		PROJ_APPROVE = 1 
+		AND PROJ_STATE != 'DELETE'		
+		<if test="detailCondition neq null">
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.projTitle)">
+					AND INSTR(PROJ_TITLE, #{detailCondition.projTitle}) > 0
+				</when>
+			</choose>
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.projEmptypeList)">
+					AND PROJ_EMPTYPE IN 
+					<foreach collection="detailCondition.projEmptypeList" item="empType" open="(" close=")" separator=",">
+								#{empType}
+					</foreach>
+				</when>
+			</choose>
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.projObj)">
+					AND C.PROJ_OBJ IN 
+					<foreach collection="detailCondition.projObj" item="obj" open="(" close=")" separator=",">
+						#{obj}
+					</foreach>
+				</when>
+			</choose>
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.comGrdList)">
+					AND B.COM_GRD IN
+					<foreach collection="detailCondition.comGrdList" item="grd"  open="(" close=")" separator=",">
+						#{grd}
+					</foreach>
+				</when>
+			</choose>
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.projSkill)">
+					AND D.PROJ_SKILL IN  
+					<foreach collection="detailCondition.projSkill" item="skill"  open="(" close=")" separator=",">
+						#{skill}
+					</foreach>
+				</when>
+			</choose>
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.projSdate)">
+					AND PROJ_SDATE <![CDATA[>=]]> #{detailCondition.projSdate}
+				</when>
+			</choose>
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotBlank(detailCondition.projFdate)">
+					AND PROJ_FDATE <![CDATA[<=]]> #{detailCondition.projFdate}
+				</when>
+			</choose>
+		</if>
+	</where>
+</sql>
+
+
+<select id="selctOutProjCount" resultType="int">
+	SELECT NVL(MAX(RNUM),1)
+       FROM(
+         SELECT DENSE_RANK() OVER(ORDER BY E.PROJ_ID) RNUM
+        , E.PROJ_ID, E.PROJ_TITLE, E.PROJ_EMPTYPE, E.PROJ_REGIST, E.PROJ_TYPE, E.PROJ_RECRUITFDATE, E.PROJ_PLANSTATE, E.PROJ_MEMNUM, E.PROJ_ESTIMATE,E.PROJ_CONTENT, E.PROJ_QUALIFI, E.PROJ_LOC, E.PROJ_RECRUITSDATE, E.COM_GRD, E.PROJ_OBJ, E.PROJ_SKILL
+                    
+               FROM 
+                    (
+                      WITH MEMRATING AS (
+                      SELECT DISTINCT A.COM_ID, A.COM_GRD
+                      FROM COM_MEMBER A RIGHT OUTER JOIN OUTSOURCING_PROJ B ON (A.COM_ID =  B.PROJ_REGIST)
+                  ), OBJ AS (
+                      SELECT  B.PROJ_ID  ,  A.PROJ_OBJ 
+                      FROM PROJECT_OBJ A RIGHT OUTER JOIN OUTSOURCING_PROJ B ON (A.PROJ_ID = B.PROJ_ID)
+                  ), SKILL AS (
+                      SELECT  A.PROJ_SKILL ,B.PROJ_ID
+                      FROM  PROJECT_SKILL A RIGHT OUTER JOIN OUTSOURCING_PROJ B ON (A.PROJ_ID = B.PROJ_ID)
+                  )
+                  SELECT 
+                     A.PROJ_ID, A.PROJ_TITLE, A.PROJ_REGIST, A.PROJ_TYPE, A.PROJ_RECRUITFDATE, A.PROJ_APPROVE
+                      , A.PROJ_PLANSTATE, A.PROJ_MEMNUM,  A.PROJ_ESTIMATE, A.PROJ_CONTENT, A.PROJ_EMPTYPE
+                      , A.PROJ_QUALIFI, A.PROJ_LOC, TO_CHAR(A.PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, B.COM_GRD, C.PROJ_OBJ, D.PROJ_SKILL
+                  FROM
+                     OUTSOURCING_PROJ A INNER JOIN MEMRATING B ON (A.PROJ_REGIST = B.COM_ID)
+                                         INNER JOIN OBJ C ON (A.PROJ_ID = C.PROJ_ID)
+                                         INNER JOIN SKILL D ON (A.PROJ_ID = D.PROJ_ID)
+                        
+	                            <include refid="outProj" />
+            ) E
+         ) F
+</select>
+
+
+<insert id="insertOutProj" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO" >
+		<selectKey resultType="String" keyProperty="projId" order="BEFORE">
+			 SELECT 'OUT' || TO_CHAR(SYSDATE, 'yymmdd') || LPAD(COUNT(*) + 1, 4, '0') PROJ_ID
+		     FROM OUTSOURCING_PROJ
+		     WHERE SUBSTR(PROJ_ID, 4, 6) = TO_CHAR(SYSDATE, 'yymmdd')
+		</selectKey>
+	INSERT INTO OUTSOURCING_PROJ (
+		PROJ_ID,
+		PROJ_REGIST,
+		PROJ_TITLE,
+		PROJ_EMPTYPE,
+		PROJ_TYPE,
+		PROJ_RECRUITSDATE,
+		PROJ_RECRUITFDATE,
+		PROJ_PLANSTATE,
+		PROJ_MEMNUM,
+		PROJ_SDATE,
+		PROJ_FDATE,
+		PROJ_ESTIMATE,
+		PROJ_CONTENT,
+		PROJ_QUALIFI,
+		PROJ_LOC
+	) VALUES(
+		#{projId},
+		#{projRegist},
+		#{projTitle},
+		#{projEmptype},
+		#{projType},
+		SYSDATE,
+		TO_DATE(#{projRecruitfdate},'YYYY-MM-DD'),
+		#{projPlanstate},
+		#{projMemnum},
+		TO_DATE(#{projSdate},'YYYY-MM-DD'),
+		TO_DATE(#{projFdate},'YYYY-MM-DD'),
+		#{projEstimate},
+		#{projContent},
+		#{projQualifi},
+		#{projLoc}
+	)
+	
+</insert>
+
+<resultMap type="kr.or.ddit.outsourcing.vo.OutProjVO" id="outProjMap" autoMapping="true">
+	<id property="projId" column="PROJ_ID"/>
+	
+<!-- 	직무분야 -->
+	<collection property="objList" javaType="java.util.List" ofType="kr.or.ddit.outsourcing.vo.ObjectVO" autoMapping="true">
+		<id property="projObj" column="PROJ_OBJ"/>
+	</collection>
+<!-- 	스킬 -->
+	<collection property="skillList" javaType="java.util.List" ofType="kr.or.ddit.outsourcing.vo.SkillVO">
+		<id property="projSkill" column="PROJ_SKILL"/>
+	</collection>
+</resultMap>
+
+<select id="selectOutProjList" parameterType="kr.or.ddit.common.vo.PagingVO" resultMap="outProjMap">
+		SELECT F.*
+		 FROM(
+			SELECT DENSE_RANK() OVER(ORDER BY E.PROJ_ID) RNUM
+        , E.PROJ_ID, E.PROJ_TITLE, E.PROJ_EMPTYPE, E.PROJ_REGIST, E.PROJ_TYPE, E.PROJ_RECRUITFDATE, E.PROJ_PLANSTATE, E.PROJ_MEMNUM, E.PROJ_ESTIMATE,E.PROJ_CONTENT, E.PROJ_QUALIFI, E.PROJ_LOC, E.PROJ_RECRUITSDATE, E.COM_GRD, E.PROJ_OBJ, E.PROJ_SKILL
+                    
+					FROM 
+                    (
+						    WITH MEMRATING AS (
+						    SELECT DISTINCT A.COM_ID, A.COM_GRD
+						    FROM COM_MEMBER A RIGHT OUTER JOIN OUTSOURCING_PROJ B ON (A.COM_ID =  B.PROJ_REGIST)
+						), OBJ AS (
+						    SELECT  B.PROJ_ID  ,  A.PROJ_OBJ 
+						    FROM PROJECT_OBJ A RIGHT OUTER JOIN OUTSOURCING_PROJ B ON (A.PROJ_ID = B.PROJ_ID)
+						), SKILL AS (
+						    SELECT  A.PROJ_SKILL ,B.PROJ_ID
+						    FROM  PROJECT_SKILL A RIGHT OUTER JOIN OUTSOURCING_PROJ B ON (A.PROJ_ID = B.PROJ_ID)
+						)
+						SELECT 
+							A.PROJ_ID, A.PROJ_TITLE, A.PROJ_REGIST, A.PROJ_TYPE, A.PROJ_RECRUITFDATE, A.PROJ_APPROVE
+						    , A.PROJ_PLANSTATE, A.PROJ_MEMNUM,  A.PROJ_ESTIMATE, A.PROJ_CONTENT, A.PROJ_EMPTYPE
+						    , A.PROJ_QUALIFI, A.PROJ_LOC, TO_CHAR(A.PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, B.COM_GRD, C.PROJ_OBJ, D.PROJ_SKILL
+						FROM
+							OUTSOURCING_PROJ A INNER JOIN MEMRATING B ON (A.PROJ_REGIST = B.COM_ID)
+						                       INNER JOIN OBJ C ON (A.PROJ_ID = C.PROJ_ID)
+						                       INNER JOIN SKILL D ON (A.PROJ_ID = D.PROJ_ID)
+                        
+						<include refid="outProj" />         
+				) E
+			) F
+		WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+</select>
+
+<resultMap type="kr.or.ddit.outsourcing.vo.OutProjVO" id="outMap" autoMapping="true">
+	<id property="projId" column="PROJ_ID"/>
+	<collection property="comMemList" ofType="kr.or.ddit.common.member.vo.ComMemberVO" autoMapping="true">
+		<id property="comId" column="COM_ID"/>
+	</collection>
+</resultMap>
+
+<select id="selectOutProj" parameterType="string" resultMap="outMap">
+	SELECT 
+	    COM.COM_NAME,COM.COM_HP, COM.COM_COMNAME,COM.COM_MAIL,COM.COM_IMG,
+		OUT.PROJ_ID, OUT.PROJ_REGIST, OUT.PROJ_EMPTYPE, OUT.PROJ_TYPE, TO_CHAR(OUT.PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE,
+		OUT.PROJ_PLANSTATE, OUT.PROJ_MEMNUM, TO_CHAR(OUT.PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(OUT.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE,
+		OUT.PROJ_CONTENT, OUT.PROJ_QUALIFI, OUT.PROJ_APPROVE, OUT.PROJ_REJECT, OUT.PROJ_RATING,
+		TO_CHAR(OUT.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, TO_CHAR(OUT.PROJ_REALFDATE, 'YYYY-MM-DD') PROJ_REALFDATE, OUT.PROJ_LOC, OUT.PROJ_STATE,
+		TO_CHAR(OUT.PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, OUT.PROJ_TITLE
+	FROM
+		OUTSOURCING_PROJ OUT LEFT OUTER JOIN COM_MEMBER COM ON (OUT.PROJ_REGIST = COM.COM_ID)
+	WHERE OUT.PROJ_ID = #{projId}
+</select>
+
+<update id="updateOutProj" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+	UPDATE OUTSOURCING_PROJ
+	SET PROJ_TITLE = #{projTitle,jdbcType=VARCHAR},
+		PROJ_CONTENT=#{projContent,jdbcType=CLOB},
+		PROJ_ESTIMATE=#{projEstimate,jdbcType=NUMERIC},
+		PROJ_EMPTYPE=#{projEmptype,jdbcType=VARCHAR},
+		PROJ_MEMNUM=#{projMemnum,jdbcType=NUMERIC},
+		PROJ_SDATE=#{projSdate,jdbcType=DATE},
+		PROJ_FDATE=#{projFdate,jdbcType=DATE},
+		PROJ_LOC=#{projLoc,jdbcType=VARCHAR}
+	WHERE PROJ_ID = #{projId}	
+
+</update>
+
+<select id="createdProjectList" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+	SELECT 
+		PROJ_ID, PROJ_REGIST, PROJ_EMPTYPE, PROJ_TYPE, PROJ_RECRUITFDATE,
+		PROJ_PLANSTATE, PROJ_MEMNUM, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE,
+		PROJ_CONTENT, PROJ_QUALIFI, PROJ_APPROVE, PROJ_REJECT, PROJ_RATING,
+		TO_CHAR(PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, TO_CHAR(PROJ_REALFDATE, 'YYYY-MM-DD') PROJ_REALFDATE, PROJ_LOC, PROJ_STATE,
+		TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, PROJ_TITLE
+	FROM
+	    OUTSOURCING_PROJ
+	WHERE PROJ_REGIST=#{projRegist}   
+	AND PROJ_APPROVE = 1 
+	AND PROJ_STATE != 'DELETE'
+</select>
+
+<update id="deleteOutProj" parameterType="String">
+	UPDATE OUTSOURCING_PROJ SET PROJ_STATE = 'DELETE'
+	WHERE PROJ_ID=#{projId}
+</update>
+
+
+<update id="finishProj" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+	UPDATE OUTSOURCING_PROJ SET PROJ_STATE = 'FINISH'
+	WHERE PROJ_ID=#{projId}
+
+</update>
+
+
+
+<!-- 직무분야, 기술 관련 -->
+<insert id="objList" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+	INSERT ALL
+	<foreach collection="objList" item="obj">
+	INTO PROJECT_OBJ(
+		PROJ_OBJ,
+		PROJ_ID
+	) VALUES (
+		#{obj.projObj}	
+		, #{projId}
+	)
+	</foreach>
+	SELECT * FROM DUAL
+</insert>
+
+
+<insert id="skillList" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+	INSERT ALL
+	<foreach collection="skillList" item="skill">
+	INTO PROJECT_SKILL(
+		PROJ_SKILL,
+		PROJ_ID
+	) VALUES (
+		#{skill.projSkill}
+		,#{projId}
+	)
+	</foreach>
+	SELECT * FROM DUAL
+</insert>
+
+
+
+<!-- work.xml 에 insertWorkAttatch 참고해서 해라 -->
+
+
+
+
+
+
+
+
+
+
+<!-- 공통 코드 관련 -->
+<select id="selectObjList" resultType="kr.or.ddit.common.vo.CommomCodeVO">
+	SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'JOBFEILD'
+</select>
+
+<select id="selectSkillList" resultType="kr.or.ddit.common.vo.CommomCodeVO">
+	SELECT CODE_ID, CODE_NAME
+		FROM COMMON_CODE
+		WHERE TYPE_ID = 'SKILL'
+</select>
+
+
+
+<!-- 직무분야, 기술 관련 -->
+	<select id="projObjList" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.ObjectVO">
+		WITH PROJOBJ AS (
+		SELECT A.CODE_NAME AS PROJOBJ_NAME, A.CODE_ID AS PROJOBJ_ID, B.PROJ_ID
+		FROM COMMON_CODE A INNER JOIN PROJECT_OBJ B ON (A.CODE_ID = B.PROJ_OBJ)
+		)
+		SELECT
+		DISTINCT B.PROJOBJ_NAME AS PROJ_OBJ,
+		B.PROJOBJ_ID AS OBJ_CODE,
+		A.PROJ_ID
+		FROM PROJECT_OBJ A INNER JOIN PROJOBJ B ON(A.PROJ_ID = B.PROJ_ID)
+		WHERE A.PROJ_ID = #{projId}
+	</select>
+
+	<select id="projSkillList" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.SkillVO">
+		WITH PROJSKILL AS (
+		SELECT A.CODE_NAME AS PROJSKILL_NAME, A.CODE_ID AS PROJSKILL_ID, B.PROJ_ID
+		FROM COMMON_CODE A INNER JOIN PROJECT_SKILL B ON (A.CODE_ID = B.PROJ_SKILL)
+		)
+		SELECT
+		DISTINCT B.PROJSKILL_NAME AS PROJ_SKILL,
+		B.PROJSKILL_ID AS SKILL_CODE,
+		A.PROJ_ID
+		FROM PROJECT_SKILL A INNER JOIN PROJSKILL B ON(A.PROJ_ID = B.PROJ_ID)
+		WHERE A.PROJ_ID = #{projId}
+	</select>
+	
+<!-- 직무분야, 스킬등록 -->
+	<insert id="insertSkill" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		INSERT ALL
+		<foreach collection="skillList" item="skill">
+			INTO PROJECT_SKILL(
+			PROJ_SKILL,
+			PROJ_ID
+			) VALUES(
+			#{skill.projSkill},
+			#{projId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+	<insert id="insertObj" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		INSERT ALL
+		<foreach collection="objList" item="obj">
+			INTO PROJECT_OBJ(
+			PROJ_OBJ,
+			PROJ_ID
+			) VALUES(
+			#{obj.projObj},
+			#{projId}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	
+<!-- 직무분야, 스킬 삭제 -->
+	<delete id="delSkill" parameterType="kr.or.ddit.outsourcing.vo.SkillVO">
+		DELETE FROM PROJECT_SKILL
+		WHERE
+		PROJ_SKILL=#{skillCode}
+		AND
+		PROJ_ID = #{projId}
+	</delete>
+	
+	<delete id="delObj" parameterType="kr.or.ddit.outsourcing.vo.ObjectVO">
+		DELETE FROM PROJECT_OBJ
+		WHERE
+		PROJ_OBJ=#{objCode}
+		AND
+		PROJ_ID = #{projId}
+	</delete>
+
+
+</mapper>
+
+
+
+
+
+
+
+
+

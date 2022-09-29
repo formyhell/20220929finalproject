@@ -1,0 +1,97 @@
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                수정자          수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 9.      작성자           최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>    
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>    
+
+<!-- 컨트롤러에서 가져온 경우 -->
+    <h4>id : ${id }</h4>
+    <br>
+    <h4> member : ${member } </h4>
+    <br>
+    <h4> memId : ${member.memId } </h4>
+    <br>
+    <h4> memPass : ${member.memPass } </h4>
+    <br>
+    <h4> memType : ${member.memType[0] }</h4>
+    
+
+<br><br><h4>-------------------------------------------------------------------</h4>
+
+
+<!-- 바로 쓰는 경우 -->
+<!-- 위에서 taglib 설정 필요-->
+	<!-- 로그인 전 -->
+	<security:authorize access="isAnonymous()">
+	
+	</security:authorize>
+	
+	<!-- 로그인 후 -->
+	<security:authorize access="isAuthenticated()">
+	
+	</security:authorize>
+	
+
+
+	<!-- authentication 객체(인증) -->
+	<security:authentication property="principal" var="authMember" /> 
+
+	<h4>아이디 : ${authMember.realMember.memId }</h4>
+
+<%-- 	<h4>memverVO : ${authMember.realMember }</h4> --%>
+	<h4>role: ${authMember.realMember.memType.get(0) }</h4>
+	
+	
+<br><h4>-------------------------------------------------------------------</h4><br>
+	
+	
+	<h4>jsp에서 사용자vo 바로 가져오기 : 해당하는 회원 유형의 주석을 풀고 확인하시오</h4>
+	<h4>일반회원</h4>
+	<%-- 
+	${authMember.realMember.genId }           
+	${authMember.realMember.genPass }         
+	${authMember.realMember.genNick }         
+	${authMember.realMember.genName }         
+	${authMember.realMember.genBirth }        
+	${authMember.realMember.genMail }         
+	${authMember.realMember.genHp }           
+	${authMember.realMember.genIntro }        
+	${authMember.realMember.genDelete }       
+	${authMember.realMember.genRating }       
+	${authMember.realMember.enabled }         
+	${authMember.realMember.genGrd }    
+	--%>       
+	
+	
+	<h4>기업회원</h4>
+	<%-- 
+	${authMember.realMember.comId }        
+	${authMember.realMember.comPass }      
+	${authMember.realMember.comNick }      
+	${authMember.realMember.comName }      
+	${authMember.realMember.comHp }        
+	${authMember.realMember.comComname }   
+	${authMember.realMember.comMail }      
+	${authMember.realMember.comComtel }    
+	${authMember.realMember.comComceo }    
+	${authMember.realMember.comCbr }       
+	${authMember.realMember.comOpendate }  
+	${authMember.realMember.comDelete }    
+	${authMember.realMember.comRating }    
+	${authMember.realMember.enabled }      
+	${authMember.realMember.comGrd }        
+	--%>
+	
+	<h4>관리자</h4>
+	<%-- 
+	${authMember.realMember.adminId }           
+	${authMember.realMember.adminPass }       
+	${authMember.realMember.enabled }  
+	--%>       
+	

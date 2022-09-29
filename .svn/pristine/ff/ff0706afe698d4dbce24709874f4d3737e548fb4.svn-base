@@ -1,0 +1,26 @@
+package kr.or.ddit.common.mypage.portfolio.vo;
+
+import java.io.Serializable;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor(access=AccessLevel.PRIVATE)
+@ToString
+@EqualsAndHashCode(of= {"pfId", "objCode"})
+public class PfObjVO implements Serializable{
+	
+	public PfObjVO (String obj) {
+		this.objCode = obj;
+	}
+	
+	private String pfId;
+	private String objCode;
+}

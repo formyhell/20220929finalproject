@@ -1,0 +1,591 @@
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 5.      고혜인      최초작성
+* 2022. 8. 15.     김유진      CRUD
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+
+<%@page import="kr.or.ddit.common.mypage.schedule.vo.ScheduleVO"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%> 
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>    
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="${cPath}/resources/cal/bootstrap-multiselect.min.css">
+<script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+<script src="${cPath}/resources/cal/bootstrap-multiselect.min.js"></script>
+<script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
+
+<script>
+//토큰
+var header = '${_csrf.headerName}';
+var token =  '${_csrf.token}'; 
+let typeList = ['ALL'];
+
+// 캘린더 생성
+document.addEventListener('DOMContentLoaded', function() {
+	var calendarEl = document.getElementById('calendar');
+	var calendar = createCalendar(calendarEl);
+	calendar.render();
+});
+
+
+
+// 캘린더 정보  
+function createCalendar(calendarEl){
+	var fullCalendar = new FullCalendar.Calendar(calendarEl, {
+		headerToolbar: {
+	        left: 'prevYear,nextYear',
+	        center: 'title',
+	        right: 'prev,next today'
+	      },
+	      locale:"ko", //한국어
+//	       initialDate: '2022-08-12', //초기 날짜 설정(안하면 sysdate 표시)
+	      editable: true, //boolean, 이벤트 드래그, 리사이징 등
+	      selectable: true, //날짜 자체 드래그 가능
+	      businessHours: true, //주말 background 색깔 표시 
+	      displayEventTime: false, // 시간 표시X
+	      dayMaxEvents: true, //캘린더 사이즈 넘어가면 +more로 표시
+//	       navlink: true, //날짜(숫자)클릭 시 세부 스케줄 이동 //안됨
+		  select: function(arg) { 
+			  let sdate = new Date(arg.start);
+			  sdate.setDate(sdate.getDate() + 1);
+			  $('#in_scheSdate').val(sdate.toISOString().substring(0,10));
+			  $('#in_scheFdate').val(sdate.toISOString().substring(0,10));
+	          $('#insertModal').modal('show');
+	      },
+		  eventClick: function(arg) {
+				 var updateFormUrl = "${cPath}/gen/schedule/"+ arg.event.id +"/form";
+				 $.ajax({
+		    			type: "get",
+		    			url: updateFormUrl, // form을 전송할 실제 파일경로
+		    		    data: arg.event.id,
+		    		    async:false,
+		    		    dataType : "json",
+		    			success: function (result) { // 전송 후 성공 시 실행 코드
+		    				let sdate = new Date(result.scheSdate);
+		    				let fdate = new Date(result.scheFdate);
+		    				sdate.setDate(sdate.getDate() + 1);
+		    				fdate.setDate(fdate.getDate() + 1);
+		    				
+		    				$('#up_scheNo').val(result.scheNo);
+		    				$('#up_scheType').val(result.scheType);
+		    				$('#up_scheProj').val(result.scheProj);
+		    				$('#up_scheSdate').val(sdate.toISOString().substring(0,10));
+		    				$('#up_scheFdate').val(fdate.toISOString().substring(0,10));
+		    				$('#up_scheTitle').val(result.scheTitle);
+		    				$('#up_scheContent').val(result.scheContent);
+		    				$('#up_scheColor').val(result.scheColor.toLowerCase());
+		    			},
+		    			error: function (e) { // 전송 후 에러 발생 시 실행 코드
+		    				console.log("ERROR : ", e);
+		    			}
+		    		});
+				 
+		          $('#updateModal').modal('show');
+	      },
+	      events:function(){
+	    	  var listResult = $.ajax({
+	    			type: "POST",
+	    			url: "${cPath}/gen/schedule/list",
+	    			data: {typeList: typeList},
+	    		    dataType : "json", 
+	    			beforeSend : function(xhr) { // 전송 전 실행 코드
+	    				xhr.setRequestHeader(header,token);
+	    			},
+	    			success: function (result) { // 전송 후 성공 시 실행 코드
+	    				console.log("result: ",result);
+	    			},
+	    			error: function (e) { // 전송 후 에러 발생 시 실행 코드
+	    				console.log("ERROR : ", e);
+	    			}
+	    		});
+	      return listResult;
+	      },
+	      eventDidMount: function(info) {
+	    	  
+				let fdate = new Date(info.event._instance.range.end);
+				fdate.setDate(fdate.getDate()-1);
+				let proj = info.event._def.extendedProps.proj;
+				if(info.event._def.extendedProps.proj==null){
+					proj = "X";
+				}
+				
+	            tippy(info.el, {
+	                content: "<div>"
+	            			+ "<p><strong>일정구분&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;</strong>" + info.event._def.extendedProps.type + "</p>"
+	            			+ "<p><strong>프로젝트ID&nbsp;:&nbsp;</strong>" + proj + "</p>"
+	            			+ "<p><strong>기간&nbsp;:&nbsp;</strong>" + info.event._instance.range.start.toISOString().substring(0,10) + " ~ " + fdate.toISOString().substring(0,10) + "</p>"
+	                	    + "</div>"
+	                , placement: "top"
+	                , theme: 'yellow'
+	                , allowHTML: true
+	                
+	            });
+	        }
+	    });
+	
+	return fullCalendar;
+}
+
+function closeModal() {
+	$('#insertModal').modal('hide');
+	$('#updateModal').modal('hide');
+	
+}
+
+</script>
+<style>
+
+  body {
+    margin: 40px 10px;
+    padding: 0;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+
+  #calendar {
+    max-width: 1100px;
+    max-height: 750px;
+    margin: 0 auto;
+    padding-top: 20px;
+  }
+  .page-body{
+  	margin-top: 20px !important;
+  	padding: 0px !important;
+  	background-color : white !important;
+  }
+  
+  .modal-dialog {
+  	margin-top: 150px;
+  }
+  
+  .choices__inner{
+  	max-height: 40px;
+  }
+
+
+  .tippy-box[data-theme~='yellow'] { 
+	background-color: white; 
+	color: black; 
+	box-shadow: 5px 5px 10px 5px gray;
+  } 
+
+  .fc-event-title.fc-sticky{
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+</style>
+
+<%-- 필터 --%>
+<div class="row" style="padding-top: 50px; margin-left: 220px;">
+	<div class="col-sm-1" style="padding: 0px; text-align: center;">
+		<div class="mb-3" style="margin-top: 10px;">
+			<label>일정 선택</label>
+		</div>
+	</div>
+	<div class="col-sm-3" style="padding: 0px;">
+		<div class="mb-3">
+			<select id="choices-multiple-remove-button" placeholder="Select upto 3 tags" multiple>
+				<c:choose>
+					<c:when test="${not empty typeList }">
+						<c:forEach items="${typeList }" var="typeList">
+							<option value="${typeList.typeId }">${typeList.typeName }</option>
+						</c:forEach>
+					</c:when>
+				</c:choose>
+			</select>
+		</div>
+	</div>
+</div>
+
+<%-- 캘린더 --%>
+<div id="calendar"></div>
+
+<security:authentication property="principal" var="authMember" /> 
+
+
+<!-- 일정 추가 -->
+<div id="insertModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>NEW</h4>
+                <button type="button" class="btn" onclick="closeModal()" data-dismiss="modal" ><span aria-hidden="true">&times;</span> <span class="sr-only">close</span></button>
+            </div>
+            <form id="insertFormID">
+	            <div id="insertModalBody" class="modal-body">
+	            	<div class="row">
+						<div class="col-sm-12">
+							<div class="mb-3">
+								<label>제목<label style="color: red;"> *</label><input type="checkbox" name="checkbox" id="checkbox" onchange="check1(this)"></label>
+	                    		<input class="form-control" type="text" name="scheTitle" id="scheTitle">
+							</div>
+						</div>
+					</div>		
+	            	<div class="row">
+						<div class="col-sm-12">
+							<div class="mb-3">
+								<label>프로젝트</label>
+			                	<select name="scheProj" class="form-select form-control" id="bootstrap-notify-placement-from">
+			                		<option value>선택안함</option>
+				                	<c:choose>
+				                		<c:when test="${not empty projList and projList != null }">
+				                			<c:forEach items="${projList }" var="projList">
+				                				<option value="${projList.projId }">${projList.projName }</option>
+				                			</c:forEach>
+				                		</c:when>
+				                	</c:choose>
+			                	</select>
+							</div>
+						</div>
+					</div>		
+	            	<div class="row">
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>일정구분<label style="color: red;">*</label></label>
+			                	<select name="scheType" class="form-select form-control" id="bootstrap-notify-placement-from">
+				                	<c:choose>
+				                		<c:when test="${not empty typeList }">
+				                			<c:forEach items="${typeList }" var="typeList">
+				                				<option value="${typeList.typeId }">${typeList.typeName }</option>
+				                			</c:forEach>
+				                		</c:when>
+				                	</c:choose>
+			                	</select>
+							</div>
+						</div>
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>일정색상<label style="color: red;">*</label></label>
+			                	<select name="scheColor" class="form-select form-control" id="bootstrap-notify-placement-from">
+			                		<option value="blue" >blue</option>
+			                		<option value="red" >red</option>
+			                		<option value="orange">orange</option>
+			                		<option value="yellow">yellow</option>
+			                		<option value="black">black</option>
+			                	</select>
+							</div>
+						</div>
+					</div>		
+	            	<div class="row">
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>시작일<label style="color: red;">*</label></label>
+	                  			<input id="in_scheSdate" class="form-control" type="date" name="scheSdate" placeholder="sdate">
+							</div>
+						</div>
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>종료일<label style="color: red;">*</label></label>
+	                    <input id="in_scheFdate" class="form-control" type="date" name="scheFdate" placeholder="fdate">
+							</div>
+						</div>
+					</div>		
+					<div class="row">
+						<div class="col-sm-12">
+							<div class="mb-3">
+								<label>내용</label>
+	                    		<textarea class="form-control" name="scheContent" rows="4" id="contents"></textarea>
+							</div>
+						</div>
+					</div>	
+	                <input type="hidden" name="scheMemid" value="${authMember.realMember.memId }" />
+<%-- 	                <input type="hidden"  name="${_csrf.parameterName}"   value="${_csrf.token}"/> --%>
+	            </div>
+	            <div class="modal-footer">
+	                <button type="submit" class="btn btn-primary" id="submitBtn">저장</button>
+	                <button type="button" class="btn" onclick="closeModal()" data-dismiss="modal">취소</button>
+	            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 일정 수정 -->
+<div id="updateModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>EDIT</h4>
+                <button type="button" class="btn" onclick="closeModal()" data-dismiss="modal" ><span aria-hidden="true">&times;</span> <span class="sr-only">close</span></button>
+            </div>
+            <form id="updateFormID" method="post">
+	            <div id="updateModalBody" class="modal-body">
+	            	<div class="row">
+						<div class="col-sm-12">
+							<div class="mb-3">
+								<label>제목<label style="color: red;">*</label></label>
+	                    		<input id="up_scheTitle" class="form-control" type="text" name="scheTitle" >
+							</div>
+						</div>
+					</div>		
+	            	<div class="row">
+						<div class="col-sm-12">
+							<div class="mb-3">
+								<label>프로젝트</label>
+			                	<select id="up_scheProj" name="scheProj" class="form-select form-control" id="bootstrap-notify-placement-from">
+			                		<option value>선택안함</option>
+				                	<c:choose>
+				                		<c:when test="${not empty projList and projList != null }">
+				                			<c:forEach items="${projList }" var="projList">
+				                				<option value="${projList.projId }">${projList.projName }</option>
+				                			</c:forEach>
+				                		</c:when>
+				                	</c:choose>
+			                	</select>
+							</div>
+						</div>
+					</div>		
+	            	<div class="row">
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>일정구분<label style="color: red;">*</label></label>
+			                	<select id="up_scheType" name="scheType" class="form-select form-control" id="bootstrap-notify-placement-from">
+				                	<c:choose>
+				                		<c:when test="${not empty typeList }">
+				                			<c:forEach items="${typeList }" var="typeList">
+				                				<option value="${typeList.typeId }">${typeList.typeName }</option>
+				                			</c:forEach>
+				                		</c:when>
+				                	</c:choose>
+			                	</select>
+							</div>
+						</div>
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>일정색상<label style="color: red;">*</label></label>
+			                	<select id="up_scheColor" name="scheColor" class="form-select form-control" id="bootstrap-notify-placement-from">
+			                		<option value="blue" >blue</option>
+			                		<option value="red" >red</option>
+			                		<option value="orange" >orange</option>
+			                		<option value="yellow" >yellow</option>
+			                		<option value="black" >black</option>
+			                	</select>
+							</div>
+						</div>
+					</div>		
+	            	<div class="row">
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>시작일<label style="color: red;">*</label></label>
+	                    		<input id="up_scheSdate" class="form-control" type="date" name="scheSdate" placeholder="sdate">
+							</div>
+						</div>
+						<div class="col-sm-6">
+							<div class="mb-3">
+								<label>종료일<label style="color: red;">*</label></label>
+	                    		<input id="up_scheFdate" class="form-control" type="date" name="scheFdate" placeholder="fdate">
+							</div>
+						</div>
+					</div>		
+					<div class="row">
+						<div class="col-sm-12">
+							<div class="mb-3">
+								<label>내용</label>
+	                    		<textarea id="up_scheContent" class="form-control" name="scheContent" rows="4"></textarea>
+							</div>
+						</div>
+					</div>	
+	                <input type="hidden" name="scheNo" id="up_scheNo" />
+	                <input type="hidden" name="scheMemid" value="${authMember.realMember.memId }" />
+	                <input type="hidden"  name="${_csrf.parameterName}"   value="${_csrf.token}"/>
+	            </div>
+	            <div class="modal-footer">
+	                <button type="submit" class="btn btn-primary" id="submitBtn">저장</button>
+	                <button type="button" class="btn btn-info" onclick="deleteSchedule()" data-dismiss="modal">삭제</button>
+	                <button type="button" class="btn" onclick="closeModal()" data-dismiss="modal">취소</button>
+	            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+<%-- 일정 분류 --%>
+$(document).ready(function(){
+    var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+       removeItemButton: true,
+       maxItemCount:3,
+       searchResultLimit:3,
+       renderChoiceLimit:3
+     }); 
+});
+let div_list  = document.getElementById('choices-multiple-remove-button');
+$(div_list).on('change', function () {
+	typeList = [];
+	if(div_list.children.length==0){
+		typeList.push('ALL');
+	}else{
+		for(let i=0; i<div_list.children.length; i++){
+			typeList.push(div_list.children[i].value);
+		}
+	}
+	console.log("hi");
+	console.log(typeList);
+	var calendarEl = document.getElementById('calendar');
+	var calendar = createCalendar(calendarEl);
+	calendar.render();
+});
+
+var yu_insertForm = $('#insertFormID');
+var yu_updateForm = $('#updateFormID');
+var errorResult = "다시";
+
+//성공 alert창
+function successAlert(result){
+	Swal.fire({
+        icon: 'success',
+        title: result
+    });
+}
+//실패 alert창
+function errorAlert(result){
+	Swal.fire({
+        icon: 'warning',
+        title: result
+    });
+}
+
+// 일정 등록 - ajax
+yu_insertForm.on("submit",function(){
+	event.preventDefault();
+	data = yu_insertForm.serialize();
+	
+	$.ajax({
+		type: "POST",
+		url: "${cPath}/gen/schedule",	// form을 전송할 실제 파일경로
+		data: data,
+	    dataType : "text", 
+		beforeSend : function(xhr) { // 전송 전 실행 코드
+			xhr.setRequestHeader(header,token);
+		},
+		success: function (result) { // 전송 후 성공 시 실행 코드
+// 			alert(result);
+			if(result.substr(0, 2) == errorResult){
+				errorAlert(result);
+			}else{
+				successAlert(result);
+			}
+			closeModal();
+			var calendarEl = document.getElementById('calendar');
+			var calendar = createCalendar(calendarEl);
+			calendar.render();
+		},
+		error: function (e) { // 전송 후 에러 발생 시 실행 코드
+			console.log("ERROR : ", e);
+		}
+	});
+	
+})
+
+
+// 일정 수정 - ajax
+yu_updateForm.on("submit",function(){
+	event.preventDefault();
+	data = yu_updateForm.serialize();
+	var updateUrl = "${cPath}/gen/schedule/"+ $('#up_scheNo').val() +"/form";
+
+	$.ajax({
+		type: "POST",
+		url: updateUrl,	// form을 전송할 실제 파일경로
+		data: data,
+		dataType : "text", 
+		beforeSend : function(xhr) { // 전송 전 실행 코드
+			xhr.setRequestHeader(header,token);
+		},
+		success: function (result) { // 전송 후 성공 시 실행 코드
+// 			alert(result);
+			if(result.substr(0, 2) == errorResult){
+				errorAlert(result);
+			}else{
+				successAlert(result);
+			}
+			closeModal();
+			var calendarEl = document.getElementById('calendar');
+			var calendar = createCalendar(calendarEl);
+			calendar.render();
+		},
+		error: function (e) { // 전송 후 에러 발생 시 실행 코드
+			console.log("ERROR : ", e);
+		}
+	});
+		
+})
+
+
+// 일정 삭제 - ajax
+function deleteSchedule() {
+	Swal.fire({
+        title: '삭제하시겠습니까?',
+//         text: "",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '확인',
+        cancelButtonText: '취소'
+    }).then((result) => {
+        if (result.isConfirmed) { //확인
+        	console.log(updateUrl);
+        	var data = $('#up_scheNo').val();
+        	var updateUrl = "${cPath}/gen/schedule/"+ data;
+        	$.ajax({
+        		type: "DELETE",
+        		url: updateUrl,	// form을 전송할 실제 파일경로
+//         		data: data,
+        		dataType : "text", 
+        		beforeSend : function(xhr) { // 전송 전 실행 코드
+        			xhr.setRequestHeader(header,token);
+        		},
+        		success: function (result) { // 전송 후 성공 시 실행 코드
+//         			console.log(result);
+        			if(result.substr(0, 2) == errorResult){
+        				errorAlert(result);
+        			}else{
+        				successAlert(result);
+        			}
+        			closeModal();
+        			var calendarEl = document.getElementById('calendar');
+        			var calendar = createCalendar(calendarEl);
+        			calendar.render();
+        		},
+        		error: function (e) { // 전송 후 에러 발생 시 실행 코드
+        			console.log("ERROR : ", e);
+        		}
+        	});
+        	
+            Swal.fire(
+                '삭제되었습니다.',
+                '',
+                'success'
+            )
+        }
+    })
+}
+
+//모달내용 초기화
+$('.modal').on('hidden.bs.modal', function (e) {
+	$(this).find('form')[0].reset();
+})
+</script>
+
+<script>
+function check1(f){
+    if (f.checked) {
+      $('#scheTitle').val('개인');
+      $('#in_scheSdate').val('2022-09-20');
+      $('#in_scheFdate').val('2022-09-20');
+      $('#contents').val('개인 프로젝트 일정입니다.');
+      }
+    }
+</script>

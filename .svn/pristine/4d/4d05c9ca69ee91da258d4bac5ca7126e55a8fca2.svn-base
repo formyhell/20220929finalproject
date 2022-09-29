@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.admin.outsourcing.dao.CheckListDAO">
+	
+	<resultMap type="kr.or.ddit.outsourcing.vo.OutProjVO" id="projMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID" />
+		<collection property="objSingleList" javaType="List" ofType="String">
+			<result column="OBJ_NAME" />
+		</collection>
+		<collection property="skillSingleList" javaType="List" ofType="String">
+			<result column="SKILL_NAME"/>
+		</collection>
+	</resultMap>
+	
+	<resultMap type="kr.or.ddit.outsourcing.vo.OutProjVO" id="projRequireMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID" />
+		<collection property="objSingleList" javaType="List" ofType="String" >
+			<result column="OBJ_NAME"/>
+		</collection>
+		<collection property="skillSingleList" javaType="List" ofType="String">
+			<result column="SKILL_NAME"/>
+		</collection>
+		<collection property="filterList" javaType="List" ofType="String">
+			<result column="FILTER_WORD"/>
+		</collection>
+	</resultMap>
+
+
+	<select id="selectAll" resultMap="projMap">
+		SELECT PROJ_ID, PROJ_REGIST, EMPTYPE_NAME AS PROJ_EMPTYPE, PROJ_TYPE, TO_CHAR(PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE
+				,PROJ_PLANSTATE ,PROJ_MEMNUM, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE, PROJ_CONTENT
+				,PROJ_QUALIFI , PROJ_LOC ,STATE_NAME AS PROJ_STATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, PROJ_TITLE, OBJ_NAME, SKILL_NAME
+		FROM V_OUTPROJ 
+		WHERE PROJ_APPROVE = 0
+		AND PROJ_STATE = 'RECRUIT'
+		AND V_OUTPROJ.PROJ_ID NOT IN (SELECT REQUIRE_CHECK.PROJ_ID
+		                  FROM  REQUIRE_CHECK
+		                 WHERE REQUIRE_CHECK.PROJ_ID = V_OUTPROJ.PROJ_ID)
+	</select>
+	
+	<select id="selectRequireAll" resultMap="projRequireMap">
+		SELECT C.PROJ_ID, C.PROJ_REGIST, C.EMPTYPE_NAME AS PROJ_EMPTYPE, C.PROJ_TYPE, TO_CHAR(C.PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE
+		    ,C.PROJ_PLANSTATE ,C.PROJ_MEMNUM, TO_CHAR(C.PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(C.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, C.PROJ_ESTIMATE, C.PROJ_CONTENT
+		    ,C.PROJ_QUALIFI , C.PROJ_LOC ,C.STATE_NAME AS PROJ_STATE, TO_CHAR(C.PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, C.PROJ_TITLE, C.OBJ_NAME, C.SKILL_NAME
+		    ,D.FILTER_WORD
+		FROM V_OUTPROJ C,  (
+		    SELECT A.PROJ_ID, A.FILTER_NO, B.FILTER_WORD
+		    FROM REQUIRE_CHECK A, FILTERING B
+		    WHERE A.FILTER_NO = B.FILTER_NO
+		) D
+		WHERE C.PROJ_ID = D.PROJ_ID
+		AND PROJ_APPROVE = 0
+		AND PROJ_STATE = 'RECRUIT'
+	</select>
+	
+	<select id="selectProj" resultMap="projMap" parameterType="String">
+		SELECT PROJ_ID, PROJ_REGIST, EMPTYPE_NAME AS PROJ_EMPTYPE, PROJ_TYPE, TO_CHAR(PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE, PROJ_APPROVE, PROJ_REJECT
+				,PROJ_PLANSTATE ,PROJ_MEMNUM, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE, PROJ_CONTENT
+				,PROJ_QUALIFI , PROJ_LOC ,STATE_NAME AS PROJ_STATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, PROJ_TITLE, OBJ_NAME, SKILL_NAME
+		FROM V_OUTPROJ
+		WHERE PROJ_ID = #{projId}
+	</select>
+	
+	<select id="selectFilterProj" resultMap="projRequireMap" parameterType="String">
+		SELECT C.PROJ_ID, C.PROJ_REGIST, C.EMPTYPE_NAME AS PROJ_EMPTYPE, C.PROJ_TYPE, TO_CHAR(C.PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE
+		    ,C.PROJ_PLANSTATE ,C.PROJ_MEMNUM, TO_CHAR(C.PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(C.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, C.PROJ_ESTIMATE, C.PROJ_CONTENT
+		    ,C.PROJ_QUALIFI , C.PROJ_LOC ,C.STATE_NAME AS PROJ_STATE, TO_CHAR(C.PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, C.PROJ_TITLE, C.OBJ_NAME, C.SKILL_NAME
+		    ,D.FILTER_WORD
+		FROM V_OUTPROJ C,  (
+		    SELECT A.PROJ_ID, A.FILTER_NO, B.FILTER_WORD
+		    FROM REQUIRE_CHECK A, FILTERING B
+		    WHERE A.FILTER_NO = B.FILTER_NO
+		) D
+		WHERE C.PROJ_ID = D.PROJ_ID
+		AND C.PROJ_ID = #{projId}
+	</select>
+	
+	<update id="updateDeny" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		UPDATE OUTSOURCING_PROJ
+		SET PROJ_APPROVE = 2
+		, PROJ_REJECT = #{projReject, jdbcType=VARCHAR}
+		WHERE PROJ_ID = #{projId}
+	</update>
+	
+	<update id="updateApprove" parameterType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		UPDATE OUTSOURCING_PROJ
+		SET PROJ_APPROVE = 1
+            , PROJ_REJECT = null
+		WHERE PROJ_ID = #{projId}
+	</update>
+	
+	<delete id="deleteRequireCheck" parameterType="String">
+		DELETE FROM REQUIRE_CHECK WHERE PROJ_ID = #{projId}
+	</delete>
+	
+	
+	<!-- 아웃소싱 리스트 -->
+	<select id="selectApproveAll" resultMap="projMap">
+		SELECT PROJ_ID, PROJ_REGIST, EMPTYPE_NAME AS PROJ_EMPTYPE, PROJ_TYPE, TO_CHAR(PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE
+				,PROJ_PLANSTATE ,PROJ_MEMNUM, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE, PROJ_CONTENT
+				,PROJ_QUALIFI , PROJ_LOC ,STATE_NAME AS PROJ_STATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, PROJ_TITLE, OBJ_NAME, SKILL_NAME
+		FROM V_OUTPROJ 
+		WHERE PROJ_APPROVE = 1
+		AND PROJ_STATE = 'RECRUIT'
+	</select>
+	
+	<select id="selectNotApproveAll" resultMap="projMap">
+		SELECT PROJ_ID, PROJ_REGIST, EMPTYPE_NAME AS PROJ_EMPTYPE, PROJ_TYPE, TO_CHAR(PROJ_RECRUITFDATE, 'YYYY-MM-DD') PROJ_RECRUITFDATE
+				,PROJ_PLANSTATE ,PROJ_MEMNUM, TO_CHAR(PROJ_SDATE, 'YYYY-MM-DD') PROJ_SDATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE, PROJ_CONTENT
+				,PROJ_QUALIFI , PROJ_LOC ,STATE_NAME AS PROJ_STATE, TO_CHAR(PROJ_RECRUITSDATE, 'YYYY-MM-DD') PROJ_RECRUITSDATE, PROJ_TITLE, OBJ_NAME, SKILL_NAME, PROJ_REJECT
+		FROM V_OUTPROJ 
+		WHERE PROJ_APPROVE = 2
+		AND PROJ_STATE = 'RECRUIT'
+	</select>
+</mapper>

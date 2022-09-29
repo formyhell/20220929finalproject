@@ -1,0 +1,212 @@
+package kr.or.ddit.common.mypage.project.manageProject.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.MemReviewVO;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.project.manageProject.dao.ProjectManageDAO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.vo.ApplicantVO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.outsourcing.vo.ProjReviewVO;
+import kr.or.ddit.pms.project.vo.projInvolveVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProjectManageServiceImpl implements ProjectManageService {
+	private final ProjectManageDAO projDAO;
+	
+	public List<OutProjVO> findAll(Map<String, Object> pagingMap) {
+		PagingVO<OutProjVO> pagingVO = (PagingVO<OutProjVO>) pagingMap.get("pagingVO");
+		MemberVO member = (MemberVO) pagingMap.get("member");
+		
+		
+		List<OutProjVO> projList = null;
+		if(member == null) {
+			throw new RuntimeException("해당 멤버가 없습니다.");
+		} else if("ROLE_GENMEM".equals(member.getMemType().get(0).toString())) {
+			pagingVO.setTotalRecord(projDAO.genSelectTotalProj(pagingMap));
+			projList = projDAO.genSelectAll(pagingMap);
+		} else if("ROLE_COMMEM".equals(member.getMemType().get(0).toString())) {
+			pagingVO.setTotalRecord(projDAO.comSelectTotalProj(pagingMap));
+			projList = projDAO.comSelectAll(pagingMap);
+		}
+		pagingVO.setDataList(projList);
+		pagingMap.put("pagingVO", pagingVO);
+		return projList;
+	}
+
+	@Override
+	public OutProjVO findOne(String projId) {
+		if(projId == null || projId.equals("")) {
+			throw new RuntimeException(String.format("%d의 프로젝트가 없습니다.", projId));
+		}
+		return projDAO.selectOne(projId);
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult createProjRev(ProjReviewVO projRev) {
+		ServiceResult result = null;
+		if(projRev == null) {
+			result = ServiceResult.NOTEXIST;
+			return result;
+		} else if(projDAO.selectProjRev(projRev) != null) {
+			result = ServiceResult.DUPLICATED;
+			return result;
+		}
+		projRev.setRevCommem(projDAO.selectCommem(projRev.getRevProj()));
+		int rowcnt = projDAO.insertProjRev(projRev);
+		if(rowcnt > 0) {
+			result = ServiceResult.OK;
+			modifyComGrade(projRev);
+			projDAO.updateProjRating(projRev.getRevProj());
+		} else {
+			result = ServiceResult.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public ProjReviewVO getProjRev(ProjReviewVO projRev) {
+		if(projRev == null) {
+			throw new RuntimeException("해당 리뷰가 없습니다.");
+		}
+		projRev.setRevCommem(projDAO.selectCommem(projRev.getRevProj()));
+		return projDAO.selectProjRev(projRev);
+	}
+
+	@Override
+	public ProjReviewVO updateProjRev(ProjReviewVO projRev) {
+		if(projRev == null) {
+			throw new RuntimeException("해당 리뷰가 없습니다.");
+		}
+		int rowcnt = projDAO.modifyProjRev(projRev);
+		ProjReviewVO projReview = null;
+		if(rowcnt > 0) {
+			projReview = projDAO.selectProjRev(projRev);
+			modifyComGrade(projRev);
+			projDAO.updateProjRating(projReview.getRevProj());
+		}
+		return projReview;
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult deleteProjRev(String revId) {
+		ServiceResult result = null;
+		if(revId == null) {
+			result = ServiceResult.NOTEXIST;
+			return result;
+		}
+		ProjReviewVO projRev = projDAO.selectProjRevWithId(revId);
+		modifyComGrade(projRev);
+		projDAO.updateProjRating(projRev.getRevProj());
+		
+		int rowcnt = projDAO.deleteProjRev(revId);
+		
+		if(rowcnt > 0) {
+			result = ServiceResult.OK;
+		} else {
+			result = ServiceResult.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public List<ApplicantVO> findApplyList(String projId) {
+		List<ApplicantVO> applyList = new ArrayList<ApplicantVO>();
+		if(projId == null) {
+			throw new RuntimeException(String.format("%d를 가진 프로젝트가 없습니다.", projId));
+		}
+		applyList = projDAO.selectApplyList(projId);
+		return applyList;
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult createGenRev(MemReviewVO memRev) {
+		ServiceResult result = null;
+		if(memRev == null) {
+			result = ServiceResult.NOTEXIST;
+			return result;
+		} else if(projDAO.selectGenRev(memRev) != null) {
+			result = ServiceResult.DUPLICATED;
+			return result;
+		}
+		int rowcnt = projDAO.insertGenRev(memRev);
+		if(rowcnt > 0) {
+			result = ServiceResult.OK;
+			modifyGenGrade(memRev);
+		} else {
+			result = ServiceResult.FAIL;
+		}
+		return result;
+	}
+
+	@Transactional
+	@Override
+	public MemReviewVO updateGenRev(MemReviewVO memRev) {
+		if(memRev == null) {
+			throw new RuntimeException("해당 리뷰가 없습니다.");
+		}
+		int rowcnt = projDAO.modifyGenRev(memRev);
+		MemReviewVO memReview = null;
+		if(rowcnt > 0) {
+			memReview = projDAO.selectGenRev(memRev);
+			modifyGenGrade(memRev);
+		}
+		return memReview;
+	}
+
+	@Transactional
+	@Override
+	public ServiceResult deleteGenRev(String genrevId) {
+		ServiceResult result = null;
+		if(genrevId == null) {
+			result = ServiceResult.NOTEXIST;
+			return result;
+		}
+		MemReviewVO memRev = projDAO.selectGenRevWithId(genrevId);
+		modifyGenGrade(memRev);
+		
+		int rowcnt = projDAO.deleteGenRev(genrevId);
+		if(rowcnt > 0) {
+			result = ServiceResult.OK;
+		} else {
+			result = ServiceResult.FAIL;
+		}
+		return result;
+	}
+
+	@Override
+	public MemReviewVO getGenRev(MemReviewVO memRev) {
+		if(memRev == null) {
+			throw new RuntimeException("해당 리뷰가 없습니다.");
+		}
+		return projDAO.selectGenRev(memRev);
+	}
+
+	@Override
+	public void modifyGenGrade(MemReviewVO memRev) {
+		projDAO.updateGenRating(memRev.getGenrevGenmem());
+		projDAO.updateGenGrade(memRev.getGenrevGenmem());
+	}
+
+	@Override
+	public void modifyComGrade(ProjReviewVO projRev) {
+		projDAO.updateComRating(projRev.getRevCommem());
+		projDAO.updateComGrade(projRev.getRevCommem());
+	}
+	
+	
+}

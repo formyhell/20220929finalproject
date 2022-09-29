@@ -1,0 +1,193 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
+<script src="${cPath}/resources/assets/js/jquery-1.12.4.min.js" type="text/javascript"></script>
+
+<%-- 아웃소싱 프로젝트 목록 리스트 --%>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자      수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 19.      신창규     내가 등록한
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+
+			<!-- CONTENT -->
+			<!-- Intro Section -->
+			<section class="inner-intro bg-img light-color overlay-before parallax-background">
+				<div class="container">
+					<div class="row title">
+						<h1 data-title="Project"><span>나의 모집중인 프로젝트</span></h1>
+					</div>
+				</div>
+			</section>
+			<!-- Intro Section -->
+			<!-- Service Section -->
+			<div id="services-section" class="pt-80 pt-xs-60">
+				<div class="container">
+<!-- 					<div class="row "> -->
+<!-- 						<div class="col-sm-12"> -->
+<!-- 							<div class="block-title v-line mb-45"> -->
+<!-- 								<h2><span>Our</span> Project</h2> -->
+<!-- 								<p class="italic"> -->
+<!-- 									원하는 프로젝트에 지원해보세요 -->
+<!-- 								</p> -->
+<!-- 							</div> -->
+<!-- 						</div> -->
+<!-- 					</div> -->
+<!-- 					<input type="button" value="등록"> -->
+					
+					<!-- 검색 -->
+					<div id="searchUI" class="form-field">
+					<form:select path="simpleCondition.searchType">
+						<form:option value="">전체</form:option>
+						<form:option value="projTitle" label="제목" />
+						<form:option value="projEmptype" label="고용형태" />
+						<form:option value="projRegist" label="등록자" />
+					</form:select>
+					<form:input style="border: 1px solid #DEDEDE;" placeholder="Search Here" path="simpleCondition.searchWord" />
+					<input type="button" id="searchBtn" class="btn-blueOcen" value="검색">
+					
+					<div class="row">
+						<div class="col-sm-12">
+							<div class="project-category">
+							
+<!-- 	혹시 모르니까 이건 지우지 마세요		<ul class="filter-button-group "> -->
+<!-- 									<li> -->
+<!-- 										<a class="line-btn active" data-filter="*">전체</a> -->
+<!-- 									</li> -->
+<!-- 									<li> -->
+<!-- 										<a class="line-btn" data-filter=".interior">외주(도급)</a>프로젝트의 분류명 -->
+<!-- 									</li> -->
+<!-- 									<li> -->
+<!-- 										<a class="line-btn" data-filter=".education">상주(기간제)</a>프로젝트의 분류명 -->
+<!-- 									</li> -->
+<!-- 								</ul> -->
+<!-- 								<ul class="filter-button-group "> -->
+<!-- 									<li> -->
+<!-- 										<a class="line-btn" data-filter=".designer">디자이너</a> -->
+<!-- 									</li> -->
+<!-- 									<li> -->
+<!-- 										<a class="line-btn" data-filter=".developer">개발자</a> -->
+<!-- 									</li> -->
+<!-- 									<li> -->
+<!-- 										<a class="line-btn" data-filter=".pm">기획자</a> -->
+<!-- 									</li> -->
+<!-- 								</ul> -->
+<!-- 								<input type="checkbox" name="projemptype" value="in"> 외주(도급) -->
+<!-- 								<input type="checkbox" name="projemptype" value="in"> 상주(기간제) -->
+									
+<!-- 								<br> -->
+								
+<!-- 								<input type="checkbox" name="jobfeild" value="developer"> 개발자 -->
+<!-- 								<input type="checkbox" name="jobfeild" value="designer"> 디자이너 -->
+<!-- 								<input type="checkbox" name="jobfeild" value="pm"> 기획자 -->
+								
+<!-- 								<br> -->
+								
+<!-- 								<input type="checkbox" name="grade" value="gold"> 골드 -->
+<!-- 								<input type="checkbox" name="grade" value="silver"> 실버 -->
+<!-- 								<input type="checkbox" name="grade" value="bronze"> 브론즈 -->
+<!-- 								<input type="checkbox" name="grade" value="common"> 일반 -->
+								
+<!-- 								<br> -->
+								
+<!-- 								<input type="number" placeholder="최저금액"> ~ <input type="number" placeholder="최대금액"> -->
+<!-- 								<br> -->
+<!-- 								시작일 <input type="date"> ~ 종료일 <input type="date"> -->
+								
+								
+								
+							</div>
+							<ul class="project-col-3 isotope" id="isotope">
+							
+								<!-- 프로젝트 목록 for-->
+								<c:set value="${pagingVO.dataList }" var="projList" />
+								<c:choose>
+									<c:when test="${not empty projList }">
+										<c:forEach items="${projList }" var="proj">
+											<li><!-- class="education" 프로젝트의 분류명 -->
+												<a href="${cPath }/outsourcing/${proj.projId}/project">
+												<div class="about-block mb-60 mb-xs-40 clearfix">
+													<figure>
+														<img class="img-responsive" src="${cPath}/resources/assets/images/project/1-1.png" alt="Photo">
+													</figure>
+													<div class="text-box mt-25">
+														<div class="box-title mb-15">
+															<h3>${proj.projTitle }</h3>
+														</div>
+														<div class="text-content">
+															<p>
+																프로젝트 번호 : ${proj.projId} <br>
+																등록자 아이디 : ${proj.projRegist} <br>
+																고용 형태 : ${proj.projEmptype} <br> 
+																기획 상태 : ${proj.projPlanstate} <br>
+																분류 : ${proj.projType} <br>
+																모집 마감일 : ${proj.projRecruitfdate} <br>
+																시작예정일 : ${proj.projSdate} <br>
+																종료 예정일 : ${proj.projSdate} <br>
+																모집 인원 : ${proj.projMemnum} <br>
+																프로젝트 규모 : ${proj.projEstimate} <br>
+																내용 : ${proj.projContent} <br>
+																모집요건 : ${proj.projQualifi} <br>
+																승인 현황 : ${proj.projApprove} <br>
+																반려사유 : ${proj.projReject} <br>
+																지역 : ${proj.projLoc} <br>
+																상태 : ${proj.projState} <br>
+																등록일 : ${proj.projRecruitsdate}
+															</p>
+<%-- 															<a href="${cPath }/outsourcing/${proj.projId}" class="btn-text mt-15">Read More</a> --%>
+														</div>
+													</div>
+												</div>
+												</a>
+											</li>
+										</c:forEach>
+									</c:when>
+									<c:otherwise>
+										<h3><strong>*등록하신 프로젝트가 없습니다*</strong></h3>
+										<h3>지금 바로 등록하세요!</h3>
+									</c:otherwise>
+								</c:choose>
+								<!-- end for -->
+								
+							</ul>
+							<div>
+							</div>
+						</div>
+					</div>
+				</div>
+								<div class="pagingArea pagination-nav text-left mt-60 mtb-xs-30">
+											${pagingVO.pagingHTMLBS }</div>
+			</div>
+			</div>
+			<!-- Service Section end -->
+<form:form id="searchForm" modelAttribute="simpleCondition" action="${cPath }/outsourcing" method="get">
+	<input type="hidden" name="page" />
+	<form:input type="hidden" path="searchType"/>
+	<form:input type="hidden" path="searchWord"/>
+
+</form:form>
+
+<script>
+	let searchForm = $("#searchForm");
+	let pagingArea = $(".pagingArea").on("click", "a", function(event){
+		let page = $(this).data("page");
+		searchForm.find("[name=page]").val(page);
+		searchForm.submit();
+	});
+	
+	let searchUI = $("#searchUI").on("click", "#searchBtn", function(event){
+		searchForm.get(0).reset();
+		let inputs = searchUI.find(":input[name]");
+		$(inputs).each(function(idx, input){
+			let name = $(this).attr("name");
+			let value = $(this).val();
+			searchForm.find("[name="+name+"]").val(value);
+		});
+		searchForm.submit();
+	});
+</script>

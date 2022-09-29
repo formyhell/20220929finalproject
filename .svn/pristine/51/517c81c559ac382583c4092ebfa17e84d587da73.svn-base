@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.manageProject.dao.ProjectManageDAO">
+	<resultMap type="kr.or.ddit.outsourcing.vo.OutProjVO" id="projMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID" />
+		<collection property="objSingleList" javaType="List" ofType="String">
+			<result column="OBJ_NAME" />
+		</collection>
+		<collection property="skillSingleList" javaType="List" ofType="String">
+			<result column="SKILL_NAME"/>
+		</collection>
+		<collection property="projReviewList" ofType="kr.or.ddit.outsourcing.vo.ProjReviewVO" autoMapping="true">
+			<id property="revId" column="REV_ID"/>
+		</collection>
+		<collection property="memReviewList" ofType="kr.or.ddit.common.member.vo.MemReviewVO" autoMapping="true">
+			<id property="genrevId" column="GENREV_ID"/>
+		</collection>
+	</resultMap>
+
+	<select id="selectOne" parameterType="String" resultMap="projMap">
+		WITH APPLYVIEW AS (
+	        SELECT REV_ID, REV_PROJ, REV_COMMEM, REV_PROJRATING, REV_CONTENT, REV_DATE, REV_WRITER, REV_COMRATING, APPLY_OBJ
+	          FROM PROJ_REVIEW A INNER JOIN APPLY_PROJ B ON(A.REV_PROJ = B.APPLY_PROJ)
+	    ), REVVIEW AS (
+	        SELECT REV_ID, REV_PROJ, REV_COMMEM, REV_PROJRATING, REV_CONTENT, REV_DATE, REV_WRITER, REV_COMRATING, CODE_NAME
+	          FROM APPLYVIEW C INNER JOIN COMMON_CODE D ON(D.CODE_ID = C.APPLY_OBJ)
+	    ), GENAPPLYVIEW AS (
+            SELECT GENREV_ID, GENREV_PROJ, GENREV_GENMEM, GENREV_RATING, GENREV_DATE, APPLY_OBJ
+              FROM GEN_REVIEW E INNER JOIN APPLY_PROJ F ON (E.GENREV_PROJ = F.APPLY_PROJ)
+             WHERE E.GENREV_GENMEM = F.APPLY_APPLICANT
+        ), GENREVVIEW AS (
+            SELECT GENREV_ID, GENREV_PROJ, GENREV_GENMEM, GENREV_RATING, GENREV_DATE, CODE_NAME
+              FROM GENAPPLYVIEW G INNER JOIN COMMON_CODE H ON (G.APPLY_OBJ = H.CODE_ID)
+        )
+	    SELECT PROJ_ID, PROJ_REGIST, PROJ_TYPE, PROJ_PLANSTATE, TO_CHAR(PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE, PROJ_ESTIMATE, TO_CHAR(PROJ_CONTENT) PROJ_CONTENT, PROJ_QUALIFI, PROJ_RATING, TO_CHAR(PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE
+	            , TO_CHAR(PROJ_REALFDATE, 'YYYY-MM-DD') PROJ_REALFDATE, PROJ_LOC, PROJ_TITLE, PROJ_REALNUM, OBJ_NAME, SKILL_NAME, EMPTYPE_NAME AS PROJ_EMPTYPE, STATE_NAME AS PROJ_STATE
+	            , REV_ID, REV_PROJ, REV_COMMEM, REV_PROJRATING, REV_CONTENT, REV_DATE, REV_WRITER, REV_COMRATING, J.CODE_NAME AS REV_WRITEROBJ
+                , GENREV_ID, GENREV_PROJ, GENREV_GENMEM, GENREV_RATING, TO_CHAR(GENREV_DATE, 'YYYY-MM-DD') GENREV_DATE, K.CODE_NAME AS GENREV_MEMOBJ
+	      FROM V_OUTPROJ I LEFT OUTER JOIN REVVIEW J ON (I.PROJ_ID = J.REV_PROJ)
+                           LEFT OUTER JOIN GENREVVIEW K ON (I.PROJ_ID = K.GENREV_PROJ)
+	     WHERE I.PROJ_ID = #{projId}
+	</select>
+	
+	<select id="genSelectTotalProj" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+			FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT) PROJ_CONTENT
+			FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE, TO_CHAR(C.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE
+                      , C.PROJ_REALNUM, TO_CHAR(C.PROJ_CONTENT) PROJ_CONTENT, C.PROJ_TITLE, D.APPLY_APPLICANT, D.CONTRACT_STATE
+					FROM OUTSOURCING_PROJ C, (SELECT A.*, B.CONTRACT_STATE
+			                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+			WHERE C.PROJ_ID = D.APPLY_PROJ
+			  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+			  
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchType)">	  
+		<choose>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'PROGRESS'
+			</when>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'FINISH'
+			</when>
+		</choose>
+	</if>
+			  AND D.CONTRACT_STATE = 'CONCLUDE'
+			  AND D.APPLY_APPLICANT = #{member.memId} ) E
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+			WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+		</if>
+			) F
+	</select>
+	
+	<select id="genSelectAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT H.*
+		FROM (SELECT ROWNUM RNUM, G.*
+		FROM (SELECT F.*
+					FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT) PROJ_CONTENT, E.PROJ_REALSDATE, E.PROJ_FDATE, E.PROJ_REALNUM, E.PROJ_STATE
+					FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE, TO_CHAR(C.PROJ_FDATE, 'YYYY-MM-DD') PROJ_FDATE
+                      		, C.PROJ_REALNUM, TO_CHAR(C.PROJ_CONTENT) PROJ_CONTENT, C.PROJ_TITLE, D.APPLY_APPLICANT, D.CONTRACT_STATE
+					FROM OUTSOURCING_PROJ C, (SELECT A.*, B.CONTRACT_STATE
+					                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+					WHERE C.PROJ_ID = D.APPLY_PROJ
+					  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+					  
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchType)">	  
+		<choose>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'PROGRESS'
+			</when>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'FINISH'
+			</when>
+		</choose>
+	</if>
+					  AND D.CONTRACT_STATE = 'CONCLUDE'
+					  AND D.APPLY_APPLICANT = #{member.memId} ) E
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+			WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+		</if>
+					) F) G) H
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	
+	<select id="comSelectTotalProj" parameterType="hashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT) PROJ_CONTENT, E.PROJ_REALSDATE, E.PROJ_REALFDATE, E.PROJ_REALNUM
+					FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE, TO_CHAR(C.PROJ_REALFDATE, 'YYYY-MM-DD') PROJ_REALFDATE
+                                , C.PROJ_REALNUM, TO_CHAR(C.PROJ_CONTENT) PROJ_CONTENT, C.PROJ_TITLE, D.APPLY_APPLICANT, D.CONTRACT_STATE
+					FROM OUTSOURCING_PROJ C, (SELECT A.*, B.CONTRACT_STATE
+		                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+		WHERE C.PROJ_ID = D.APPLY_PROJ
+		  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+	<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchType)">	  
+		<choose>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'PROGRESS'
+			</when>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'FINISH'
+			</when>
+		</choose>
+	</if>
+		  AND D.CONTRACT_STATE = 'CONCLUDE'
+		  AND C.PROJ_REGIST = #{member.memId} ) E
+	<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+		WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+		OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+		OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+	</if>
+		) F
+	</select>
+	
+	
+	<select id="comSelectAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		SELECT H.*
+		FROM (SELECT ROWNUM RNUM, G.*
+		FROM (SELECT F.*
+					FROM (SELECT DISTINCT E.PROJ_ID, E.PROJ_TITLE, E.PROJ_REGIST, TO_CHAR(E.PROJ_CONTENT) PROJ_CONTENT, E.PROJ_REALSDATE, E.PROJ_REALFDATE, E.PROJ_REALNUM, E.PROJ_STATE
+					FROM (SELECT C.PROJ_ID, C.PROJ_REGIST, TO_CHAR(C.PROJ_REALSDATE, 'YYYY-MM-DD') PROJ_REALSDATE, C.PROJ_STATE, TO_CHAR(C.PROJ_REALFDATE, 'YYYY-MM-DD') PROJ_REALFDATE
+                                , C.PROJ_REALNUM, TO_CHAR(C.PROJ_CONTENT) PROJ_CONTENT, C.PROJ_TITLE, D.APPLY_APPLICANT, D.CONTRACT_STATE
+					FROM OUTSOURCING_PROJ C, (SELECT A.*, B.CONTRACT_STATE
+					                    FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID = B.CONTRACT_APPLYID)) D
+					WHERE C.PROJ_ID = D.APPLY_PROJ
+					  AND C.PROJ_STATE IN ('PROGRESS', 'FINISH')
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchType)">	  
+		<choose>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'PROGRESS'
+			</when>
+			<when test="pagingVO.simpleCondition.searchType eq 'doing'">
+				AND C.PROJ_STATE = 'FINISH'
+			</when>
+		</choose>
+	</if>
+					  AND D.CONTRACT_STATE = 'CONCLUDE'
+					  AND C.PROJ_REGIST = #{member.memId} ) E
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">	  
+			WHERE INSTR(E.PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+			OR INSTR(E.PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+		</if>
+					) F) G) H
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	
+	
+	<select id="selectCommem" parameterType="String" resultType="String">
+		SELECT PROJ_REGIST
+		FROM OUTSOURCING_PROJ
+		WHERE PROJ_ID = #{projId}
+	</select>
+	
+	<insert id="insertProjRev" parameterType="kr.or.ddit.outsourcing.vo.ProjReviewVO">
+		INSERT INTO PROJ_REVIEW (
+		    REV_ID
+		    , REV_PROJ
+		    , REV_COMMEM
+		    , REV_PROJRATING
+		   <if test="revContent != null and revContent != ''">
+		    , REV_CONTENT
+		   </if>
+		    , REV_DATE
+		    , REV_WRITER
+		    , REV_COMRATING
+		) VALUES (
+		    FN_CREATE_PROJ_REVIEW_ID
+		    , #{revProj,jdbcType=VARCHAR}
+		    , #{revCommem,jdbcType=VARCHAR}
+		    , #{revProjrating,jdbcType=NUMERIC}
+		   <if test="revContent != null and revContent != ''">
+		    , #{revContent,jdbcType=VARCHAR}
+		   </if>
+		    , SYSDATE
+		    , #{revWriter,jdbcType=VARCHAR}
+		    , #{revComrating,jdbcType=NUMERIC}
+		)
+	</insert>
+	
+	<select id="selectProjRev" parameterType="kr.or.ddit.outsourcing.vo.ProjReviewVO" resultType="kr.or.ddit.outsourcing.vo.ProjReviewVO">
+		SELECT REV_ID
+		        , REV_PROJ
+		        , REV_COMMEM
+		        , REV_PROJRATING
+		        , REV_CONTENT
+		        , REV_DATE
+		        , REV_WRITER
+		        , REV_COMRATING
+				, APPLY_OBJ AS REV_WRITEROBJ
+				, GEN_IMG
+		FROM PROJ_REVIEW A INNER JOIN  APPLY_PROJ B ON(A.REV_WRITER = B.APPLY_APPLICANT)
+						   INNER JOIN GEN_MEMBER C ON(A.REV_WRITER=C.GEN_ID)
+		WHERE A.REV_PROJ = B.APPLY_PROJ
+		  AND REV_PROJ = #{revProj}
+		  AND REV_WRITER = #{revWriter}
+	</select>
+	
+	<select id="selectProjRevWithId" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.ProjReviewVO">
+		SELECT REV_ID
+		        , REV_PROJ
+		        , REV_COMMEM
+		        , REV_PROJRATING
+		        , REV_CONTENT
+		        , REV_DATE
+		        , REV_WRITER
+		        , REV_COMRATING
+				, APPLY_OBJ AS REV_WRITEROBJ
+				, GEN_IMG
+		FROM PROJ_REVIEW
+	   WHERE REV_ID = #{revId}
+	</select>
+	
+	<select id="selectGenRevWithId" parameterType="String" resultType="kr.or.ddit.common.member.vo.MemReviewVO">
+		SELECT GENREV_ID
+				, GENREV_PROJ
+				, GENREV_GENMEM
+				, GENREV_RATING
+				, TO_CHAR(GENREV_DATE, 'YYYY-MM-DD') GENREV_DATE
+		 FROM GEN_REVIEW
+		WHERE GENREV_ID = #{genrevId}
+	</select>
+	
+	<update id="modifyProjRev" parameterType="kr.or.ddit.outsourcing.vo.ProjReviewVO">
+		UPDATE PROJ_REVIEW
+			SET REV_PROJRATING = #{revProjrating,jdbcType=NUMERIC}
+			  <if test="revContent != null and revContent != ''">
+			    , REV_CONTENT = #{revContent,jdbcType=VARCHAR}
+			  </if>
+			    , REV_COMRATING = #{revComrating,jdbcType=NUMERIC}
+			WHERE REV_ID = #{revId}
+	</update>
+	
+	<delete id="deleteProjRev" parameterType="String">
+		DELETE FROM PROJ_REVIEW WHERE REV_ID = #{revId}
+	</delete>
+	
+	<select id="selectApplyList" parameterType="String" resultType="kr.or.ddit.outsourcing.vo.ApplicantVO">
+		SELECT APPLY_APPLICANT, APPLY_PROJ, CODE_NAME AS APPLY_OBJ
+			FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID=B.CONTRACT_APPLYID)
+			                  INNER JOIN COMMON_CODE C ON (A.APPLY_OBJ=C.CODE_ID)
+			WHERE B.CONTRACT_STATE = 'CONCLUDE'
+		AND A.APPLY_PROJ = #{projId}
+	</select>
+	
+	<insert id="insertGenRev" parameterType="kr.or.ddit.common.member.vo.MemReviewVO">
+		INSERT INTO GEN_REVIEW (
+			    GENREV_ID
+			    , GENREV_PROJ
+			    , GENREV_GENMEM
+			    , GENREV_RATING
+			    , GENREV_DATE
+			) VALUES (
+			    FN_CREATE_GEN_REVIEW_ID
+			    , #{genrevProj,jdbcType=VARCHAR}
+			    , #{genrevGenmem,jdbcType=VARCHAR}
+			    , #{genrevRating,jdbcType=NUMERIC}
+			    , SYSDATE
+			)
+	</insert>
+	
+	<select id="selectGenRev" parameterType="kr.or.ddit.common.member.vo.MemReviewVO" resultType="kr.or.ddit.common.member.vo.MemReviewVO">
+		SELECT GENREV_ID
+				, GENREV_PROJ
+				, GENREV_GENMEM
+				, GENREV_RATING
+				, TO_CHAR(GENREV_DATE, 'YYYY-MM-DD') GENREV_DATE
+                , APPLY_OBJ AS GENREV_MEMOBJ
+                 , GEN_IMG
+		FROM GEN_REVIEW A INNER JOIN APPLY_PROJ B ON(A.GENREV_GENMEM=B.APPLY_APPLICANT)
+		                  INNER JOIN GEN_MEMBER C ON(A.GENREV_GENMEM=C.GEN_ID)
+		WHERE GENREV_PROJ = #{genrevProj}
+		  AND GENREV_GENMEM = #{genrevGenmem}
+		  AND A.GENREV_PROJ=B.APPLY_PROJ
+	</select>
+	
+	<update id="modifyGenRev" parameterType="kr.or.ddit.common.member.vo.MemReviewVO">
+		UPDATE GEN_REVIEW
+		SET GENREV_RATING = #{genrevRating}
+		WHERE GENREV_ID = #{genrevId}
+	</update>
+	
+	<delete id="deleteGenRev" parameterType="String">
+		DELETE FROM GEN_REVIEW WHERE GENREV_ID = #{genrevId}
+	</delete>
+	
+	<update id="updateGenRating" parameterType="String">
+		UPDATE GEN_MEMBER
+		   SET GEN_RATING = (SELECT SUM(GENREV_RATING) / COUNT(*) AS RATING
+		                          FROM GEN_REVIEW
+		                         WHERE GENREV_GENMEM = #{memId})
+		WHERE GEN_ID = #{memId};
+	</update>
+	
+	<update id="updateComRating" parameterType="String">
+		UPDATE COM_MEMBER
+			SET COM_RATING = (SELECT SUM(REV_COMRATING) / COUNT(*) AS RATING
+			                      FROM PROJ_REVIEW
+			                     WHERE REV_COMMEM = #{memId})
+			WHERE COM_ID = #{memId}
+	</update>
+	
+	<update id="updateProjRating" parameterType="String">
+		UPDATE OUTSOURCING_PROJ
+		   SET PROJ_RATING = (SELECT SUM(REV_PROJRATING) / COUNT(*) AS RATING
+		                          FROM PROJ_REVIEW
+		                         WHERE REV_PROJ = #{projId})
+		WHERE PROJ_ID = #{projId}
+	</update>
+</mapper>

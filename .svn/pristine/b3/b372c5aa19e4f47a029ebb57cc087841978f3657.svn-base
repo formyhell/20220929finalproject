@@ -1,0 +1,54 @@
+package kr.or.ddit.pms.project.controller;
+
+import java.nio.charset.Charset;
+import java.util.Random;
+
+public class RandomString {
+	public String getRandomString(int i) 
+    { 
+    
+        // bind the length 
+		byte[] bytearray;
+        bytearray = new byte[256];         
+        String mystring;
+        StringBuffer thebuffer;
+        String theAlphaNumericS;
+
+        new Random().nextBytes(bytearray); 
+
+        mystring 
+            = new String(bytearray, Charset.forName("UTF-8")); 
+            
+        thebuffer = new StringBuffer();
+        
+        //remove all spacial char 
+        theAlphaNumericS 
+            = mystring 
+                .replaceAll("[^A-Z0-9]", ""); 
+
+        //random selection
+        for (int m = 0; m < theAlphaNumericS.length(); m++) { 
+
+            if (Character.isLetter(theAlphaNumericS.charAt(m)) 
+                    && (i > 0) 
+                || Character.isDigit(theAlphaNumericS.charAt(m)) 
+                    && (i > 0)) { 
+
+                thebuffer.append(theAlphaNumericS.charAt(m)); 
+                i--; 
+            } 
+        } 
+
+        // the resulting string 
+        return thebuffer.toString(); 
+    } 
+
+//    public static void main(String[] args) 
+//    { 
+//        // the random string length
+//        int i = 15; 
+//
+//        // output 
+//        System.out.println("A random string: " +  getRandomString(i)); 
+//    } 
+}

@@ -1,0 +1,532 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>
+<%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 29.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="${cPath }/resources/assetsPms/css/fontawesome.css">
+<link rel="stylesheet" type="text/css" href="${cPath }/resources/assetsPms/css/style.css">
+<link id="color" rel="stylesheet" href="${cPath }/resources/assetsPms/css/color-1.css" media="screen">
+</head>
+<body> 
+			<!-- Modal -->
+			<div class="modal fade" id="projModal" tabindex="-1" aria-labelledby="projModalLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <h5 class="modal-title" id="projModalLabel">일반회원 리뷰 작성</h5>
+			        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			      </div>
+			      <div class="modal-body" style="padding-top:0px">
+			      <form class="needs-validation" method="post" id="projForm">
+			      <div class="card-body">
+			      <div class="row" style="padding-bottom: 20px;">
+			      <div class="col">
+                         <div class="mb-3">
+			      <label class="form-label genrevGenmem" for="validationCustom01"></label>
+			      <span class="badge rounded-pill badge-primary genrevMemObj"></span>
+                    <div class="rating-container" style="margin-top:10px">
+                      <select id="u-rating-fontawesome" name="rating" class="genrevRating" autocomplete="off">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </div>
+				 </div>
+				 </div>
+				 </div>
+				 
+				 </div>			      
+			      <div class="card-foot" style="float:right">
+			        <button class="btn btn-primary" type="button" id="btn-form" >저장</button>
+			        <button class="btn btn-light btn-cancel" type="button" style="margin-right:10px" data-bs-dismiss="modal">취소</button>
+			      </div>
+			      </form>
+			      </div>
+			    </div>
+			  </div>
+			</div>   
+		
+			
+			<!-- Modal -->
+			<div class="modal fade" id="projModifyModal" tabindex="-1" aria-labelledby="projModalLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <h5 class="modal-title" id="projModalLabel">일반회원 리뷰 작성</h5>
+			        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			      </div>
+			      <div class="modal-body" style="padding-top:0px">
+			      <form class="needs-validation" method="post" id="projForm">
+			      <div class="card-body">
+			      <div class="row" style="padding-bottom: 20px;">
+			      <div class="col">
+                         <div class="mb-3">
+			      <label class="form-label revGenmem" for="validationCustom01"></label>
+			      <span class="badge rounded-pill badge-primary revMemObj"></span>
+                    <div class="rating-container" style="margin-top:10px">
+                      <select id="u-rating-fontawesome" name="rating" class="revRating" autocomplete="off">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                    </div>
+				 </div>
+				 </div>
+				 </div>
+				 
+				 </div>			      
+			      <div class="card-foot" style="float:right">
+			        <button class="btn btn-primary" type="button" id="btn-submit" >저장</button>
+			        <button class="btn btn-light btn-cancel" type="button" style="margin-right:10px" data-bs-dismiss="modal">취소</button>
+			      </div>
+			      </form>
+			      </div>
+			    </div>
+			  </div>
+			</div>   
+			
+			<!-- finish Modal -->
+			<div class="modal fade" id="finishModal" tabindex="-1" aria-labelledby="projModalLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <h4 class="modal-title" id="projModalLabel">비밀번호를 입력하시오</h4>
+			        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			      </div>
+			      <form method="post" action="${cPath }/myinfo/project/projectFinish">
+			      <input type="hidden" name="projId" value="${proj.projId}" />
+			      <div>
+			      	<p>프로젝트 명  <strong>[${proj.projTitle}]</strong></p>
+			      	<p>등록자  <strong>[${proj.projRegist}]</strong></p>
+			      	<p>프로젝트 기간 <strong>[${proj.projRealsdate}] ~ [${proj.projRealfdate}]</strong></p>
+			      	<p>프로젝트 지역 <strong>[${proj.projLoc}]</strong></p>
+			      	<p>프로젝트 비용  <strong>${proj.projEstimate} 원</strong></p>
+			      </div>
+			      <sec:csrfInput/>
+				      <div class="modal-body">
+				      	<p align="center" style="color:red; font: "><strong>한번 완료된 프로젝트는 되돌릴수 없습니다. <br> 종료전 프로젝트 정보를 다시한번 확인 하십시오.</strong></p>
+				        <input type="password" name="password" class="form-control" placeholder="비밀번호를 입력하시오."/>
+				        <c:if test="${not empty message}">
+							<script>
+							alert("${message}");
+							</script>
+						</c:if>	
+			      		<form:errors  path="password" element="span" cssClass="error"/>
+				      </div>
+				      <div class="modal-footer">
+				        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+				        <button type="submit" class="btn btn-danger"  >프로젝트 종료하기</button>
+				      </div>
+			      </form> 
+			    </div>
+			  </div>
+			</div>
+			           
+          <div class="container-fluid">
+            <div class="page-header">
+              <div class="row">
+                <div class="col-sm-6">
+                  <h3>프로젝트 상세조회</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Container-fluid starts-->
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-xl-12 xl-60 box-col-8">
+                <div class="card">
+                  <div class="job-search">
+                    <div class="card-body">
+                      <div class="media">
+                        <div class="media-body">
+                          <div class="row">
+                          	<h4 class="f-w-600 col-md-2 txt-primary" style="margin-right: -60px">${proj.projTitle }</h4>
+                          	<p id="projId" style="display:none">${proj.projId }</p>
+                          	<c:if test="${proj.projRating != 0}">
+                          	<ul class="rating col-sm-4">
+                          	<c:forEach begin="1" end="${proj.projRating / 1 }">
+                            	<li><i class="fa fa-star font-warning"></i></li>
+                            </c:forEach>
+                            <c:if test="${proj.projRating % 1 > 0}">
+                            	<i class="fa fa-star-half-o font-warning"></i>
+                            </c:if>
+                          </ul>
+                          </c:if>
+                          </div>
+                          <p>${proj.projRegist }</p>
+                          
+                          <c:if test="${empty proj.memReviewList && proj.projState eq '완료' && not empty applyList}">
+                        	<a class="btn btn-primary btn-sm job-apply-btn" data-bs-toggle="modal" data-bs-target="#projModal">리뷰 작성</a>
+							</c:if>
+                        </div>
+                      </div>
+                      <div class="job-description">
+                        <h6>세부사항</h6>
+                      	<P>프로젝트 기간 <strong>${proj.projRealsdate }</strong>-
+                      	<c:if test="${proj.projState eq '진행중' }">
+                      		<strong>${proj.projFdate }</strong>
+                      	</c:if>
+                      	<c:if test="${proj.projState eq '완료' }">
+                      		<strong>${proj.projRealfdate }</strong>
+                      	</c:if>
+                      	</P>
+                      	<p>비용  <strong>${proj.projEstimate }</strong></p>
+                      	<p>참여인원 <strong>${proj.projRealNum }</strong></p>
+                      	<p>고용형태  <strong>${proj.projEmptype }</strong></p>
+                      	<p>분류  <strong>${proj.projType }</strong></p>
+                      	<p>지역  <strong>${proj.projLoc }</strong></p>
+                      	<p class="f-w-600">프로젝트 필요기술</p>
+                      	<c:if test="${not empty proj.objSingleList }">
+                      		<c:forEach items="${proj.objSingleList }" var="obj">
+                      			<span class="badge rounded-pill badge-primary col-sm-1">${obj }</span>
+                      		</c:forEach>
+                      	</c:if>
+                      	<p class="f-w-600">프로젝트 모집분야</p>
+                      	<c:if test="${not empty proj.skillSingleList }">
+                      		<c:forEach items="${proj.skillSingleList }" var="skill">
+                      			<span class="badge rounded-pill badge-light text-dark col-sm-1">${skill }</span>
+                      		</c:forEach>
+                      	</c:if>
+                      </div>
+                      <div class="job-description">
+                        <h6>업무내용</h6>
+                        	<p>${proj.projContent }</p>
+                      </div>
+                      <div class="job-description">
+                        <h6>모집요건</h6>
+                        	<p>${proj.projQualifi }</p>
+                      </div>
+                       <div class="job-description">
+                        <h6>프로젝트 참여자</h6>
+                           <c:forEach items="${applyList }" var="apply">
+                           <div class="row applyRow">
+                        	<p style="margin-bottom:10px">${apply.applyApplicant }<span class="badge rounded-pill badge-primary" style="margin-left:10px">${apply.applyObj }</span></p>
+                        	<c:if test="${proj.projState eq '완료'}">
+                        		<c:set var="count" value="0"/>
+                        		<c:forEach items="${proj.memReviewList }" var="memRev">
+                        			<c:if test="${(fn:contains(memRev.genrevGenmem,apply.applyApplicant ))}">
+			                          	<c:set var="count" value="${count + 1}" />
+			                        </c:if>
+                        		</c:forEach>
+                        	</c:if>
+                        	<c:if test="${count < 1 }">
+                        		<a class="btn btn-primary btn-sm job-apply-btn" data-bs-toggle="modal" data-bs-target="#projModal">리뷰 작성</a>
+                        	</c:if>
+                        	</div>
+                        	</c:forEach>
+                      </div>
+                       <div class="job-description">
+                       <h3>앙 기모리</h3>
+                       <button class="btn btn-pill btn-danger active" data-bs-toggle="modal" data-bs-target="#finishModal">프로젝트 종료</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+             <c:if test="${proj.projState eq '완료' }">   
+                <div class="card comment-box">
+                    <div class="card-body">
+                      <h4>프로젝트 리뷰</h4>
+                      <ul id="revBody">
+                      <c:if test="${not empty proj.projReviewList}">
+                      	<c:forEach items="${proj.projReviewList }" var="rev">
+                        <li class="revLi">
+                          <div class="media align-self-center"><img class="align-self-center" src="../assets/images/blog/comment.jpg" alt="Generic placeholder image">
+                            <div class="media-body">
+                            	<div class="revId" style="display:none">${rev.revId }</div>
+                              <div class="row">
+                                <div class="col-md-4 xl-100">
+                                    <h6 class="mt-0">${rev.revWriter }<span> ( ${rev.revWriterObj } )</span></h6></div>
+                               	<div class="col-md-8 xl-100">
+                                  <ul class="comment-social learning-comment" style="float: right;">
+                                    <li class="digits proj"><i class="icofont icofont-briefcase"></i>프로젝트 ${rev.revProjrating }</li>
+                                    <li class="digits com"><i class="icofont icofont-businessman"></i>기업 ${rev.revComrating }</li>
+                                  </ul>
+                                </div>
+                              </div>
+                              <p>${rev.revContent }</p>
+                            </div>
+                          </div>
+                        </li>
+                        </c:forEach>
+                        </c:if>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div class="card comment-box">
+                    <div class="card-body">
+                      <h4>일반회원 리뷰</h4>
+                      <ul id="genRevBody">
+                      <c:if test="${not empty proj.memReviewList}">
+                      	<c:forEach items="${proj.memReviewList }" var="rev">
+                        <li class="genRevLi">
+                          <div class="media align-self-center"><img class="align-self-center" src="../assets/images/blog/comment.jpg" alt="Generic placeholder image">
+                            <div class="media-body">
+                            	<div class="revId" style="display:none">${rev.genrevId }</div>
+                              <div class="row">
+                                <div class="col-md-4 xl-100">
+                                <p style="display:none">${rev.genrevRating }</p>
+                                    <h6 class="mt-0">${rev.genrevGenmem }<span> ( ${rev.genrevMemObj } )</span></h6></div>
+                                    	<div class="col-md-8 xl-100">
+                                  <ul class="comment-social learning-comment" style="float: right; display: inline-block">
+                                    <li class="digits proj"><i class="fa fa-calendar-o"></i>${rev.genrevDate }</li>
+                                   </ul>
+                                </div>
+                              </div> 
+                                <c:if test="${rev.genrevRating != 0}">
+                          	<ul class="rating" style="margin-left:0px; display: inline-block; margin-top: 30px">
+                          	<c:forEach begin="1" end="${rev.genrevRating / 1 }">
+                            	<li style="clear: none; display: inline-block; letter-spacing: -2px;"><i class="fa fa-star font-warning"></i></li>
+                            </c:forEach>
+                            <c:if test="${rev.genrevRating % 1 > 0}">
+                            	<li style="clear: none; display: inline-block;"><i class="fa fa-star-half-o font-warning"></i>
+                            </c:if>
+                          </ul>
+                          </c:if>
+                          </div>
+                          </div>
+                           <div style="float : right"> 
+                            <button class="btn btn-light btn-sm" id="btn-modify" type="button">수정</button>
+                            <button class="btn btn-danger btn-sm" id="btn-del" type="button">삭제</button>
+                           </div>
+                        </li>
+                        </c:forEach>
+                        </c:if>
+                      </ul>
+                      </div>
+                    </div>
+                    </c:if>
+                  </div>
+              </div>
+            </div>
+<script>
+var header = '${_csrf.headerName}';
+var token =  '${_csrf.token}'; 
+
+$(document).on("click", ".job-apply-btn", function() {
+	let genrevProj = $("#projId").text();
+	let genrevMemObj = $(this).siblings("p").children("span").text();
+	let pTag = $(this).siblings("p").text();
+	let genrevGenmem = pTag.substr(0,pTag.length - genrevMemObj.length);
+	let applyBtn = $(this);
+	
+	
+
+	$(".genrevMemObj").text(genrevMemObj);
+	$(".genrevGenmem").text(genrevGenmem);
+	
+	$("#btn-form").on("click", function() {	
+		let genrevRating = $(".genrevRating").val();
+		
+		console.log("genrevProj: " + genrevProj);
+		console.log("genrevMemObj: " + genrevMemObj);
+		console.log("genrevGenmem: " + genrevGenmem);
+		console.log("genrevRating: " + genrevRating);
+		
+		 $.ajax({
+			url : "${cPath}/myinfo/project/com/" + genrevProj,
+			method : "post",
+			contentType: 'application/json; charset=utf-8',
+			data : JSON.stringify({
+				genrevProj : genrevProj,
+				genrevGenmem : genrevGenmem,
+				genrevRating : genrevRating
+				
+			}),
+			dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+			,
+			beforeSend : function(xhr)
+			{
+			   xhr.setRequestHeader(header,token);
+			},
+			success : function(resp, status, jqXHR) {
+				$('#projModal').modal('hide');
+				let resultMap = resp;
+				applyBtn.remove();
+				let memRev = resultMap.memRev;
+				let singleDiv = makeDiv(memRev);
+				$('#genRevBody').prepend(singleDiv); 
+			},
+			error : function(jqXHR, status, error) {
+				console.log(jqXHR);
+				console.log(status);
+				console.log(error);
+			}
+		}); 
+	});
+});
+
+
+let liTag = null;
+let genrevId = null;
+let genrevGenmem = null;
+$(document).on("click", "#btn-modify", function() {
+	$('#projModifyModal').modal('show');
+	genrevId = $(this).closest(".genRevLi").children(".media").children(".media-body").children(".revId").text();
+	genrevGenmem = $(this).closest(".genRevLi").children(".media").children(".media-body").children(".row").children(".col-md-4").children("h6").text().trim().split('(', 1);
+	let genrevMemObj = $(this).closest(".genRevLi").children(".media").children(".media-body").children(".row").children(".col-md-4").children("h6").children("span").text().slice(2, -1);
+	let genrevRating = $(this).closest(".genRevLi").children(".media").children(".media-body").children(".row").children(".col-md-4").children("p").text().substr(0,1);
+	liTag = $(this).closest(".genRevLi");
+	
+	genrevGenmem = genrevGenmem[0].trim();
+	console.log(genrevRating);
+	$(".revMemObj").text(genrevMemObj);
+	$(".revGenmem").text(genrevGenmem);
+	$(".revRating").val(genrevRating).prop("selected",true); 
+});
+
+$(document).on("click", "#btn-submit", function(event) {
+	event.preventDefault();
+	let genrevRating = $(".revRating").val();
+	let genrevProj = $("#projId").text();
+	console.log("genrevId: " + genrevId + typeof(genrevId));
+	console.log("genrevGenmem: " + genrevGenmem + typeof(genrevGenmem));
+	console.log("genrevRating: " + genrevRating + typeof(genrevRating));
+
+	  $.ajax({
+			url : "${cPath}/myinfo/project/com/" + genrevProj,
+			method : "put",
+			contentType: 'application/json; charset=utf-8',
+			data : JSON.stringify({
+				genrevId : genrevId,
+				genrevProj : genrevProj,
+				genrevGenmem : genrevGenmem,
+				genrevRating : genrevRating
+			}),
+			dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+			,
+			beforeSend : function(xhr)
+			{
+			   xhr.setRequestHeader(header,token);
+			},
+			success : function(resp, status, jqXHR) {
+				$('#projModifyModal').modal('hide');
+				liTag.remove();
+				let memRev = resp;
+				let singleDiv = makeDiv(memRev);
+				$('#genRevBody').prepend(singleDiv); 
+			},
+			error : function(jqXHR, status, error) {
+				console.log(jqXHR);
+				console.log(status);
+				console.log(error);
+			}
+		});  
+});
+
+$(document).on("click", "#btn-del", function() {
+	genrevId = $(this).closest(".genRevLi").children(".media").children(".media-body").children(".revId").text();
+	genrevGenmem = $(this).closest(".genRevLi").children(".media").children(".media-body").children(".row").children(".col-md-4").children("h6").text().trim().split('(', 1);
+	liTag = $(this).closest(".genRevLi");
+	let genrevProj = $("#projId").text(); 
+	let divId = $(".applyRow");
+	
+	let divTag = null;
+	let pTag = null;
+	let spanTag = null;
+	let result = null;
+	genrevGenmem = genrevGenmem[0].trim();
+	console.log(genrevGenmem);
+	for(let i=0; i<divId.length; i++) {
+		pTag = divId.eq(i).children("p").text();
+		spanTag = divId.eq(i).children("p").children("span").text();
+		result = pTag.substr(0,pTag.length - spanTag.length);
+		if(result == genrevGenmem) {
+			divTag = divId.eq(i);
+		}
+	}
+	console.log(divTag);
+	
+	
+	$.ajax({
+		url : "${cPath}/myinfo/project/com/" + genrevProj,
+		method : "delete",
+		contentType: 'application/json; charset=utf-8',
+		data : JSON.stringify({
+			genrevId : genrevId
+		}),
+		dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+		,
+		beforeSend : function(xhr)
+		{
+		   xhr.setRequestHeader(header,token);
+		},
+		success : function(resp, status, jqXHR) {
+			liTag.remove();
+			divTag.append('<a class="btn btn-primary btn-sm job-apply-btn" data-bs-toggle="modal" data-bs-target="#projModal">리뷰 작성</a>');
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	}); 
+	
+}); 
+
+let makeDiv = function(memRev) {
+	let singleDiv = '';
+	singleDiv +='<li class="genRevLi">';
+	singleDiv +='<div class="media align-self-center"><img class="align-self-center" src="../assets/images/blog/comment.jpg" alt="Generic placeholder image">';
+	singleDiv +='<div class="media-body">';
+	singleDiv +='<div class="revId" style="display:none">' + memRev.genrevId + '</div>';
+	singleDiv +='<div class="row">';
+	singleDiv +='<div class="col-md-4 xl-100">';	
+	singleDiv +='<p style="display:none">${rev.genrevRating }</p>';
+	singleDiv +='<h6 class="mt-0">' + memRev.genrevGenmem + '<span> (' + memRev.genrevMemObj + ')</span></h6></div>';
+	singleDiv +='<div class="col-md-8 xl-100">';
+	singleDiv +='<ul class="comment-social learning-comment" style="float: right; display: inline-block">';
+	singleDiv +='<li class="digits proj"><i class="fa fa-calendar-o"></i>' + memRev.genrevDate + '</li>';
+	singleDiv +='</ul>';
+	singleDiv +='</div>';
+	singleDiv +='</div>';
+
+	if(memRev.genrevRating != 0) {
+		singleDiv +='<ul class="rating" style="margin-left:0px; display: inline-block; margin-top: 30px">';
+		for(let i=0; i < memRev.genrevRating / 1; i++) {
+			singleDiv +='<li style="clear: none; display: inline-block; letter-spacing: -2px;"><i class="fa fa-star font-warning"></i></li>';
+		}
+		if(memRev.genrevRating % 1 > 0) {
+			singleDiv +='<li style="clear: none; display: inline-block;"><i class="fa fa-star-half-o font-warning"></i>';
+		}
+		singleDiv +='</ul>';
+	}
+
+	singleDiv +='</div>';
+	singleDiv +='</div>';
+	singleDiv += ' <div style="float : right">'; 
+    singleDiv += ' <button class="btn btn-light btn-sm" id="btn-modify" type="button">수정</button>';
+    singleDiv += ' <button class="btn btn-danger btn-sm" id="btn-del" type="button">삭제</button>';
+    singleDiv += '</div>';
+	singleDiv +='</li>';
+	
+	return singleDiv;
+}
+
+
+
+
+</script>         
+</body>
+</html>

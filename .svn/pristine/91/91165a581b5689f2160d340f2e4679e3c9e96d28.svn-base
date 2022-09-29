@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.interestProject.dao.InterestProjectDAO">
+	<resultMap type="kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO" id="projectMap" autoMapping="true">
+		<id property="projId" column="PROJ_ID"/>
+	</resultMap>
+	<resultMap type="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO" id="interestMap" autoMapping="true"/>
+	
+	<insert id="insertInterest" parameterType="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO">
+		INSERT INTO INTEREST_PROJ (interest_proj, interest_genmem) VALUES (#{interestProj},#{interestGenmem})
+	</insert>
+	<select id="selectProjectList" parameterType="map" resultMap="projectMap">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		    	SELECT PROJ_ID, PROJ_REGIST, PROJ_EMPTYPE
+						, PROJ_TYPE
+			            , TO_CHAR(PROJ_RECRUITFDATE, 'yyyy.mm.dd') AS PROJ_RECRUITFDATE
+			            , PROJ_PLANSTATE
+						, PROJ_MEMNUM 
+			            , TO_CHAR(PROJ_SDATE, 'yyyy.mm.dd') AS PROJ_SDATE
+			            , TO_CHAR(PROJ_FDATE, 'yyyy.mm.dd') AS PROJ_FDATE
+						, PROJ_ESTIMATE, PROJ_CONTENT, PROJ_QUALIFI
+						, PROJ_APPROVE, PROJ_REJECT, PROJ_RATING
+						, PROJ_REALSDATE, PROJ_REALFDATE, PROJ_LOC
+						, PROJ_STATE
+			            , TO_CHAR(PROJ_RECRUITSDATE, 'yyyy.mm.dd') AS PROJ_RECRUITSDATE
+			            , PROJ_TITLE
+				FROM OUTSOURCING_PROJ C, INTEREST_PROJ D
+				WHERE C.PROJ_ID = D.INTEREST_PROJ
+				AND D.INTEREST_GENMEM = #{genId}
+				AND PROJ_ID NOT IN (SELECT NVL(F.PROJ_OUTPROJ, 0)
+		                              FROM PROJ_INVOLVE E, PMSPROJ F 
+		                             WHERE E.INVOLVE_MEM = #{genId} 
+		                               AND F.PROJ_ID= E.PROJ_ID)
+		    ) A
+		) B
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	<select id="selectProjectCount" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM OUTSOURCING_PROJ A, INTEREST_PROJ B 
+		WHERE A.PROJ_ID = B.INTEREST_PROJ
+		AND B.INTEREST_GENMEM = #{genId}
+		AND PROJ_ID NOT IN (SELECT NVL(F.PROJ_OUTPROJ, 0)
+		                      FROM PROJ_INVOLVE E, PMSPROJ F 
+		                     WHERE E.INVOLVE_MEM = #{genId} 
+		                       AND F.PROJ_ID= E.PROJ_ID)
+	</select>
+	
+	<delete id="deleteInterest" parameterType="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO">
+		DELETE FROM interest_proj
+		 WHERE interest_proj =#{interestProj}
+		   AND interest_genmem =#{interestGenmem}
+	</delete>
+	<delete id="deleteGen" parameterType="string">
+		DELETE FROM interest_proj
+		WHERE interest_genmem =#{genId}
+	</delete>
+	<delete id="deleteProj" parameterType="string">
+		DELETE FROM interest_proj
+		WHERE interest_proj =#{interestProj}
+	</delete>
+	<select id="getByProjWithGen" parameterType="kr.or.ddit.common.mypage.project.interestProject.vo.InterestProjectVO" resultMap="interestMap">
+		SELECT *
+		FROM interest_proj
+		WHERE interest_proj =#{interestProj}
+		  AND interest_genmem =#{interestGenmem}
+	</select>
+	
+	<!-- 지원 프로젝트 -->
+	<select id="selectApplyProjectCount" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		    FROM (
+		    	SELECT C.PROJ_ID, D.APPLY_APPLICANT
+				  FROM OUTSOURCING_PROJ C, APPLY_PROJ D
+			  	 WHERE C.PROJ_ID = D.APPLY_PROJ
+			  	   AND D.APPLY_APPLICANT = #{genId} 
+                   AND C.PROJ_STATE = 'RECRUIT' 
+                   AND NOT EXISTS ( SELECT 1
+                                      FROM CONTRACT_PROJ E
+                                     WHERE D.APPLY_ID = E.CONTRACT_APPLYID)
+		    )
+	</select>
+	<select id="selectApplyProjectList" parameterType="map" resultMap="projectMap">
+		SELECT B.*
+		FROM (
+		    SELECT ROWNUM RNUM, A.*
+		    FROM (
+		    	SELECT PROJ_ID, PROJ_REGIST, PROJ_EMPTYPE
+						, PROJ_TYPE
+			            , TO_CHAR(PROJ_RECRUITFDATE, 'yyyy.mm.dd') AS PROJ_RECRUITFDATE
+			            , PROJ_PLANSTATE
+						, PROJ_MEMNUM 
+			            , TO_CHAR(PROJ_SDATE, 'yyyy.mm.dd') AS PROJ_SDATE
+			            , TO_CHAR(PROJ_FDATE, 'yyyy.mm.dd') AS PROJ_FDATE
+						, PROJ_ESTIMATE, PROJ_APPROVE, PROJ_REJECT
+						, PROJ_RATING, PROJ_REALSDATE, PROJ_REALFDATE
+						, PROJ_LOC, PROJ_STATE
+			            , TO_CHAR(PROJ_RECRUITSDATE, 'yyyy.mm.dd') AS PROJ_RECRUITSDATE
+			            , PROJ_TITLE
+			            , APPLY_ID APPLY_ID
+				FROM OUTSOURCING_PROJ C, APPLY_PROJ D
+				WHERE C.PROJ_ID = D.APPLY_PROJ
+				AND D.APPLY_APPLICANT = #{genId}
+                AND C.PROJ_STATE = 'RECRUIT' 
+                AND NOT EXISTS ( SELECT 1
+                                   FROM CONTRACT_PROJ E
+                                  WHERE D.APPLY_ID = E.CONTRACT_APPLYID)
+		    ) A
+		) B
+		WHERE RNUM BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+	</select>
+	<select id="selectApplyProject" resultType="kr.or.ddit.outsourcing.vo.ApplicantVO">
+		SELECT
+		    APPLY_ID,
+		    APPLY_APPLICANT,
+		    APPLY_OBJ,
+		    APPLY_PROJ
+		FROM APPLY_PROJ
+		WHERE APPLY_ID = #{applyId}
+	</select>
+	<delete id="deleteApplyProject" parameterType="String">
+		DELETE FROM APPLY_PROJ
+		WHERE APPLY_ID = #{applyId}
+		AND NOT EXISTS ( SELECT 1
+		            	FROM CONTRACT_PROJ A
+		           		WHERE #{applyId} = A.CONTRACT_APPLYID)
+	</delete>
+	
+</mapper>

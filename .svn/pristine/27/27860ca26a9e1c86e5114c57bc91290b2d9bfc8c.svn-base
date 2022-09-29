@@ -1,0 +1,54 @@
+package kr.or.ddit.common.mypage.project.contractProject.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.mypage.project.contractProject.dao.ContractProjectDAO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.outsourcing.contract.dao.ContractDAO;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import kr.or.ddit.pms.issue.vo.IssueVO;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * @author 조채원
+ * @since 2022. 9. 3.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자              	 	수정내용
+ * --------     --------    ----------------------
+ * 2022. 9. 3.    조채원       			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * 
+ */
+@Service
+@RequiredArgsConstructor
+public class ContractProjectServiceImpl implements ContractProjectService {
+	private final ContractProjectDAO contractDao;
+	
+	@Override
+	public List<OutProjVO> getGenAll(Map<String, Object> pagingMap) {
+		/*PagingVO<IssueVO> pagingVO = (PagingVO<IssueVO>) pagingMap.get("pagingVO");
+		pagingVO.setTotalRecord(contractDao.selectGenTotalProj(projId));
+		
+		if(genId == null) {
+			throw new RuntimeException(String.format("%d 아이디를 가진 회원이 없습니다", genId));
+		}
+		List<OutProjVO> projList = null;
+		projList = contractDao.selectGenAll(pagingMap);
+		return projList;*/
+		return null;
+	}
+
+	@Override
+	public List<OutProjVO> getComAll(Map<String, Object> pagingMap) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+}

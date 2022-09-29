@@ -1,0 +1,109 @@
+package kr.or.ddit.admin.filtering.controller;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.admin.filtering.service.FilteringService;
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                     수정자                   수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.    조채원              	   jsp 연결
+ * 2022. 8. 5.    홍승조             		url /admin 추가 
+ * 2022. 8. 6.	   조채원				insert, get 추가
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ * 
+ */
+@Slf4j
+@Controller
+@RequestMapping("/admin/filtering")
+public class FilteringController {
+	@Inject
+	FilteringService service;
+	
+//	@GetMapping
+//	public String get(Model model) {
+//		List<HashMap<Integer, String>> filterList = service.findAll();
+//		model.addAttribute("filterList", filterList);
+//		return "admin/filterWord";
+//	}
+	@GetMapping(produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@ResponseBody
+	public List<HashMap<String, Object>> get(Model model) {
+		List<HashMap<String, Object>> filterList = service.findAll();
+		log.info("filterList :{}",filterList);
+		return filterList;
+	}
+	
+	@PostMapping
+	public String insert(
+			@ModelAttribute("filterWord") String filterWord
+			, RedirectAttributes redirectAttributes) {
+		ServiceResult result = service.create(filterWord);	
+		log.info(filterWord);
+		switch(result) {
+		case DUPLICATED:
+			redirectAttributes.addFlashAttribute("message", "이미 등록한 단어입니다.");
+			break;
+		case FAIL:
+			redirectAttributes.addFlashAttribute("message", "단어 등록에 실패했습니다.");
+			break;
+		default:
+			redirectAttributes.addFlashAttribute("message", "단어 등록에 성공했습니다.");
+			break;
+		}
+		return "redirect:/admin/checkList/require";
+	}
+	
+	@DeleteMapping("{FILTER_NO}")
+	public String delete(
+			@ModelAttribute("FILTER_NO") int filterNo
+			,RedirectAttributes redirectAttributes ) {
+		service.remove(filterNo);
+		redirectAttributes.addFlashAttribute("message", "단어 삭제에 성공했습니다.");
+		return "redirect:/admin/checkList/require";
+	}
+	
+	// 일괄 삭제
+	@PostMapping("delList")
+	public String deleteList(
+			String chkList
+			,RedirectAttributes redirectAttributes) {
+		
+		String[] chkLists = chkList.split(",");
+		for(String filterNo: chkLists) {
+		    log.info("number: {}",filterNo);
+		    service.remove(Integer.parseInt(filterNo));
+		}
+		redirectAttributes.addFlashAttribute("message", "단어 삭제에 성공했습니다.");
+		return "redirect:/admin/checkList/require";
+		
+	}
+			
+}

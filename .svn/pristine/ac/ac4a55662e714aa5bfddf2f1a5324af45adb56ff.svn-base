@@ -1,0 +1,43 @@
+package kr.or.ddit.common.main.controller;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.security.core.Authentication;
+/**
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * 
+ *      <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                          수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 9. 2.      윤지영         추천프로젝트 화면 수정
+ * Copyright (c) 2022 by DDIT All right reserved
+ *      </pre>
+ */
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.common.member.vo.ComMemberVO;
+import kr.or.ddit.common.mypage.memInfo.service.MemInfoService;
+import kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO;
+import kr.or.ddit.common.mypage.project.recommendProject.service.RecommendProjectService;
+import kr.or.ddit.outsourcing.vo.OutProjVO;
+
+@Controller
+public class IndexController {
+	
+	@Inject
+	RecommendProjectService recomService;
+	
+	@RequestMapping("/")
+	public String index(Model model,Authentication authentication) {
+		List<ProjectVO> projList = recomService.mainProjectList();
+		model.addAttribute("recommed",projList);
+		return "index";
+	}
+}

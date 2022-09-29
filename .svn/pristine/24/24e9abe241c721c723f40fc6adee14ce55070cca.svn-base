@@ -1,0 +1,244 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%--
+* [[개정이력(Modification Information)]]
+* 	수정일              수정자      	  수정내용
+* ----------  ---------  -----------------
+* 2022. 8. 2.   조채원     		 컨트롤러 연결
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+	crossorigin="anonymous"></script>
+<c:if test="${not empty message }">
+	<script type="text/javascript">
+		alert("${message }");
+	</script>
+	<c:remove var="message" scope="session" />
+</c:if>
+</head>
+<body>
+
+
+
+	<div class="row" style="padding: 50px;">
+		<div class="col-xl-3 col-50 box-col-6 des-xl-50">
+			<h4 style="padding-right: 20px; display: inline-block;">필터링 단어</h4>
+			<button onclick="WordsDel()" class="btn btn-danger btn-sm">일괄삭제</button>
+			<table>
+				<thead>
+					<tr>
+						<th colspan="2">필터링 단어</th>
+						<th></th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody id="filterListBody">
+				</tbody>
+				<tfoot>
+					<tr style="height: 15px;"></tr>
+					<tr>
+						<form action="${cPath }/admin/filtering" method="post">
+							<td colspan="3">
+								<sec:csrfInput/>
+								<input type="text" name="filterWord" /> 
+							</td>
+							<td>
+								<input type="submit" value="등록" class="btn btn-primary btn-sm"/>
+							</td>
+						</form>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+
+		<%-- <div class="col-xl col-50 box-col-6 des-xl-50">
+			<h4>필수 검토 리스트</h4>
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th><spring:message code="outProj.projId" /></th>
+						<th><spring:message code="outProj.projTitle" /></th>
+						<th><spring:message code="outProj.projRegist" /></th>
+						<th><spring:message code="outProj.projRecruitsdate" /></th>
+					</tr>
+				</thead>
+				<tbody id="listBody">
+				</tbody>
+			</table>
+		</div>
+	</div> --%>
+	<div class="col-xl col-50 box-col-6 des-xl-50">
+                    <div class="default-according" id="accordion">
+                      <div class="card">
+                        <div class="card-header" id="headingOne">
+                          <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">Collapsible Group Item #<span>1</span></button>
+                          </h5>
+                        </div>
+                        <div class="collapse" id="collapseOne" aria-labelledby="headingOne" data-bs-parent="#accordion" style="">
+                          <div class="card-body">Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+	
+	<form id="searchForm" action="${cPath}/admin/filtering/delList" method="post">
+		<sec:csrfInput/>
+		<input type="hidden" name="chkList" />
+	</form>
+
+
+	<script>
+	let divTag = function(proj) {
+		return $("<div>").addClass("card").append(
+					$("<div>").addClass("card-header").attr("id", "headingOne").append(
+						$("<h5>").addClass("mb-0").append(
+							$("<button>").addClass("btn btn-link collapsed").attr({
+								data-bs-toggle : "collapse",
+								data-bs-target : "#collapseOne",
+								aria-expanded : "false",
+								aria-controls : "collapseOne"
+							}).text(proj.proj.projTitle)		
+						)		
+					),
+					$("<div>").addClass("collapse").attr({
+						id : "collapseOne",
+						aria-labelledby : "headingOne",
+						data-bs-parent : "#accordion"
+					}).append(
+						$("<div>").addClass("card-body")		
+					)
+				);
+	}  
+  
+	let header = '${_csrf.headerName}';
+	let token =  '${_csrf.token}'; 
+	let listBody = $("#listBody");
+		
+	let makeSingleTr = function(index, proj) {
+		let aTag = $("<a>").attr("href",
+				"${cPath}/admin/checkList/require/" + proj.projId + "/form").html(proj.projId);
+	
+		return $("<tr>").append($("<td>").html(aTag).addClass("projId"),
+				$("<td>").html(proj.projTitle),
+				$("<td>").html(proj.projRegist),
+				$("<td>").html(proj.projRecruitsdate));
+	}
+	
+	$.ajax({
+		url : "${cPath}/admin/checkList/require",
+		method : "get",
+		dataType : "json" // text, html, json, xml, script -> main type : text, 파일 업로드 처리를 비동기로? (FormData)
+		,
+		success : function(resp, status, jqXHR) {
+			let projList = resp;
+			let trTags = [];
+			if (projList && projList.length > 0) {
+				$(projList).each(function(index, proj) {
+					trTags.push(makeSingleTr(index, proj));
+				});
+			} else {
+				let trTag = $("<tr>").html(
+						$("<td>").attr("colspan", "4").html(
+								"필터링 단어에 해당하는 프로젝트가 없습니다."));
+				trTags.push(trTag);
+			}
+			listBody.html(trTags);
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	});
+
+	<%-- 필터링 단어 --%>	
+	var filterList;
+	let filterListBody = $("#filterListBody");
+	let makeFilterSingleTr = function(index, word) {
+		return $("<tr>").append(
+			$("<td>").html(word["RNUM"]).attr("style","width: fit-content;"),
+			$("<td>").html(word["FILTER_WORD"]),
+			$("<td>").append(
+					$("<input>").attr({
+						"class": "checkbox_animated",
+						"id": `chk-ani\${word["FILTER_NO"]}`,
+						"type": "checkbox"
+					})),
+			$("<td>").append(
+				$("<form>").attr({
+					"action": `${cPath }/admin/filtering/\${word["FILTER_NO"] }`,
+					"method": "post"
+				}).append(
+					`<sec:csrfInput/>`,
+					$("<input>").attr({
+						"type": "hidden",
+						"name": "_method",
+						"value": "delete"
+					}),
+					$("<input>").attr({
+						"type": "submit",
+						"class": "btn btn-light btn-sm",
+						"value": "삭제"
+					})
+				)
+			)
+		);
+	}
+	<%-- 필터링 단어리스트 --%>
+	$.ajax({
+		url : "${cPath}/admin/filtering",
+		method : "get",
+		dataType : "json",
+		beforeSend : function(xhr) { 
+			xhr.setRequestHeader(header,token);
+		},
+		success : function(resp, status, jqXHR) {
+			let trTags = [];
+			let wordList = resp;
+			
+			if (wordList && wordList.length > 0) {
+				$(wordList).each(function(index, word) {
+					console.log("word: ", word);
+					trTags.push(makeFilterSingleTr(index, word));
+				});
+			}else{
+				let trTag = $("<tr>").html(
+						$("<td>").attr("colspan", "2").html(
+								"등록된 필터링 단어가 없습니다."));
+				trTags.push(trTag);
+			}
+			filterListBody.html(trTags);
+		},
+		error : function(jqXHR, status, error) {
+			console.log(jqXHR);
+			console.log(status);
+			console.log(error);
+		}
+	});
+	<%-- 일괄 삭제 --%>
+	function WordsDel() {
+		let ret = $('input[class=checkbox_animated]');
+		let chkList = [];
+		$('input[class=checkbox_animated]').each(function(index, chkbox) {
+			if(chkbox.checked){
+				console.log(chkbox["id"].substring(7));
+				chkList.push(chkbox["id"].substring(7));
+			}
+		})
+		if(chkList!=null && chkList.length>0){
+			$("#searchForm").find("[name=chkList]").val(chkList);
+			$("#searchForm").submit();
+		}
+	}
+	</script>	
+</body>
+</html>

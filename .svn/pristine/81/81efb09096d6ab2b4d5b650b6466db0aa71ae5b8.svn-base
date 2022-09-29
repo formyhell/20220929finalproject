@@ -1,0 +1,49 @@
+package kr.or.ddit.common.mypage.project.contractProject.controller;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.common.member.vo.MemberPrincipal;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.vo.SimpleSearchCondition;
+
+/**
+ * @author 조채원
+ * @since 2022. 9. 3.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                   수정자              	 	수정내용
+ * --------     --------    ----------------------
+ * 2022. 9. 3.    조채원       			최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@RequestMapping("/myinfo/contract/project")
+public class ContractProjectController {
+	@ModelAttribute("simpleCondition")
+	public SimpleSearchCondition simpleCondition() {
+		return new SimpleSearchCondition();
+	}
+	
+	@GetMapping
+	public String contractProjList(Authentication authentication) {
+		String viewName = null;
+		MemberPrincipal userPrincipal = (MemberPrincipal) authentication.getPrincipal();
+		MemberVO member = userPrincipal.getRealMember();
+		
+		if ("ROLE_GENMEM".equals(member.getMemType().get(0).toString())) {
+			viewName = "common/mypage/gen/projDetail";	
+		} else if ("ROLE_COMMEM".equals(member.getMemType().get(0).toString())) {
+			
+			viewName = "common/mypage/com/projDetail";
+		}
+		
+		return viewName;
+	}
+}

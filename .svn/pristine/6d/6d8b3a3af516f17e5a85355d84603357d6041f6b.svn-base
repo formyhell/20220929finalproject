@@ -1,0 +1,64 @@
+package kr.or.ddit.common.mypage.project.recommendProject.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.mypage.project.interestProject.vo.ProjectVO;
+import kr.or.ddit.common.mypage.project.recommendProject.dao.RecommendProjectDAO;
+import kr.or.ddit.common.mypage.project.recommendProject.vo.RecommendProjectVO;
+import kr.or.ddit.common.vo.PagingVO;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class RecommendProjectServiceImpl implements RecommendProjectService {
+	
+	private final RecommendProjectDAO recomDAO;
+
+	@Override
+	public List<ProjectVO> selectProjectList(PagingVO<ProjectVO> pagingVO, String genId) {
+		if(genId == null) throw new PreAuthenticatedCredentialsNotFoundException("로그인이 안되어 있음 ");
+		List<RecommendProjectVO> list = recomDAO.checkProj(genId);
+		pagingVO.setTotalRecord(list.size());
+		
+		Map<String,Object> pagingMap = new HashMap<String, Object>();
+		pagingMap.put("pagingVO", pagingVO);
+		List<ProjectVO> finalList;
+		
+		if(list.size()==0) {
+			return null;
+		}else {
+			String projIds = "";
+			projIds += "(";
+			for (RecommendProjectVO vo : list) {
+				String projId = vo.getProjId();
+				if(projIds.length()< 2) {
+					projIds += "'"+projId+"'";
+				}else {				
+					projIds += ", '"+projId+"'";
+				}
+			}
+			projIds += ")";
+			pagingMap.put("projIds", projIds);
+			
+			finalList = recomDAO.getProj(pagingMap);
+			
+			//내용 요약
+			for (ProjectVO vo : finalList) {
+				String content = vo.getProjContent();
+				if(content.length()>60) {
+					content = content.substring(0,60)+"...";
+					vo.setProjContent(content);
+				}
+			}
+			
+			pagingVO.setDataList(finalList);
+			return finalList;
+		}
+	}
+
+}

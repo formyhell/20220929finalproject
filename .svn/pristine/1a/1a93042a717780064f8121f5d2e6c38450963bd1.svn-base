@@ -1,0 +1,167 @@
+package kr.or.ddit.pms.main.controller;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.ddit.common.member.service.CommonCodeService;
+import kr.or.ddit.common.vo.CommonCodeVO;
+import kr.or.ddit.common.vo.PagingVO;
+import kr.or.ddit.pms.issue.service.IssueService;
+import kr.or.ddit.pms.issue.vo.IssueSolveVO;
+import kr.or.ddit.pms.issue.vo.IssueVO;
+import kr.or.ddit.pms.project.service.ProjInvolveService;
+import kr.or.ddit.pms.project.vo.projInvolveVO;
+import kr.or.ddit.pms.report.service.reportService;
+import kr.or.ddit.pms.report.vo.ReportVO;
+import kr.or.ddit.pms.work.service.WorkService;
+import kr.or.ddit.pms.work.vo.WorkVO;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author 김유진
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * 
+ *      <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                 수정자               수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.       김유진              최초작성
+ * 2022. 8. 31.      홍승조              최초작성
+ * Copyright (c) 2022 by DDIT All right reserved
+ *      </pre>
+ */
+@Slf4j
+@Controller
+@RequestMapping("/pms")
+public class mainRetrieveController {
+
+	@Inject
+	WorkService workService;
+
+	@Inject
+	reportService reportService;
+
+	@Inject
+	IssueService issueService;
+
+	@Inject
+	ProjInvolveService projInvolveService;
+
+	@Inject
+	CommonCodeService commonCodeService;
+	
+	@GetMapping("{projId}")
+	public String pmsMain(@PathVariable String projId,
+			@RequestParam(value = "workTitle", required = false) String workTitle,
+			@RequestParam(value = "workParent", required = false) String workParent,
+			@RequestParam(value = "workSdate", required = false) String workSdate,
+			@RequestParam(value = "workFdate", required = false) String workFdate, Model model) {
+		// 간트 차트에 그릴 일감 데이터 검색 조건들
+		WorkVO work = new WorkVO();
+		work.setWorkProj(projId);
+		work.setWorkTitle(workTitle);
+		work.setWorkParent(workParent);
+		work.setWorkSdate(workSdate);
+		work.setWorkFdate(workFdate);
+		// 간트 차트에 그릴 일감 데이터 가져오기
+		List<WorkVO> workList = workService.ganttWork(work);
+
+		// 참여자 목록
+		List<projInvolveVO> projInvolve = projInvolveService.retrieveProjInvolveList(projId);
+
+		// 참여자 역할
+		List<CommonCodeVO> pmsJopFeildList = commonCodeService.selectPmsfeild();
+
+		model.addAttribute("projId", projId);
+		model.addAttribute("workList", workList);
+		model.addAttribute("projInvolve", projInvolve);
+		model.addAttribute("pmsJopFeildList", pmsJopFeildList);
+		
+		return "pms/pms";
+	}
+
+	@GetMapping("{projId}/{memId}")
+	public String pmsInvolve(@PathVariable String projId, @PathVariable String memId,
+			@RequestParam(name = "workpage", required = false, defaultValue = "1") int workcurrentPage,
+			@RequestParam(name = "reportpage", required = false, defaultValue = "1") int reportcurrentPage,
+			@RequestParam(name = "issuepage", required = false, defaultValue = "1") int issuecurrentPage, Model model) {
+		// 일감
+		PagingVO<WorkVO> work = new PagingVO<>(5, 8);
+		work.setCurrentPage(workcurrentPage);
+		// 일감 조건 vo에 넣어주기
+		WorkVO workvo = new WorkVO();
+		workvo.setWorkCharger(memId);
+		workvo.setWorkProj(projId);
+		work.setDetailCondition(workvo);
+
+		workService.involveWorkList(work);
+
+		// ----------------------------------------------
+
+		PagingVO<ReportVO> report = new PagingVO<>(5, 8);
+		report.setCurrentPage(reportcurrentPage);
+
+		ReportVO reportvo = new ReportVO();
+		reportvo.setReportWriter(memId);
+		reportvo.setReportProj(projId);
+		report.setDetailCondition(reportvo);
+
+		reportService.involveReprotList(report);
+
+		// ----------------------------------------------
+
+		PagingVO<IssueVO> issue = new PagingVO<>(5, 8);
+		issue.setCurrentPage(issuecurrentPage);
+
+		IssueVO issuevo = new IssueVO();
+		issuevo.setIssueCharger(memId);
+		issuevo.setIssueProj(projId);
+		issue.setDetailCondition(issuevo);
+
+		issueService.involveIssueList(issue);
+
+		model.addAttribute("projId", projId);
+		model.addAttribute("memId", memId);
+
+		model.addAttribute("work", work);
+
+		model.addAttribute("report", report);
+
+		model.addAttribute("issues", issue);
+
+		return "pms/involvepms";
+	}
+
+	@GetMapping("{projId}/role/{memId}")
+	public String roleAssignment(
+		@PathVariable("projId")String projId
+		, @PathVariable("memId")String memId
+		, @RequestParam(value="pmsJopFeild", required=false)String pmsJopFeild
+		) {
+		projInvolveVO involve = new projInvolveVO();
+		
+		log.info("프로젝트 아이디 : {}, 참가 회원 아이디 : {}, 참가회원에게 부여할 역할{}", projId, memId, pmsJopFeild);
+		
+		involve.setInvolveMem(memId);
+		involve.setProjId(projId);
+		involve.setInvolveRole(pmsJopFeild);
+		
+		
+		projInvolveService.updateRole(involve);
+		
+		return "redirect:/pms/{projId}";
+	}
+
+}

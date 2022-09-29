@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.mypage.project.contractProject.dao.ContractProjectDAO">
+	<sql id="search">
+	  <trim prefix="AND">
+		<if test="pagingVO.simpleCondition neq null and @org.apache.commons.lang3.StringUtils@isNotBlank(pagingVO.simpleCondition.searchWord)">
+						(
+						INSTR(PROJ_TITLE, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_CONTENT, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_QUALIFI, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_REGIST, #{pagingVO.simpleCondition.searchWord}) > 0
+						OR
+						INSTR(PROJ_TYPE, #{pagingVO.simpleCondition.searchWord}) > 0
+						)
+		</if>
+	  </trim>
+	</sql>
+	
+	<resultMap type="kr.or.ddit.outsourcing.vo.ContractVO" id="conMap" autoMapping="true">
+		<id property="contractId" column="CONTRACT_ID"/>
+		<collection property="applicantList" ofType="kr.or.ddit.outsourcing.vo.ApplicantVO">
+			<id property="applyApplicant" column="APPLY_APPLICANT"/>
+		</collection>
+	</resultMap>
+	
+	<select id="selectGenTotalProj" parameterType="hashMap" resultType="int">
+		WITH APPLYVIEW AS (
+			    SELECT APPLY_PROJ, APPLY_APPLICANT
+			     FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID=B.CONTRACT_APPLYID)
+			)  
+			SELECT COUNT(*)
+				FROM ( SELECT DISTINCT PROJ_ID, PROJ_TITLE, APPLY_APPLICANT
+			          FROM OUTSOURCING_PROJ A INNER JOIN APPLYVIEW B ON(A.PROJ_ID=B.APPLY_PROJ)
+			          WHERE APPLY_APPLICANT = #{member.memId}
+		<include refid="search" />)
+	</select>
+	
+	<select id="selectComTotalProj" parameterType="hashMap" resultType="int">
+		WITH APPLYVIEW AS (
+		    SELECT APPLY_ID, APPLY_PROJ
+		    FROM CONTRACT_PROJ A INNER JOIN APPLY_PROJ B ON (A.CONTRACT_APPLYID=B.APPLY_ID)
+		)   SELECT COUNT(*)
+		    FROM (SELECT DISTINCT PROJ_ID, PROJ_TITLE
+		          FROM OUTSOURCING_PROJ C INNER JOIN APPLYVIEW D ON(C.PROJ_ID=D.APPLY_PROJ)
+		          WHERE PROJ_REGIST = #{member.memId}
+		            AND EXISTS (SELECT APPLY_PROJ
+		                             FROM APPLYVIEW )
+		   <include refid="search" />)  
+	</select>
+	
+	<select id="selectGenAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		WITH APPLYVIEW AS (
+			    SELECT APPLY_PROJ, APPLY_APPLICANT
+			     FROM APPLY_PROJ A INNER JOIN CONTRACT_PROJ B ON (A.APPLY_ID=B.CONTRACT_APPLYID)
+			)   
+			SELECT DISTINCT PROJ_ID, PROJ_TITLE, APPLY_APPLICANT
+			          FROM OUTSOURCING_PROJ A INNER JOIN APPLYVIEW B ON(A.PROJ_ID=B.APPLY_PROJ)
+			          WHERE APPLY_APPLICANT = #{member.memId}
+		<include refid="search" />
+	</select>
+	
+	<select id="selectComAll" parameterType="hashMap" resultType="kr.or.ddit.outsourcing.vo.OutProjVO">
+		 WITH APPLYVIEW AS (
+					    SELECT APPLY_ID, APPLY_PROJ
+					    FROM CONTRACT_PROJ A INNER JOIN APPLY_PROJ B ON (A.CONTRACT_APPLYID=B.APPLY_ID)
+					)SELECT DISTINCT PROJ_ID, PROJ_TITLE
+					          FROM OUTSOURCING_PROJ C INNER JOIN APPLYVIEW D ON(C.PROJ_ID=D.APPLY_PROJ)
+					          WHERE PROJ_REGIST = #{member.memId}
+					            AND EXISTS (SELECT APPLY_PROJ
+					                             FROM APPLYVIEW )
+         <include refid="search" />
+	</select>
+	
+	<select id="findComContract" parameterType="hashMap" resultMap="conMap">
+		WITH APPLYVIEW AS (
+			    SELECT APPLY_PROJ, APPLY_APPLICANT, CONTRACT_ID, CONTRACT_NAME, CONTRACT_PAY, CONTRACT_STATE, TO_CHAR(CONTRACT_SDATE, 'YYYY-MM-DD') CONTRACT_SDATE, TO_CHAR(CONTRACT_FDATE, 'YYYY-MM-DD') CONTRACT_FDATE
+			    FROM APPLY_PROJ INNER JOIN CONTRACT_PROJ ON (APPLY_PROJ.APPLY_ID=CONTRACT_PROJ.CONTRACT_APPLYID)
+			),
+  CONTRACTVIEW AS (
+                SELECT APPLY_PROJ, APPLY_APPLICANT, CONTRACT_ID, CONTRACT_NAME, CONTRACT_PAY, CODE_NAME, CONTRACT_SDATE, CONTRACT_FDATE
+                FROM APPLYVIEW INNER JOIN COMMON_CODE ON (APPLYVIEW.CONTRACT_STATE=COMMON_CODE.CODE_ID)
+            )
+			SELECT DISTINCT CONTRACT_ID, APPLY_APPLICANT, CONTRACT_NAME, CONTRACT_PAY, CODE_NAME AS CONTRACT_STATE, CONTRACT_SDATE, CONTRACT_FDATE
+			          FROM OUTSOURCING_PROJ A INNER JOIN CONTRACTVIEW B ON (A.PROJ_ID=B.APPLY_PROJ)
+			          WHERE PROJ_REGIST = #{member.memId}
+			            AND EXISTS (SELECT APPLY_PROJ
+			                             FROM APPLYVIEW)
+			            AND PROJ_ID = #{projId}
+	</select>
+	
+	<select id="findGenContract" parameterType="hashMap" resultMap="conMap">
+	WITH APPLYVIEW AS (
+			    SELECT APPLY_PROJ, APPLY_APPLICANT, CONTRACT_ID, CONTRACT_NAME, CONTRACT_PAY, CONTRACT_STATE, TO_CHAR(CONTRACT_SDATE, 'YYYY-MM-DD') CONTRACT_SDATE, TO_CHAR(CONTRACT_FDATE, 'YYYY-MM-DD') CONTRACT_FDATE
+			    FROM APPLY_PROJ INNER JOIN CONTRACT_PROJ ON (APPLY_PROJ.APPLY_ID=CONTRACT_PROJ.CONTRACT_APPLYID)
+			),
+  CONTRACTVIEW AS (
+                SELECT APPLY_PROJ, APPLY_APPLICANT, CONTRACT_ID, CONTRACT_NAME, CONTRACT_PAY, CODE_NAME, CONTRACT_SDATE, CONTRACT_FDATE
+                FROM APPLYVIEW INNER JOIN COMMON_CODE ON (APPLYVIEW.CONTRACT_STATE=COMMON_CODE.CODE_ID)
+            )
+			SELECT DISTINCT CONTRACT_ID, APPLY_APPLICANT, CONTRACT_NAME, CONTRACT_PAY, CODE_NAME AS CONTRACT_STATE, CONTRACT_SDATE, CONTRACT_FDATE
+			          FROM OUTSOURCING_PROJ A INNER JOIN CONTRACTVIEW B ON (A.PROJ_ID=B.APPLY_PROJ)
+			          WHERE APPLY_APPLICANT = #{member.memId}
+			            AND EXISTS (SELECT APPLY_PROJ
+			                             FROM APPLYVIEW)
+			            AND PROJ_ID = #{projId}
+	</select>
+</mapper>

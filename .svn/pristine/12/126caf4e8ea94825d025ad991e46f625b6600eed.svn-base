@@ -1,0 +1,158 @@
+package kr.or.ddit.common.mypage.memInfo.service;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.inject.Inject;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.common.enumpkg.ServiceResult;
+import kr.or.ddit.common.member.vo.ComMemberVO;
+import kr.or.ddit.common.member.vo.GenMemberVO;
+import kr.or.ddit.common.member.vo.MemberVO;
+import kr.or.ddit.common.mypage.memInfo.dao.MemberInfoDAO;
+import kr.or.ddit.common.mypage.memInfo.exception.PKNotFoundException;
+import kr.or.ddit.common.mypage.memInfo.vo.GenObjVO;
+import kr.or.ddit.common.mypage.memInfo.vo.GenSkillVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class MemInfoServiceImpl implements MemInfoService {
+
+	@Inject
+	PasswordEncoder passEncoder;
+
+	@Inject
+	MemberInfoDAO memberInfoDAO;
+
+	@Resource
+	AuthenticateService authService;
+
+	@Override
+	public GenMemberVO retrieveGenMemInfo(String memId) {
+		GenMemberVO genMember = memberInfoDAO.selectGenMem(memId);
+		log.info("genMemberVO : {}",genMember);
+//		List<String> objList = memberInfoDAO.objList(memId);
+//		List<String> skillList = memberInfoDAO.skillList(memId);
+		List<GenObjVO> objList = memberInfoDAO.genObjList(memId);
+		List<GenSkillVO> skillList = memberInfoDAO.genSkillList(memId);
+		genMember.setObjList(objList);
+		genMember.setSkillList(skillList);
+		
+		log.info("####objList : {} ####", objList);
+		log.info("####skillList : {} ####", skillList);
+		
+		return genMember;
+	}
+	
+	//스킬리스트 조회
+	
+	
+	
+	
+	
+
+	@Override
+	public ComMemberVO retrieveComMemInfo(String memId) {
+		ComMemberVO comMember = memberInfoDAO.selectComMem(memId);
+
+		if (comMember == null) {
+//			throw new PKNotFoundException(String.format("%s 아이디를 가진 회원이 없음.", MemId));
+		}
+		return comMember;
+	}
+
+	@Override
+	public ServiceResult modifyGenMember(MemberVO member) {
+		MemberVO inputData = new MemberVO();
+		inputData.setMemId(member.getMemId());
+		inputData.setMemPass(member.getMemPass());
+		ServiceResult result = authService.authenticate(inputData);
+		switch (result) {
+		case NOTEXIST:
+			throw new PKNotFoundException(String.format("%s 에 해당하는 회원이 없음.", member.getMemId()));
+//		case INVALIDPASSWORD:
+//			break;
+		default:
+			int rowcnt = memberInfoDAO.updateGenMember(member);
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+			break;
+		}
+		return result;
+
+	}
+
+	@Override
+	public ServiceResult modifyComMember(MemberVO member) {
+		MemberVO inputData = new MemberVO();
+		inputData.setMemId(member.getMemId());
+		inputData.setMemPass(member.getMemPass());
+		ServiceResult result = authService.authenticate(inputData);
+		switch (result) {
+		case NOTEXIST:
+			throw new PKNotFoundException(String.format("%s 에 해당하는 회원이 없음.", member.getMemId()));
+//		case INVALIDPASSWORD:
+//			break;
+		default:
+			int rowcnt = memberInfoDAO.updateComMember(member);
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+			break;
+		}
+		return result;
+	}
+
+	@Override
+	public ServiceResult deleteGenMember(MemberVO member, String password) {
+		ServiceResult result = null;
+
+
+		if (passEncoder.matches(password, member.getMemPass())) {
+			// 복호화한값과 입력받은 값이 일치할때
+
+			int rowcnt = memberInfoDAO.deleteGenMember(member.getMemId());
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+		} else {
+			result = ServiceResult.INVALIDPASSWORD;
+		}
+		return result;
+
+	}
+	
+	@Override
+	public ServiceResult deleteComMember(MemberVO member, String password) {
+		ServiceResult result = null;
+
+
+		if (passEncoder.matches(password, member.getMemPass())) {
+			// 복호화한값과 입력받은 값이 일치할때
+
+			int rowcnt = memberInfoDAO.deleteComMember(member.getMemId());
+			result = rowcnt > 0 ? ServiceResult.OK : ServiceResult.FAIL;
+		} else {
+			result = ServiceResult.INVALIDPASSWORD;
+		}
+		return result;
+
+	}
+
+	@Override
+	public void insertSkill(GenMemberVO genMem) {
+//		genMem.setGenId();
+		genMem.getGenObj();
+		genMem.getObjList();
+		
+		log.info("Obj배열 = {} // Obj리스트 = {}  Vo값 = {}",genMem.getGenObj(),genMem.getObjList(), genMem);
+		
+		memberInfoDAO.insertSkill(genMem);
+		memberInfoDAO.insertObj(genMem);
+	}
+
+	@Override
+	public int remove(GenSkillVO genId) {
+		int delSkill = memberInfoDAO.delSkill(genId);
+		return delSkill;
+	}
+}

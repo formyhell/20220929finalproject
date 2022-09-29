@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.qna.dao.QnaReplyDAO">
+	
+	<select id="selectQReply" parameterType="int" resultType="kr.or.ddit.common.qna.vo.QnaReplyVO">
+		SELECT
+		    rep_no,
+		    rep_title,
+		    rep_content,
+		    rep_date,
+		    rep_admin,
+		    rep_parent
+		FROM
+		    qna_reply
+		WHERE rep_parent = #{qnaNo}
+	</select>
+	
+	<insert id="insertQReply" parameterType="kr.or.ddit.common.qna.vo.QnaReplyVO">
+		INSERT INTO qna_reply (
+		    rep_no,
+		    rep_title,
+		    rep_content,
+		    rep_date,
+		    rep_admin,
+		    rep_parent
+		) VALUES (
+			QNA_REP_NO_SEQ.NEXTVAL,
+			#{repTitle},
+			#{repContent},
+			sysdate,
+			#{repAdmin},
+			#{repParent}
+		)
+	</insert>
+	
+	<update id="updateQReply" parameterType="kr.or.ddit.common.qna.vo.QnaReplyVO">
+	UPDATE qna_reply
+    SET rep_title=#{repTitle,jdbcType=VARCHAR},
+    	rep_content=#{repContent,jdbcType=CLOB}
+	WHERE rep_no = #{repNo}
+	</update>
+	
+	<delete id="deleteQReply" parameterType="int">
+		DELETE FROM qna_reply
+		WHERE rep_parent = #{qnaNo}
+	</delete>
+	
+</mapper>

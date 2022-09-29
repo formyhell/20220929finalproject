@@ -1,0 +1,63 @@
+package kr.or.ddit.outsourcing.contract.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.math.BigInteger;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Date;
+import java.security.PrivateKey;
+import java.security.Signature;
+
+/**
+ * @author 조채원
+ * @since 2022. 8. 2.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일                    수정자              		 수정내용
+ * --------     --------    ----------------------
+ * 2022. 8. 2.     조채원       			jsp 연결
+ * Copyright (c) 2022 by DDIT All right reserved
+ * </pre>
+ */
+@Controller
+@RequestMapping("/outsourcing/contract")
+public class ContractInsertController {
+	@GetMapping("test")
+	public String get(Model model) throws Exception {
+		//private key
+		String privateKeyHexStr = "3041020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420264a92b09b29d266d3d7c29f39f02042f5b854ecce72ee2ae9d95e6747ae1a57";
+		KeyFactory keyFact = KeyFactory.getInstance("EC");
+		PKCS8EncodedKeySpec psks8KeySpec = new PKCS8EncodedKeySpec(new BigInteger(privateKeyHexStr,16).toByteArray());
+		PrivateKey privateKey = keyFact.generatePrivate(psks8KeySpec);
+
+		//execution_time - 서버 현재 시간
+		long execution_time = new Date().getTime();
+		String execution_time_str = String.valueOf(execution_time);
+
+		//eformsign_signature 생성
+		Signature ecdsa = Signature.getInstance("SHA256withECDSA");
+		ecdsa.initSign(privateKey);
+		ecdsa.update(execution_time_str.getBytes("UTF-8"));
+		String eformsign_signature = new BigInteger(ecdsa.sign()).toString(16);
+
+
+		//현재 시간 및 현재 시간 서명값
+		model.addAttribute("eformsign_signature", eformsign_signature);
+		model.addAttribute("execution_time", execution_time);
+		return "outsourcing/contractTest";
+	}
+	
+/*	@PostMapping()
+	public String post() {
+		return "outsourcing/contract";
+	}*/
+}

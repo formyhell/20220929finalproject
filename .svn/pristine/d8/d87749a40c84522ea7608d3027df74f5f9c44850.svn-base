@@ -1,0 +1,113 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="security" %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<%--
+* [[개정이력(Modification Information)]]
+* 수정일                 수정자     		   수정내용
+* ----------  ---------  -----------------
+* 2022. 9. 7.      306-22        최초작성
+* Copyright (c) 2022 by DDIT All right reserved
+ --%>
+<c:if test="${not empty message }">
+    	<script type="text/javascript">
+    		alert("${message }");
+    	</script>
+    	<c:remove var="message" scope="session"/>
+</c:if>
+<!-- <button class="btn btn-primary btn-sm btn-approve">승인</button>
+<button class="btn btn-danger btn-sm btn-deny" data-bs-toggle="modal" data-bs-target="#denyModal">반려</button>
+ --><!-- Modal -->
+	<div class="modal fade" id="denyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel">반려 사유 입력</h5>
+	        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	      </div>
+	      <div class="modal-body">
+	      <form>
+	      		<textarea class="form-control input-air-primary" style="margin-bottom:20px" name="projReject" cols="60" rows="3"></textarea>
+	        	<input name="projId" style="display:none">
+	        <sec:csrfInput/>
+	        <input type="submit" class="btn btn-primary" style="float:right;margin-left:10px" id="btn_submit" value="저장" />
+	        <button type="button" class="btn btn-secondary" style="float:right" data-bs-dismiss="modal">취소</button>
+	      </form>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	
+          <div class="container-fluid">
+            <div class="page-header">
+              <div class="row">
+                <div class="col-sm-6">
+                  <h3>프로젝트 상세조회</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Container-fluid starts-->
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="job-search">
+                    <div class="card-body">
+                      <div class="media">
+                        <div class="media-body">
+                          <div class="row">
+                          	<h4 class="f-w-600 col-md-6 txt-primary" style="margin-right: -60px">${outProj.projTitle }</h4>
+                          	<p id="projId" style="display:none">${outProj.projId }</p>
+                          </div>
+                          <p>${outProj.projRegist }</p>
+                          <a class="btn btn-primary btn-sm job-apply-btn btn-approve" style="margin-right:90px">승인</a>
+                          <a class="btn btn-danger btn-sm job-apply-btn btn-deny" data-bs-toggle="modal" data-bs-target="#denyModal">반려</a>
+                        </div>
+                      </div>
+                      <div class="job-description">
+                        <h6>세부사항</h6>
+                        <P>모집마감일 ${outProj.projRecruitfdate }</P>
+                      	<P>예상 프로젝트 기간 ${outProj.projSdate }-${outProj.projFdate }</P>
+                      	<p>비용 ${outProj.projEstimate }</p>
+                      	<p>모집인원 ${outProj.projMemnum }</p>
+                      	<p>고용형태 ${outProj.projEmptype }</p>
+                      	<p>분류 ${outProj.projType }</p>
+                      	<p>지역 ${outProj.projLoc }</p>
+                      	<p>계획상태 ${outProj.projPlanstate }</p>
+                      	<p class="f-w-600">프로젝트 필요기술</p>
+                      	<c:if test="${not empty outProj.objSingleList }">
+                      		<c:forEach items="${outProj.objSingleList }" var="obj">
+                      			<span class="badge rounded-pill badge-primary col-sm-1">${obj }</span>
+                      		</c:forEach>
+                      	</c:if>
+                      	<p class="f-w-600">프로젝트 모집분야</p>
+                      	<c:if test="${not empty outProj.skillSingleList }">
+                      		<c:forEach items="${outProj.skillSingleList }" var="skill">
+                      			<span class="badge rounded-pill badge-light text-dark col-sm-1">${skill }</span>
+                      		</c:forEach>
+                      	</c:if>
+                      </div>
+                      <div class="job-description">
+                        <h6>업무내용</h6>
+                        	<p>${outProj.projContent }</p>
+                      </div>
+                      <div class="job-description">
+                        <h6>모집요건</h6>
+                        	<p>${outProj.projQualifi }</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>      
+<script>
+var header = '${_csrf.headerName}';
+var token =  '${_csrf.token}'; 
+
+
+</script>         

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.common.member.dao.MemDAO">
+<!-- 일반회원가입 -->
+<insert id="insertGenMember" parameterType="kr.or.ddit.common.member.vo.GenMemberVO">
+INSERT INTO GEN_MEMBER (
+    GEN_ID,
+    GEN_PASS,
+    GEN_NICK,
+    GEN_NAME,
+    GEN_BIRTH,
+    GEN_MAIL,
+    GEN_HP
+) VALUES (
+    #{genId,jdbcType=VARCHAR}
+    ,#{genPass,jdbcType=VARCHAR}
+    ,#{genNick,jdbcType=VARCHAR}
+    ,#{genName,jdbcType=VARCHAR}
+    ,TO_DATE(#{genBirth,jdbcType=DATE}, 'YYYY/MM/DD')
+    ,#{genMail,jdbcType=VARCHAR}
+    ,#{genHp,jdbcType=VARCHAR}
+)
+</insert>
+<insert id="insertComMember" parameterType="kr.or.ddit.common.member.vo.ComMemberVO">
+INSERT INTO COM_MEMBER (
+    COM_ID
+    ,COM_PASS
+    ,COM_NICK
+    ,COM_NAME
+    ,COM_HP
+    ,COM_COMNAME
+    ,COM_MAIL
+    ,COM_COMTEL
+    ,COM_COMCEO
+    ,COM_CBR
+    ,COM_OPENDATE
+) VALUES (
+    #{comId,jdbcType=VARCHAR}
+    ,#{comPass,jdbcType=VARCHAR}
+    ,#{comNick,jdbcType=VARCHAR}
+    ,#{comName,jdbcType=VARCHAR}
+    ,#{comHp,jdbcType=VARCHAR}
+    ,#{comComname,jdbcType=VARCHAR}
+    ,#{comMail,jdbcType=VARCHAR}
+    ,#{comComtel,jdbcType=VARCHAR}
+    ,#{comComceo,jdbcType=VARCHAR}
+    ,#{comCbr,jdbcType=VARCHAR}
+    ,TO_DATE(#{comOpendate,jdbcType=DATE}, 'YYYY/MM/DD')    
+)
+</insert>
+</mapper>
